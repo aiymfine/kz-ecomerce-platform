@@ -44,7 +44,7 @@ async function provisionTenant(storeId: number) {
 
     for (const table of tenantTables) {
       await prisma.$executeRawUnsafe(
-        Prisma.sql`CREATE TABLE IF NOT EXISTS ${Prisma.raw(`store_${storeId}`)}.${Prisma.raw(table)} (LIKE public.${Prisma.raw(table)} INCLUDING ALL)`,
+        `CREATE TABLE IF NOT EXISTS store_${storeId}.${table} (LIKE public.${table} INCLUDING ALL)`,
       );
     }
 
