@@ -77,12 +77,12 @@ async function seedTenant(storeId: number, storeName: string) {
   try {
     // Products
     await prisma.$executeRawUnsafe(
-      `INSERT INTO ${prefix}.products (title, slug, description, status, weight_grams) VALUES
-        ('Телефон Samsung Galaxy A54', 'samsung-galaxy-a54', 'Флагманский смартфон Samsung', 'active', 200),
-        ('Наушники AirPods Pro', 'airpods-pro', 'Беспроводные наушники', 'active', 50),
-        ('Чехол для iPhone 15', 'iphone-15-case', 'Силиконовый чехол', 'active', 30),
-        ('Кроссовки Nike Air Max', 'nike-air-max', 'Спортивные кроссовки', 'active', 400),
-        ('Рюкзак для ноутбука', 'laptop-backpack', 'Вместительный рюкзак', 'active', 600)`,
+      `INSERT INTO ${prefix}.products (title, slug, description, status, weight_grams, created_at, updated_at) VALUES
+        ('Телефон Samsung Galaxy A54', 'samsung-galaxy-a54', 'Флагманский смартфон Samsung', 'active', 200, NOW(), NOW()),
+        ('Наушники AirPods Pro', 'airpods-pro', 'Беспроводные наушники', 'active', 50, NOW(), NOW()),
+        ('Чехол для iPhone 15', 'iphone-15-case', 'Силиконовый чехол', 'active', 30, NOW(), NOW()),
+        ('Кроссовки Nike Air Max', 'nike-air-max', 'Спортивные кроссовки', 'active', 400, NOW(), NOW()),
+        ('Рюкзак для ноутбука', 'laptop-backpack', 'Вместительный рюкзак', 'active', 600, NOW(), NOW())`,
     );
 
     // Variant attributes
@@ -95,17 +95,17 @@ async function seedTenant(storeId: number, storeName: string) {
 
     // Product variants
     await prisma.$executeRawUnsafe(
-      `INSERT INTO ${prefix}.product_variants (product_id, sku, price_tiyin, is_active, position) VALUES
-        (1, 'samsung-galaxy-a54-black', 28990000, true, 0),
-        (1, 'samsung-galaxy-a54-white', 28990000, true, 1),
-        (2, 'airpods-pro', 42990000, true, 0),
-        (3, 'iphone-15-case-black', 499000, true, 0),
-        (3, 'iphone-15-case-clear', 499000, true, 1),
-        (4, 'nike-air-max-42', 8990000, true, 0),
-        (4, 'nike-air-max-43', 8990000, true, 1),
-        (4, 'nike-air-max-44', 9490000, true, 2),
-        (5, 'laptop-backpack-black', 1599000, true, 0),
-        (5, 'laptop-backpack-grey', 1599000, true, 1)`,
+      `INSERT INTO ${prefix}.product_variants (product_id, sku, price_tiyin, is_active, position, created_at, updated_at) VALUES
+        (1, 'samsung-galaxy-a54-black', 28990000, true, 0, NOW(), NOW()),
+        (1, 'samsung-galaxy-a54-white', 28990000, true, 1, NOW(), NOW()),
+        (2, 'airpods-pro', 42990000, true, 0, NOW(), NOW()),
+        (3, 'iphone-15-case-black', 499000, true, 0, NOW(), NOW()),
+        (3, 'iphone-15-case-clear', 499000, true, 1, NOW(), NOW()),
+        (4, 'nike-air-max-42', 8990000, true, 0, NOW(), NOW()),
+        (4, 'nike-air-max-43', 8990000, true, 1, NOW(), NOW()),
+        (4, 'nike-air-max-44', 9490000, true, 2, NOW(), NOW()),
+        (5, 'laptop-backpack-black', 1599000, true, 0, NOW(), NOW()),
+        (5, 'laptop-backpack-grey', 1599000, true, 1, NOW(), NOW())`,
     );
 
     // Variant attribute values
