@@ -45,7 +45,6 @@ const tablesWithUpdatedAt = [
   'staff_members',
   'theme_templates',
   'inventory',
-  'abandoned_carts',
 ];
 
 async function provisionTenant(storeId: number) {

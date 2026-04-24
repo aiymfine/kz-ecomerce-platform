@@ -49,7 +49,6 @@ export class StoresService {
     'staff_members',
     'theme_templates',
     'inventory',
-    'abandoned_carts',
   ];
 
   constructor(private prisma: PrismaService) {}
