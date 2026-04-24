@@ -86,6 +86,25 @@ export class AuthController {
     return result;
   }
 
+  @Post('admin/login')
+  @HttpCode(HttpStatus.OK)
+  @UsePipes(new ZodValidationPipe(loginSchema))
+  @ApiOperation({ summary: 'Admin login (platform admin only)' })
+  @ApiResponse({ status: 200, description: 'Admin login successful' })
+  @ApiResponse({ status: 401, description: 'Invalid credentials' })
+  async adminLogin(@Body() body: unknown) {
+    const result = await this.authService.adminLogin(body as any);
+    if (result.error) {
+      const statusMap: Record<string, number> = {
+        UNAUTHORIZED: 401,
+        FORBIDDEN: 403,
+      };
+      const statusCode = statusMap[result.error] || 400;
+      return { statusCode, ...result };
+    }
+    return result;
+  }
+
   @Post('logout')
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthGuard)
