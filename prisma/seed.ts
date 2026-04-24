@@ -34,105 +34,116 @@ const tenantTables = [
   'store_audit_log',
 ];
 
+// Tables with updated_at but NO database default (Prisma @updatedAt)
+const tablesWithUpdatedAt = [
+  'products',
+  'product_variants',
+  'customers',
+  'carts',
+  'cart_items',
+  'orders',
+  'staff_members',
+  'theme_templates',
+  'inventory',
+  'abandoned_carts',
+];
+
 async function provisionTenant(storeId: number) {
-  console.log(`  Provisioning tenant schema store_${storeId}...`);
+  const schema = `store_${storeId}`;
+  console.log(`  Provisioning tenant schema ${schema}...`);
 
-  try {
-    // Drop existing schema and recreate for clean state
-    await prisma.$executeRawUnsafe(`DROP SCHEMA IF EXISTS store_${storeId} CASCADE`);
+  // Drop existing and recreate
+  await prisma.$executeRawUnsafe(`DROP SCHEMA IF EXISTS ${schema} CASCADE`);
+  await prisma.$executeRawUnsafe(`CREATE SCHEMA ${schema}`);
+
+  // Create tables using LIKE
+  for (const table of tenantTables) {
     await prisma.$executeRawUnsafe(
-      `CREATE SCHEMA store_${storeId}`,
+      `CREATE TABLE ${schema}.${table} (LIKE public.${table} INCLUDING ALL)`,
     );
-
-    for (const table of tenantTables) {
-      await prisma.$executeRawUnsafe(
-        `CREATE TABLE IF NOT EXISTS store_${storeId}.${table} (LIKE public.${table} INCLUDING ALL)`,
-      );
-    }
-
-    // Default categories — one INSERT per statement
-    const categories = [
-      ['Все товары', 'all', '/1/', 0, 0],
-      ['Электроника', 'electronics', '/2/', 0, 1],
-      ['Одежда', 'clothing', '/3/', 0, 2],
-      ['Аксессуары', 'accessories', '/4/', 0, 3],
-      ['Новинки', 'new-arrivals', '/5/', 0, 4],
-      ['Распродажа', 'sale', '/6/', 0, 5],
-    ];
-    for (const [name, slug, path, depth, sortOrder] of categories) {
-      await prisma.$executeRawUnsafe(
-        `INSERT INTO store_${storeId}.categories (name, slug, path, depth, sort_order) VALUES ('${name}', '${slug}', '${path}', ${depth}, ${sortOrder})`,
-      );
-    }
-
-    console.log(`  ✓ Tenant store_${storeId} provisioned`);
-  } catch (err) {
-    console.error(`  ✗ Failed to provision tenant: ${err}`);
-    throw err;
   }
+
+  // Fix updated_at columns: add DEFAULT NOW() so raw SQL works
+  for (const table of tablesWithUpdatedAt) {
+    await prisma.$executeRawUnsafe(
+      `ALTER TABLE ${schema}.${table} ALTER COLUMN updated_at SET DEFAULT NOW()`,
+    );
+  }
+
+  // Insert default categories
+  const categories = [
+    ['Все товары', 'all', '/1/', 0, 0],
+    ['Электроника', 'electronics', '/2/', 0, 1],
+    ['Одежда', 'clothing', '/3/', 0, 2],
+    ['Аксессуары', 'accessories', '/4/', 0, 3],
+    ['Новинки', 'new-arrivals', '/5/', 0, 4],
+    ['Распродажа', 'sale', '/6/', 0, 5],
+  ];
+  for (const [name, slug, path, depth, sortOrder] of categories) {
+    await prisma.$executeRawUnsafe(
+      `INSERT INTO ${schema}.categories (name, slug, path, depth, sort_order) VALUES ('${name}', '${slug}', '${path}', ${depth}, ${sortOrder})`,
+    );
+  }
+
+  console.log(`  ✓ Tenant ${schema} provisioned`);
 }
 
 async function seedTenant(storeId: number, storeName: string) {
-  console.log(`  Seeding data for ${storeName} (store_${storeId})...`);
-  const prefix = `store_${storeId}`;
+  const schema = `store_${storeId}`;
+  console.log(`  Seeding data for ${storeName} (${schema})...`);
 
-  try {
-    // Products
-    await prisma.$executeRawUnsafe(
-      `INSERT INTO ${prefix}.products (title, slug, description, status, weight_grams, created_at, updated_at) VALUES
-        ('Телефон Samsung Galaxy A54', 'samsung-galaxy-a54', 'Флагманский смартфон Samsung', 'active', 200, NOW(), NOW()),
-        ('Наушники AirPods Pro', 'airpods-pro', 'Беспроводные наушники', 'active', 50, NOW(), NOW()),
-        ('Чехол для iPhone 15', 'iphone-15-case', 'Силиконовый чехол', 'active', 30, NOW(), NOW()),
-        ('Кроссовки Nike Air Max', 'nike-air-max', 'Спортивные кроссовки', 'active', 400, NOW(), NOW()),
-        ('Рюкзак для ноутбука', 'laptop-backpack', 'Вместительный рюкзак', 'active', 600, NOW(), NOW())`,
-    );
+  // Products — only specify columns without defaults
+  await prisma.$executeRawUnsafe(`
+    INSERT INTO ${schema}.products (title, slug, description, status, weight_grams) VALUES
+      ('Телефон Samsung Galaxy A54', 'samsung-galaxy-a54', 'Флагманский смартфон Samsung', 'active', 200),
+      ('Наушники AirPods Pro', 'airpods-pro', 'Беспроводные наушники', 'active', 50),
+      ('Чехол для iPhone 15', 'iphone-15-case', 'Силиконовый чехол', 'active', 30),
+      ('Кроссовки Nike Air Max', 'nike-air-max', 'Спортивные кроссовки', 'active', 400),
+      ('Рюкзак для ноутбука', 'laptop-backpack', 'Вместительный рюкзак', 'active', 600)
+  `);
 
-    // Variant attributes
-    await prisma.$executeRawUnsafe(
-      `INSERT INTO ${prefix}.variant_attributes (name, type) VALUES
-        ('Размер', 'size'),
-        ('Цвет', 'color'),
-        ('Материал', 'material')`,
-    );
+  // Variant attributes
+  await prisma.$executeRawUnsafe(`
+    INSERT INTO ${schema}.variant_attributes (name, type) VALUES
+      ('Размер', 'size'),
+      ('Цвет', 'color'),
+      ('Материал', 'material')
+  `);
 
-    // Product variants
-    await prisma.$executeRawUnsafe(
-      `INSERT INTO ${prefix}.product_variants (product_id, sku, price_tiyin, is_active, position, created_at, updated_at) VALUES
-        (1, 'samsung-galaxy-a54-black', 28990000, true, 0, NOW(), NOW()),
-        (1, 'samsung-galaxy-a54-white', 28990000, true, 1, NOW(), NOW()),
-        (2, 'airpods-pro', 42990000, true, 0, NOW(), NOW()),
-        (3, 'iphone-15-case-black', 499000, true, 0, NOW(), NOW()),
-        (3, 'iphone-15-case-clear', 499000, true, 1, NOW(), NOW()),
-        (4, 'nike-air-max-42', 8990000, true, 0, NOW(), NOW()),
-        (4, 'nike-air-max-43', 8990000, true, 1, NOW(), NOW()),
-        (4, 'nike-air-max-44', 9490000, true, 2, NOW(), NOW()),
-        (5, 'laptop-backpack-black', 1599000, true, 0, NOW(), NOW()),
-        (5, 'laptop-backpack-grey', 1599000, true, 1, NOW(), NOW())`,
-    );
+  // Product variants
+  await prisma.$executeRawUnsafe(`
+    INSERT INTO ${schema}.product_variants (product_id, sku, price_tiyin, is_active, position) VALUES
+      (1, 'samsung-galaxy-a54-black', 28990000, true, 0),
+      (1, 'samsung-galaxy-a54-white', 28990000, true, 1),
+      (2, 'airpods-pro', 42990000, true, 0),
+      (3, 'iphone-15-case-black', 499000, true, 0),
+      (3, 'iphone-15-case-clear', 499000, true, 1),
+      (4, 'nike-air-max-42', 8990000, true, 0),
+      (4, 'nike-air-max-43', 8990000, true, 1),
+      (4, 'nike-air-max-44', 9490000, true, 2),
+      (5, 'laptop-backpack-black', 1599000, true, 0),
+      (5, 'laptop-backpack-grey', 1599000, true, 1)
+  `);
 
-    // Variant attribute values
-    await prisma.$executeRawUnsafe(
-      `INSERT INTO ${prefix}.variant_attribute_values (variant_id, attribute_id, value) VALUES
-        (1, 2, 'Black'),
-        (2, 2, 'White'),
-        (6, 1, '42'),
-        (7, 1, '43'),
-        (8, 1, '44'),
-        (9, 2, 'Black'),
-        (10, 2, 'Grey')`,
-    );
+  // Variant attribute values
+  await prisma.$executeRawUnsafe(`
+    INSERT INTO ${schema}.variant_attribute_values (variant_id, attribute_id, value) VALUES
+      (1, 2, 'Black'),
+      (2, 2, 'White'),
+      (6, 1, '42'),
+      (7, 1, '43'),
+      (8, 1, '44'),
+      (9, 2, 'Black'),
+      (10, 2, 'Grey')
+  `);
 
-    // Webhooks
-    await prisma.$executeRawUnsafe(
-      `INSERT INTO ${prefix}.webhooks (url, secret, events, is_active) VALUES
-        ('https://example.com/webhook', '${Array.from({length: 64}, () => '0').join('')}', '["order.created","product.updated"]'::json, true)`,
-    );
+  // Webhooks
+  await prisma.$executeRawUnsafe(`
+    INSERT INTO ${schema}.webhooks (url, secret, events, is_active) VALUES
+      ('https://example.com/webhook', '${Array.from({ length: 64 }, () => '0').join('')}', '["order.created","product.updated"]'::json, true)
+  `);
 
-    console.log(`  ✓ ${storeName} seeded`);
-  } catch (err) {
-    console.error(`  ✗ Failed to seed tenant ${storeName}: ${err}`);
-    throw err;
-  }
+  console.log(`  ✓ ${storeName} seeded`);
 }
 
 async function main() {
@@ -155,14 +166,13 @@ async function main() {
 
   // 2. Create merchants
   console.log('2. Creating merchants...');
-
-  const merchant1Password = await bcrypt.hash('merchant123', 12);
+  const m1Pass = await bcrypt.hash('merchant123', 12);
   const merchant1 = await prisma.merchant.upsert({
     where: { email: 'merchant1@example.com' },
     update: {},
     create: {
       email: 'merchant1@example.com',
-      passwordHash: merchant1Password,
+      passwordHash: m1Pass,
       name: 'Айдана Касымова',
       phone: '+7 701 234 5678',
       businessName: 'TechShop KZ',
@@ -172,13 +182,13 @@ async function main() {
   });
   console.log(`  ✓ Merchant 1: ${merchant1.email} (password: merchant123)`);
 
-  const merchant2Password = await bcrypt.hash('merchant123', 12);
+  const m2Pass = await bcrypt.hash('merchant123', 12);
   const merchant2 = await prisma.merchant.upsert({
     where: { email: 'merchant2@example.com' },
     update: {},
     create: {
       email: 'merchant2@example.com',
-      passwordHash: merchant2Password,
+      passwordHash: m2Pass,
       name: 'Бекзат Нурланов',
       phone: '+7 702 345 6789',
       businessName: 'FashionStore KZ',
@@ -190,7 +200,6 @@ async function main() {
 
   // 3. Create stores
   console.log('3. Creating stores...');
-
   const store1 = await prisma.store.upsert({
     where: { subdomain: 'techshop' },
     update: {},
@@ -221,9 +230,8 @@ async function main() {
   });
   console.log(`  ✓ Store 2: ${store2.name} (${store2.subdomain})\n`);
 
-  // 4. Provision tenant schemas (always recreate for clean seed)
+  // 4. Provision tenant schemas (always drop + recreate)
   console.log('4. Provisioning tenant schemas...');
-
   await provisionTenant(store1.id);
   await provisionTenant(store2.id);
   console.log();
@@ -234,7 +242,7 @@ async function main() {
   await seedTenant(store2.id, store2.name);
   console.log();
 
-  // 6. Log provisioning
+  // 6. Provisioning logs
   console.log('6. Creating provisioning logs...');
   await prisma.tenantProvisioningLog.upsert({
     where: { id: 1 },
@@ -246,7 +254,6 @@ async function main() {
       details: { source: 'prisma-seed' },
     },
   });
-
   await prisma.tenantProvisioningLog.upsert({
     where: { id: 2 },
     update: {},
