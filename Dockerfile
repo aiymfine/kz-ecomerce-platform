@@ -31,8 +31,8 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY prisma ./prisma/
 COPY --from=builder /app/dist ./dist
 
-# Install prod deps then generate Prisma client in this stage
-RUN pnpm install --frozen-lockfile --prod
+# Install prod deps + prisma CLI (needed to generate client at runtime)
+RUN pnpm install --frozen-lockfile --prod && pnpm add --save-prod prisma@^5.22.0
 RUN npx prisma generate
 
 EXPOSE 3000
