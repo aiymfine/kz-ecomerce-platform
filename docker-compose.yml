@@ -6,7 +6,7 @@ services:
     ports:
       - '3000:3000'
     environment:
-      NODE_ENV: development
+      NODE_ENV: production
       PORT: 3000
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/shopbuilder
       REDIS_URL: redis://redis:6379/0
@@ -17,9 +17,6 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    volumes:
-      - ./src:/app/src
-    command: pnpm start:dev
 
   postgres:
     image: postgres:15-alpine
