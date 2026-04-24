@@ -1,0 +1,742 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// ENUMS
+// ============================================================================
+
+enum PlatformAdminRole {
+  super_admin
+  support
+}
+
+enum MerchantStatus {
+  pending
+  approved
+  rejected
+  suspended
+}
+
+enum StoreStatus {
+  setup
+  active
+  suspended
+  closed
+}
+
+enum StorePlan {
+  free
+  starter
+  professional
+  enterprise
+}
+
+enum BillingStatus {
+  pending
+  paid
+  failed
+  refunded
+}
+
+enum ProductStatus {
+  draft
+  active
+  archived
+}
+
+enum AttributeType {
+  size
+  color
+  material
+}
+
+enum CartStatus {
+  active
+  abandoned
+  converted
+}
+
+enum OrderStatus {
+  payment_pending
+  payment_failed
+  confirmed
+  processing
+  shipped
+  delivered
+  cancelled
+  refunded
+}
+
+enum ShippingMethod {
+  choco
+  kazpost
+  self_pickup
+}
+
+enum PaymentProvider {
+  kaspi_pay
+  halyk_bank
+  manual
+}
+
+enum PaymentStatus {
+  pending
+  processing
+  succeeded
+  failed
+  refunded
+}
+
+enum DiscountType {
+  percentage
+  fixed_amount
+  free_shipping
+}
+
+enum WebhookEventStatus {
+  pending
+  delivering
+  delivered
+  failed
+  dead_letter
+}
+
+enum BillingCycle {
+  weekly
+  bi_weekly
+  monthly
+}
+
+enum SubscriptionStatus {
+  active
+  paused
+  cancelled
+  dunning
+}
+
+enum StaffRole {
+  inventory_manager
+  order_processor
+  analytics_viewer
+}
+
+enum AbandonedCartStatus {
+  pending
+  recovering
+  converted
+  expired
+}
+
+enum ActorType {
+  merchant
+  staff
+  customer
+}
+
+// ============================================================================
+// PUBLIC SCHEMA MODELS
+// ============================================================================
+
+model PlatformAdmin {
+  id           Int               @id @default(autoincrement()) @map("id")
+  email        String            @unique @db.VarChar(255) @map("email")
+  passwordHash String            @map("password_hash") @db.VarChar(255)
+  name         String            @map("name") @db.VarChar(255)
+  role         PlatformAdminRole @default(support) @map("role")
+  isActive     Boolean           @default(true) @map("is_active")
+  createdAt    DateTime          @default(now()) @map("created_at")
+  lastLoginAt  DateTime?         @map("last_login_at")
+
+  auditLogs PlatformAuditLog[]
+
+  @@map("platform_admins")
+}
+
+model Merchant {
+  id           Int            @id @default(autoincrement()) @map("id")
+  email        String         @unique @db.VarChar(255) @map("email")
+  passwordHash String         @map("password_hash") @db.VarChar(255)
+  name         String         @map("name") @db.VarChar(255)
+  phone        String?        @map("phone") @db.VarChar(20)
+  businessName String?        @map("business_name") @db.VarChar(255)
+  status       MerchantStatus @default(pending) @map("status")
+  isActive     Boolean        @default(true) @map("is_active")
+  createdAt    DateTime       @default(now()) @map("created_at")
+  updatedAt    DateTime       @updatedAt @map("updated_at")
+
+  stores Store[]
+
+  @@map("merchants")
+}
+
+model Store {
+  id           Int        @id @default(autoincrement()) @map("id")
+  merchantId   Int        @map("merchant_id")
+  name         String     @map("name") @db.VarChar(255)
+  subdomain    String     @unique @map("subdomain") @db.VarChar(63)
+  customDomain String?    @unique @map("custom_domain") @db.VarChar(255)
+  schemaName   String     @unique @map("schema_name") @db.VarChar(63)
+  status       StoreStatus @default(setup) @map("status")
+  plan         StorePlan   @default(free) @map("plan")
+  themeId      Int?       @map("theme_id")
+  currency     String     @default("KZT") @map("currency") @db.VarChar(3)
+  timezone     String     @default("Asia/Almaty") @map("timezone") @db.VarChar(50)
+  vatRate      Int        @default(12) @map("vat_rate")
+  isLive       Boolean    @default(false) @map("is_live")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+
+  merchant       Merchant        @relation(fields: [merchantId], references: [id])
+  billingRecords BillingRecord[]
+
+  @@index([merchantId], map: "ix_stores_merchant_id")
+  @@index([subdomain], map: "ix_stores_subdomain")
+  @@index([themeId], map: "ix_stores_theme_id")
+  @@map("stores")
+}
+
+model BillingRecord {
+  id           Int           @id @default(autoincrement()) @map("id")
+  storeId      Int           @map("store_id")
+  amountTiyin  Int           @map("amount_tiyin")
+  description  String        @map("description") @db.VarChar(500)
+  status       BillingStatus @default(pending) @map("status")
+  providerTxId String?       @map("provider_tx_id") @db.VarChar(255)
+  createdAt    DateTime      @default(now()) @map("created_at")
+
+  store Store @relation(fields: [storeId], references: [id])
+
+  @@index([storeId], map: "ix_billing_store_id")
+  @@map("billing_records")
+}
+
+model PlatformAuditLog {
+  id             Int      @id @default(autoincrement()) @map("id")
+  adminId        Int?     @map("admin_id")
+  action         String   @map("action") @db.VarChar(100)
+  resourceType   String   @map("resource_type") @db.VarChar(100)
+  resourceId     Int?     @map("resource_id")
+  changes        Json?    @map("changes")
+  ipAddress      String?  @map("ip_address") @db.VarChar(45)
+  sessionId      String?  @map("session_id") @db.VarChar(100)
+  userAgent      String?  @map("user_agent") @db.VarChar(500)
+  requestMethod  String?  @map("request_method") @db.VarChar(10)
+  requestPath    String?  @map("request_path") @db.VarChar(500)
+  responseStatus Int?     @map("response_status")
+  durationMs     Int?     @map("duration_ms")
+  level          String   @default("INFO") @map("level") @db.VarChar(20)
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  admin PlatformAdmin? @relation(fields: [adminId], references: [id])
+
+  @@index([createdAt], map: "ix_audit_created_at")
+  @@index([resourceType, resourceId], map: "ix_platform_audit_resource")
+  @@index([action], map: "ix_platform_audit_action")
+  @@index([level, createdAt], map: "ix_platform_audit_level")
+  @@map("platform_audit_log")
+}
+
+model TenantProvisioningLog {
+  id        Int      @id @default(autoincrement()) @map("id")
+  storeId   Int      @map("store_id")
+  action    String   @map("action") @db.VarChar(100)
+  status    String   @map("status") @db.VarChar(50)
+  details   Json?    @map("details")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([storeId], map: "ix_tenant_prov_store_id")
+  @@map("tenant_provisioning_log")
+}
+
+// ============================================================================
+// TENANT SCHEMA MODELS
+// ============================================================================
+
+model Product {
+  id             Int           @id @default(autoincrement())
+  title          String        @db.VarChar(200)
+  slug           String        @unique @db.VarChar(200)
+  description    String?       @db.Text
+  status         ProductStatus @default(draft)
+  weightGrams    Int           @default(0) @map("weight_grams")
+  allowBackorder Boolean       @default(false) @map("allow_backorder")
+  lowStockAlert  Int           @default(5) @map("low_stock_alert")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+
+  images     ProductImage[]
+  variants   ProductVariant[]
+  categories ProductCategory[]
+
+  @@index([status])
+  @@map("products")
+}
+
+model ProductImage {
+  id        Int      @id @default(autoincrement())
+  productId Int      @map("product_id")
+  url       String   @db.VarChar(500)
+  altText   String?  @map("alt_text") @db.VarChar(255)
+  position  Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, position], map: "uq_product_image_position")
+  @@index([productId])
+  @@map("product_images")
+}
+
+model Category {
+  id        Int      @id @default(autoincrement())
+  name      String   @db.VarChar(200)
+  slug      String   @unique @db.VarChar(200)
+  parentId  Int?     @map("parent_id")
+  path      String   @default("/") @map("path") @db.VarChar(500)
+  depth     Int      @default(0) @map("depth")
+  sortOrder Int      @default(0) @map("sort_order")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  parent   Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children Category[] @relation("CategoryTree")
+  products ProductCategory[]
+
+  @@index([parentId])
+  @@map("categories")
+}
+
+model ProductCategory {
+  id         Int @id @default(autoincrement())
+  productId  Int @map("product_id")
+  categoryId Int @map("category_id")
+
+  product  Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, categoryId], map: "uq_product_category")
+  @@map("product_categories")
+}
+
+model VariantAttribute {
+  id        Int          @id @default(autoincrement())
+  name      String       @db.VarChar(100)
+  type      AttributeType
+  createdAt DateTime     @default(now()) @map("created_at")
+
+  values VariantAttributeValue[]
+
+  @@index([type])
+  @@map("variant_attributes")
+}
+
+model VariantAttributeValue {
+  id          Int              @id @default(autoincrement())
+  variantId   Int              @map("variant_id")
+  attributeId Int              @map("attribute_id")
+  value       String           @db.VarChar(100)
+  sortOrder   Int              @default(0) @map("sort_order")
+
+  variant   ProductVariant    @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  attribute VariantAttribute @relation(fields: [attributeId], references: [id], onDelete: Cascade)
+
+  @@unique([variantId, attributeId], map: "uq_variant_attribute")
+  @@index([variantId])
+  @@index([attributeId])
+  @@map("variant_attribute_values")
+}
+
+model ProductVariant {
+  id                  Int      @id @default(autoincrement())
+  productId           Int      @map("product_id")
+  sku                 String   @unique @db.VarChar(50)
+  priceTiyin          Int      @map("price_tiyin")
+  compareAtPriceTiyin Int?     @map("compare_at_price_tiyin")
+  barcode             String?  @map("barcode") @db.VarChar(50)
+  weightGrams         Int      @default(0) @map("weight_grams")
+  isActive            Boolean  @default(true) @map("is_active")
+  position            Int      @default(0)
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  product          Product                  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  attributeValues  VariantAttributeValue[]
+
+  @@index([productId])
+  @@map("product_variants")
+}
+
+model Warehouse {
+  id        Int      @id @default(autoincrement())
+  name      String   @db.VarChar(200)
+  address   String   @db.VarChar(500)
+  city      String   @db.VarChar(100)
+  latitude  Float?
+  longitude Float?
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([city])
+  @@map("warehouses")
+}
+
+model Inventory {
+  id                Int      @id @default(autoincrement())
+  variantId         Int      @map("variant_id")
+  warehouseId       Int      @map("warehouse_id")
+  quantityAvailable Int      @default(0) @map("quantity_available")
+  quantityReserved  Int      @default(0) @map("quantity_reserved")
+  lowStockThreshold Int      @default(5) @map("low_stock_threshold")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  @@unique([variantId, warehouseId], map: "uq_variant_warehouse")
+  @@index([quantityAvailable], map: "ix_inventory_available")
+  @@map("inventory")
+}
+
+model Customer {
+  id           Int       @id @default(autoincrement())
+  email        String    @unique @db.VarChar(255)
+  passwordHash String    @map("password_hash") @db.VarChar(255)
+  firstName    String    @map("first_name") @db.VarChar(100)
+  lastName     String?   @map("last_name") @db.VarChar(100)
+  phone        String?   @map("phone") @db.VarChar(20)
+  isFirstBuyer Boolean   @default(true) @map("is_first_buyer")
+  lastLoginAt  DateTime? @map("last_login_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  addresses      Address[]
+  orders         Order[]
+  carts          Cart[]
+  abandonedCarts AbandonedCart[]
+
+  @@map("customers")
+}
+
+model Address {
+  id           Int      @id @default(autoincrement())
+  customerId   Int      @map("customer_id")
+  label        String?  @map("label") @db.VarChar(50)
+  fullName     String   @map("full_name") @db.VarChar(200)
+  phone        String   @map("phone") @db.VarChar(20)
+  addressLine1 String   @map("address_line1") @db.VarChar(255)
+  addressLine2 String?  @map("address_line2") @db.VarChar(255)
+  city         String   @db.VarChar(100)
+  region       String?  @db.VarChar(100)
+  postalCode   String?  @map("postal_code") @db.VarChar(20)
+  latitude     Float?
+  longitude    Float?
+  isDefault    Boolean  @default(false) @map("is_default")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([customerId])
+  @@map("addresses")
+}
+
+model Cart {
+  id         Int        @id @default(autoincrement())
+  customerId Int        @map("customer_id")
+  status     CartStatus @default(active)
+  createdAt  DateTime   @default(now()) @map("created_at")
+  updatedAt  DateTime   @updatedAt @map("updated_at")
+
+  customer Customer   @relation(fields: [customerId], references: [id])
+  items    CartItem[]
+
+  @@index([customerId])
+  @@index([status])
+  @@map("carts")
+}
+
+model CartItem {
+  id        Int      @id @default(autoincrement())
+  cartId    Int      @map("cart_id")
+  variantId Int      @map("variant_id")
+  quantity  Int
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  cart    Cart           @relation(fields: [cartId], references: [id], onDelete: Cascade)
+
+  @@index([cartId])
+  @@map("cart_items")
+}
+
+model Order {
+  id             Int             @id @default(autoincrement())
+  orderNumber    String          @unique @map("order_number") @db.VarChar(30)
+  customerId     Int             @map("customer_id")
+  status         OrderStatus     @default(payment_pending)
+  subtotalTiyin  Int             @map("subtotal_tiyin")
+  discountTiyin  Int             @default(0) @map("discount_tiyin")
+  shippingTiyin  Int             @default(0) @map("shipping_tiyin")
+  vatTiyin       Int             @default(0) @map("vat_tiyin")
+  totalTiyin     Int             @map("total_tiyin")
+  shippingMethod ShippingMethod? @map("shipping_method")
+  shippingAddress Json?          @map("shipping_address")
+  customerNote   String?         @map("customer_note") @db.VarChar(500)
+  notes          String?         @map("notes") @db.Text
+  idempotencyKey String?         @unique @map("idempotency_key") @db.VarChar(100)
+  createdAt      DateTime        @default(now()) @map("created_at")
+  updatedAt      DateTime        @updatedAt @map("updated_at")
+
+  customer     Customer           @relation(fields: [customerId], references: [id])
+  items        OrderItem[]
+  payments     Payment[]
+  discounts    OrderDiscount[]
+
+  @@index([status, createdAt], map: "ix_orders_status_created")
+  @@index([customerId], map: "ix_orders_customer")
+  @@index([status])
+  @@map("orders")
+}
+
+model OrderItem {
+  id              Int     @id @default(autoincrement())
+  orderId         Int     @map("order_id")
+  variantId       Int     @map("variant_id")
+  productTitle    String  @map("product_title") @db.VarChar(200)
+  variantSku      String  @map("variant_sku") @db.VarChar(50)
+  quantity        Int
+  unitPriceTiyin  Int     @map("unit_price_tiyin")
+  totalPriceTiyin Int     @map("total_price_tiyin")
+
+  order   Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@map("order_items")
+}
+
+model Payment {
+  id             Int            @id @default(autoincrement())
+  orderId        Int            @map("order_id")
+  provider       PaymentProvider
+  providerTxId   String?        @map("provider_tx_id") @db.VarChar(255)
+  amountTiyin    Int            @map("amount_tiyin")
+  status         PaymentStatus  @default(pending)
+  idempotencyKey String         @unique @map("idempotency_key") @db.VarChar(100)
+  metadata       Json?          @map("metadata")
+  createdAt      DateTime       @default(now()) @map("created_at")
+
+  order Order @relation(fields: [orderId], references: [id])
+
+  @@index([orderId], map: "ix_payments_order")
+  @@index([status])
+  @@index([idempotencyKey], map: "ix_payments_idempotency")
+  @@map("payments")
+}
+
+model OrderFulfillment {
+  id             Int      @id @default(autoincrement())
+  orderId        Int      @map("order_id")
+  warehouseId    Int      @map("warehouse_id")
+  status         String   @default("pending") @db.VarChar(50)
+  trackingNumber String?  @map("tracking_number") @db.VarChar(100)
+  shippedAt      DateTime? @map("shipped_at")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  @@index([orderId])
+  @@map("order_fulfillments")
+}
+
+model PromoCode {
+  id             Int           @id @default(autoincrement())
+  code           String        @unique @db.VarChar(30)
+  type           DiscountType
+  value          Int
+  minOrderTiyin  Int           @default(0) @map("min_order_tiyin")
+  maxUses        Int?          @map("max_uses")
+  usedCount      Int           @default(0) @map("used_count")
+  maxPerCustomer Int           @default(1) @map("max_per_customer")
+  isStackable    Boolean       @default(false) @map("is_stackable")
+  firstBuyerOnly Boolean       @default(false) @map("first_buyer_only")
+  startsAt       DateTime?     @map("starts_at")
+  expiresAt      DateTime?     @map("expires_at")
+  isActive       Boolean       @default(true) @map("is_active")
+  createdAt      DateTime      @default(now()) @map("created_at")
+
+  orderDiscounts OrderDiscount[]
+
+  @@index([isActive, expiresAt], map: "ix_promo_code_active")
+  @@map("promo_codes")
+}
+
+model OrderDiscount {
+  id            Int      @id @default(autoincrement())
+  orderId       Int      @map("order_id")
+  promoCodeId   Int?     @map("promo_code_id")
+  discountTiyin Int      @map("discount_tiyin")
+  description   String   @map("description") @db.VarChar(255)
+
+  order     Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  promoCode PromoCode? @relation(fields: [promoCodeId], references: [id])
+
+  @@index([orderId])
+  @@map("order_discounts")
+}
+
+model Webhook {
+  id        Int      @id @default(autoincrement())
+  url       String   @db.VarChar(500)
+  secret    String   @db.VarChar(64)
+  events    Json
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  webhookEvents WebhookEvent[]
+
+  @@map("webhooks")
+}
+
+model WebhookEvent {
+  id               Int               @id @default(autoincrement())
+  webhookId        Int               @map("webhook_id")
+  eventType        String            @map("event_type") @db.VarChar(100)
+  payload          Json
+  status           WebhookEventStatus @default(pending)
+  attemptCount     Int               @default(0) @map("attempt_count")
+  maxAttempts      Int               @default(5) @map("max_attempts")
+  nextRetryAt      DateTime?         @map("next_retry_at")
+  lastResponseCode Int?              @map("last_response_code")
+  createdAt        DateTime          @default(now()) @map("created_at")
+  deliveredAt      DateTime?         @map("delivered_at")
+
+  webhook Webhook @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+
+  @@index([status], map: "ix_webhook_events_status")
+  @@index([status, nextRetryAt], map: "ix_webhook_events_retry")
+  @@index([webhookId])
+  @@map("webhook_events")
+}
+
+model SubscriptionBox {
+  id                 Int          @id @default(autoincrement())
+  title              String       @db.VarChar(200)
+  description        String?      @db.Text
+  priceTiyin         Int          @map("price_tiyin")
+  billingCycle       BillingCycle
+  maxSkipConsecutive Int          @default(2) @map("max_skip_consecutive")
+  isActive           Boolean      @default(true) @map("is_active")
+  createdAt          DateTime     @default(now()) @map("created_at")
+
+  items SubscriptionBoxItem[]
+  orders SubscriptionOrder[]
+
+  @@index([billingCycle])
+  @@map("subscription_boxes")
+}
+
+model SubscriptionBoxItem {
+  id        Int      @id @default(autoincrement())
+  boxId     Int      @map("box_id")
+  variantId Int      @map("variant_id")
+  quantity  Int
+  sortOrder Int      @default(0) @map("sort_order")
+
+  box     SubscriptionBox @relation(fields: [boxId], references: [id], onDelete: Cascade)
+
+  @@index([boxId])
+  @@map("subscription_box_items")
+}
+
+model SubscriptionOrder {
+  id               Int               @id @default(autoincrement())
+  boxId            Int               @map("box_id")
+  customerId       Int               @map("customer_id")
+  status           SubscriptionStatus @default(active)
+  cycleNumber      Int               @default(0) @map("cycle_number")
+  amountTiyin      Int               @map("amount_tiyin")
+  paymentStatus    PaymentStatus     @default(pending) @map("payment_status")
+  paymentAttempts  Int               @default(0) @map("payment_attempts")
+  consecutiveSkips Int               @default(0) @map("consecutive_skips")
+  nextBillingAt    DateTime          @map("next_billing_at")
+  createdAt        DateTime          @default(now()) @map("created_at")
+
+  box      SubscriptionBox @relation(fields: [boxId], references: [id])
+
+  @@index([status, nextBillingAt], map: "ix_sub_orders_status_next")
+  @@index([customerId])
+  @@map("subscription_orders")
+}
+
+model StaffMember {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique @db.VarChar(255)
+  passwordHash String   @map("password_hash") @db.VarChar(255)
+  name         String   @db.VarChar(200)
+  role         StaffRole
+  permissions  Json     @default("{}")
+  isActive     Boolean  @default(true) @map("is_active")
+  invitedAt    DateTime @default(now()) @map("invited_at")
+  lastLoginAt  DateTime? @map("last_login_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@index([role])
+  @@map("staff_members")
+}
+
+model ThemeTemplate {
+  id              Int      @id @default(autoincrement())
+  name            String   @db.VarChar(200)
+  templateContent String   @map("template_content") @db.Text
+  isActive        Boolean  @default(true) @map("is_active")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("theme_templates")
+}
+
+model AbandonedCart {
+  id            Int                 @id @default(autoincrement())
+  customerId    Int                 @map("customer_id")
+  cartSnapshot  Json                @map("cart_snapshot")
+  recoveryCode  String              @unique @map("recovery_code") @db.VarChar(64)
+  discountCode  String?             @map("discount_code") @db.VarChar(30)
+  discountTiyin Int                 @default(0) @map("discount_tiyin")
+  emailsSent    Int                 @default(0) @map("emails_sent")
+  status        AbandonedCartStatus @default(pending)
+  lastEmailAt   DateTime?           @map("last_email_at")
+  expiresAt     DateTime            @map("expires_at")
+  createdAt     DateTime            @default(now()) @map("created_at")
+
+  customer Customer @relation(fields: [customerId], references: [id])
+
+  @@index([customerId])
+  @@index([status, expiresAt], map: "ix_abandoned_status_expires")
+  @@map("abandoned_carts")
+}
+
+model StoreAuditLog {
+  id             Int       @id @default(autoincrement())
+  actorId        Int?      @map("actor_id")
+  actorType      ActorType @map("actor_type")
+  action         String    @map("action") @db.VarChar(100)
+  resourceType   String    @map("resource_type") @db.VarChar(100)
+  resourceId     Int?      @map("resource_id")
+  changes        Json?     @map("changes")
+  ipAddress      String?   @map("ip_address") @db.VarChar(45)
+  sessionId      String?   @map("session_id") @db.VarChar(100)
+  userAgent      String?   @map("user_agent") @db.VarChar(500)
+  requestMethod  String?   @map("request_method") @db.VarChar(10)
+  requestPath    String?   @map("request_path") @db.VarChar(500)
+  responseStatus Int?      @map("response_status")
+  durationMs     Int?      @map("duration_ms")
+  level          String    @default("INFO") @map("level") @db.VarChar(20)
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  @@index([createdAt], map: "ix_store_audit_created")
+  @@index([actorId, actorType], map: "ix_store_audit_actor")
+  @@index([resourceType, resourceId], map: "ix_store_audit_resource")
+  @@index([action], map: "ix_store_audit_action")
+  @@index([level, createdAt], map: "ix_store_audit_level")
+  @@map("store_audit_log")
+}
