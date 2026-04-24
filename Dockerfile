@@ -28,12 +28,12 @@ WORKDIR /app
 ENV NODE_ENV=production
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-RUN pnpm install --frozen-lockfile --prod
-
+COPY prisma ./prisma/
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/.pnpm ./node_modules/.pnpm
+
+# Install prod deps then generate Prisma client in this stage
+RUN pnpm install --frozen-lockfile --prod
+RUN npx prisma generate
 
 EXPOSE 3000
 
