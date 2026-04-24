@@ -38,8 +38,10 @@ async function provisionTenant(storeId: number) {
   console.log(`  Provisioning tenant schema store_${storeId}...`);
 
   try {
+    // Drop existing schema and recreate for clean state
+    await prisma.$executeRawUnsafe(`DROP SCHEMA IF EXISTS store_${storeId} CASCADE`);
     await prisma.$executeRawUnsafe(
-      `CREATE SCHEMA IF NOT EXISTS store_${storeId}`,
+      `CREATE SCHEMA store_${storeId}`,
     );
 
     for (const table of tenantTables) {
@@ -219,27 +221,11 @@ async function main() {
   });
   console.log(`  ✓ Store 2: ${store2.name} (${store2.subdomain})\n`);
 
-  // 4. Provision tenant schemas
+  // 4. Provision tenant schemas (always recreate for clean seed)
   console.log('4. Provisioning tenant schemas...');
 
-  const existingSchemas = await prisma.$queryRawUnsafe(
-    `SELECT schema_name FROM information_schema.schemata WHERE schema_name LIKE 'store_%'`,
-  );
-  const existingNames = new Set(
-    (existingSchemas as any[]).map((s: any) => s.schema_name),
-  );
-
-  if (!existingNames.has(`store_${store1.id}`)) {
-    await provisionTenant(store1.id);
-  } else {
-    console.log(`  ⊙ Schema store_${store1.id} already exists`);
-  }
-
-  if (!existingNames.has(`store_${store2.id}`)) {
-    await provisionTenant(store2.id);
-  } else {
-    console.log(`  ⊙ Schema store_${store2.id} already exists`);
-  }
+  await provisionTenant(store1.id);
+  await provisionTenant(store2.id);
   console.log();
 
   // 5. Seed tenant data
