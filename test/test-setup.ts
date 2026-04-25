@@ -10,6 +10,9 @@ process.env.CORS_ORIGINS = 'http://localhost:3000';
 jest.setTimeout(30000);
 
 // Wait for Redis to be reachable before tests start
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { beforeAll } = require('@jest/globals');
+
 beforeAll(async () => {
   const { default: Redis } = await import('ioredis');
   const client = new Redis(process.env.REDIS_URL!, { lazyConnect: true, maxRetriesPerRequest: 3 });
