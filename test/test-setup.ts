@@ -11,7 +11,7 @@ jest.setTimeout(30000);
 
 // Wait for Redis to be reachable before tests start
 beforeAll(async () => {
-  const Redis = require('ioredis');
+  const { default: Redis } = await import('ioredis');
   const client = new Redis(process.env.REDIS_URL!, { lazyConnect: true, maxRetriesPerRequest: 3 });
 
   for (let i = 0; i < 10; i++) {
