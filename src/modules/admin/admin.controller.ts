@@ -11,13 +11,7 @@ import {
   HttpStatus,
   ParseIntPipe,
 } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-  ApiQuery,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { AdminService } from './admin.service';
 import {
   rejectMerchantSchema,
@@ -39,7 +33,11 @@ export class AdminController {
 
   @Get('merchants')
   @ApiOperation({ summary: 'List all merchants' })
-  @ApiQuery({ name: 'status', required: false, enum: ['pending', 'approved', 'rejected', 'suspended'] })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    enum: ['pending', 'approved', 'rejected', 'suspended'],
+  })
   @ApiQuery({ name: 'cursor', required: false, type: String })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiResponse({ status: 200, description: 'List of merchants' })
@@ -76,10 +74,7 @@ export class AdminController {
   @ApiOperation({ summary: 'Reject merchant application' })
   @ApiResponse({ status: 200, description: 'Merchant rejected' })
   @ApiResponse({ status: 404, description: 'Merchant not found' })
-  async rejectMerchant(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() body: unknown,
-  ) {
+  async rejectMerchant(@Param('id', ParseIntPipe) id: number, @Body() body: unknown) {
     return this.adminService.rejectMerchant(id, (body as any).reason);
   }
 

@@ -41,11 +41,7 @@ export class AdminService {
 
   // ==================== Merchants ====================
 
-  async listMerchants(params: {
-    status?: string;
-    cursor?: string;
-    limit: number;
-  }) {
+  async listMerchants(params: { status?: string; cursor?: string; limit: number }) {
     const where: any = {};
     if (params.status) {
       where.status = params.status;
@@ -74,9 +70,7 @@ export class AdminService {
       meta: {
         limit: params.limit,
         hasMore: items.length > params.limit,
-        cursor: items.length > params.limit
-          ? String(items[items.length - 1].id)
-          : undefined,
+        cursor: items.length > params.limit ? String(items[items.length - 1].id) : undefined,
       },
     };
   }
@@ -267,9 +261,7 @@ export class AdminService {
       meta: {
         limit: params.limit,
         hasMore: items.length > params.limit,
-        cursor: items.length > params.limit
-          ? String(items[items.length - 1].id)
-          : undefined,
+        cursor: items.length > params.limit ? String(items[items.length - 1].id) : undefined,
       },
     };
   }
@@ -277,19 +269,14 @@ export class AdminService {
   // ==================== Analytics ====================
 
   async getAnalytics() {
-    const [
-      totalMerchants,
-      activeMerchants,
-      totalStores,
-      activeStores,
-      pendingMerchants,
-    ] = await Promise.all([
-      this.prisma.merchant.count(),
-      this.prisma.merchant.count({ where: { status: 'approved' } }),
-      this.prisma.store.count(),
-      this.prisma.store.count({ where: { status: 'active' } }),
-      this.prisma.merchant.count({ where: { status: 'pending' } }),
-    ]);
+    const [totalMerchants, activeMerchants, totalStores, activeStores, pendingMerchants] =
+      await Promise.all([
+        this.prisma.merchant.count(),
+        this.prisma.merchant.count({ where: { status: 'approved' } }),
+        this.prisma.store.count(),
+        this.prisma.store.count({ where: { status: 'active' } }),
+        this.prisma.merchant.count({ where: { status: 'pending' } }),
+      ]);
 
     return {
       data: {
@@ -332,9 +319,7 @@ export class AdminService {
       meta: {
         limit: params.limit,
         hasMore: items.length > params.limit,
-        cursor: items.length > params.limit
-          ? String(items[items.length - 1].id)
-          : undefined,
+        cursor: items.length > params.limit ? String(items[items.length - 1].id) : undefined,
       },
     };
   }
@@ -348,9 +333,7 @@ export class AdminService {
 
     try {
       // Create schema
-      await this.prisma.$executeRawUnsafe(
-        `CREATE SCHEMA IF NOT EXISTS store_${storeId}`,
-      );
+      await this.prisma.$executeRawUnsafe(`CREATE SCHEMA IF NOT EXISTS store_${storeId}`);
 
       // Create all tenant tables using LIKE public.tablename
       for (const table of this.tenantTables) {

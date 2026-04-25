@@ -10,9 +10,7 @@ export const inviteStaffSchema = z.object({
 export type InviteStaffDto = z.infer<typeof inviteStaffSchema>;
 
 export const updateStaffSchema = z.object({
-  role: z
-    .enum(['inventory_manager', 'order_processor', 'analytics_viewer'])
-    .optional(),
+  role: z.enum(['inventory_manager', 'order_processor', 'analytics_viewer']).optional(),
   permissions: z.record(z.unknown()).optional(),
   isActive: z.boolean().optional(),
 });

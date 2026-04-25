@@ -1,10 +1,4 @@
-import {
-  Injectable,
-  NestInterceptor,
-  ExecutionContext,
-  CallHandler,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, NestInterceptor, ExecutionContext, CallHandler, Logger } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { Request } from 'express';
@@ -26,12 +20,7 @@ export class LoggingInterceptor implements NestInterceptor {
           const duration = Date.now() - startTime;
           const statusCode = response.statusCode;
 
-          const logMethod =
-            statusCode >= 400
-              ? 'warn'
-              : statusCode >= 300
-                ? 'debug'
-                : 'log';
+          const logMethod = statusCode >= 400 ? 'warn' : statusCode >= 300 ? 'debug' : 'log';
 
           this.logger[logMethod](
             `${method} ${url} ${statusCode} ${duration}ms - ${ip} - ${userAgent.substring(0, 80)}`,
@@ -39,9 +28,7 @@ export class LoggingInterceptor implements NestInterceptor {
         },
         error: (error) => {
           const duration = Date.now() - startTime;
-          this.logger.error(
-            `${method} ${url} - ${error.status || 500} ${duration}ms - ${ip}`,
-          );
+          this.logger.error(`${method} ${url} - ${error.status || 500} ${duration}ms - ${ip}`);
         },
       }),
     );

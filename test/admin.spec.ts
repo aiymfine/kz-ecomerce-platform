@@ -19,14 +19,25 @@ describe('Admin RBAC (e2e)', () => {
     // Create admin
     const adminHash = await bcrypt.hash('AdminPass123!', 12);
     const admin = await prisma.platformAdmin.create({
-      data: { email: 'test-admin@example.com', passwordHash: adminHash, name: 'Test Admin', role: 'super_admin' },
+      data: {
+        email: 'test-admin@example.com',
+        passwordHash: adminHash,
+        name: 'Test Admin',
+        role: 'super_admin',
+      },
     });
     adminToken = jwtService.sign({ sub: admin.id, email: admin.email, role: 'super_admin' });
 
     // Create merchant
     const mHash = await bcrypt.hash('MerchantPass123!', 12);
     const merchant = await prisma.merchant.create({
-      data: { email: 'test-rbac@example.com', passwordHash: mHash, name: 'Test', status: 'approved', isActive: true },
+      data: {
+        email: 'test-rbac@example.com',
+        passwordHash: mHash,
+        name: 'Test',
+        status: 'approved',
+        isActive: true,
+      },
     });
     merchantToken = jwtService.sign({ sub: merchant.id, email: merchant.email, role: 'merchant' });
   });

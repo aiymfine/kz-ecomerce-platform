@@ -30,13 +30,16 @@ export class WarehousesService {
     return warehouse;
   }
 
-  async createWarehouse(storeId: number, data: {
-    name: string;
-    address: string;
-    city: string;
-    latitude?: number;
-    longitude?: number;
-  }) {
+  async createWarehouse(
+    storeId: number,
+    data: {
+      name: string;
+      address: string;
+      city: string;
+      latitude?: number;
+      longitude?: number;
+    },
+  ) {
     return this.prisma.withTenant(storeId, () =>
       this.prisma.warehouse.create({
         data: {

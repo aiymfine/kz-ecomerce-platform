@@ -40,9 +40,7 @@ export class JwtAuthGuard implements CanActivate {
 
       // Check if token is blacklisted
       if (payload.jti) {
-        const isBlacklisted = await this.redisService.isTokenBlacklisted(
-          payload.jti,
-        );
+        const isBlacklisted = await this.redisService.isTokenBlacklisted(payload.jti);
         if (isBlacklisted) {
           return false;
         }

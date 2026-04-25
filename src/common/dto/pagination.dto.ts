@@ -23,9 +23,7 @@ export function buildPaginationMeta(
   return {
     limit: requestedLimit,
     hasMore: items.length > requestedLimit,
-    cursor: items.length > requestedLimit
-      ? String(items[items.length - 1].id)
-      : undefined,
+    cursor: items.length > requestedLimit ? String(items[items.length - 1].id) : undefined,
   };
 }
 

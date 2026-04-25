@@ -62,12 +62,8 @@ async function bootstrap() {
   SwaggerModule.setup('docs', app, document);
 
   await app.listen(port);
-  console.log(
-    `🚀 ShopBuilder API running on http://localhost:${port}`,
-  );
-  console.log(
-    `📚 API Docs available at http://localhost:${port}/docs`,
-  );
+  console.log(`🚀 ShopBuilder API running on http://localhost:${port}`);
+  console.log(`📚 API Docs available at http://localhost:${port}/docs`);
 }
 
 bootstrap();

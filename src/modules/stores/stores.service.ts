@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 
 @Injectable()
@@ -71,14 +67,17 @@ export class StoresService {
     });
   }
 
-  async createStore(merchantId: number, data: {
-    name: string;
-    subdomain: string;
-    customDomain?: string;
-    timezone?: string;
-    currency?: string;
-    vatRate?: number;
-  }) {
+  async createStore(
+    merchantId: number,
+    data: {
+      name: string;
+      subdomain: string;
+      customDomain?: string;
+      timezone?: string;
+      currency?: string;
+      vatRate?: number;
+    },
+  ) {
     const existing = await this.prisma.store.findUnique({
       where: { subdomain: data.subdomain },
     });
@@ -133,11 +132,7 @@ export class StoresService {
     return store;
   }
 
-  async updateStore(
-    storeId: number,
-    merchantId: number,
-    data: Record<string, unknown>,
-  ) {
+  async updateStore(storeId: number, merchantId: number, data: Record<string, unknown>) {
     const store = await this.prisma.store.findFirst({
       where: { id: storeId, merchantId },
     });
@@ -164,9 +159,7 @@ export class StoresService {
     await this.prisma.$executeRawUnsafe(`BEGIN`);
 
     try {
-      await this.prisma.$executeRawUnsafe(
-        `CREATE SCHEMA IF NOT EXISTS ${schema}`,
-      );
+      await this.prisma.$executeRawUnsafe(`CREATE SCHEMA IF NOT EXISTS ${schema}`);
 
       for (const table of this.tenantTables) {
         await this.prisma.$executeRawUnsafe(

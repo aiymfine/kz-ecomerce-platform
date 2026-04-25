@@ -12,17 +12,9 @@ import {
   HttpStatus,
   ParseIntPipe,
 } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { WarehousesService } from './warehouses.service';
-import {
-  createWarehouseSchema,
-  updateWarehouseSchema,
-} from './dto/warehouse.dto';
+import { createWarehouseSchema, updateWarehouseSchema } from './dto/warehouse.dto';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -48,10 +40,7 @@ export class WarehousesController {
   @UsePipes(new ZodValidationPipe(createWarehouseSchema))
   @ApiOperation({ summary: 'Create a warehouse' })
   @ApiResponse({ status: 201, description: 'Warehouse created' })
-  async createWarehouse(
-    @Param('storeId', ParseIntPipe) storeId: number,
-    @Body() body: unknown,
-  ) {
+  async createWarehouse(@Param('storeId', ParseIntPipe) storeId: number, @Body() body: unknown) {
     return this.warehousesService.createWarehouse(storeId, body as any);
   }
 
@@ -76,11 +65,7 @@ export class WarehousesController {
     @Param('warehouseId', ParseIntPipe) warehouseId: number,
     @Body() body: unknown,
   ) {
-    return this.warehousesService.updateWarehouse(
-      storeId,
-      warehouseId,
-      body as any,
-    );
+    return this.warehousesService.updateWarehouse(storeId, warehouseId, body as any);
   }
 
   @Delete(':warehouseId')

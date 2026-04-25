@@ -31,7 +31,5 @@ export function countVariantCombinations(
   colors: string[],
   materials: string[],
 ): number {
-  return (
-    (sizes.length || 1) * (colors.length || 1) * (materials.length || 1)
-  );
+  return (sizes.length || 1) * (colors.length || 1) * (materials.length || 1);
 }

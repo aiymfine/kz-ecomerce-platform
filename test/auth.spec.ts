@@ -18,18 +18,27 @@ describe('Auth (e2e)', () => {
 
   afterAll(async () => {
     for (const email of createdEmails) {
-      try { await prisma.merchant.deleteMany({ where: { email } }); } catch {}
+      try {
+        await prisma.merchant.deleteMany({ where: { email } });
+      } catch {}
     }
-    try { await prisma.$disconnect(); await app.close(); } catch {}
+    try {
+      await prisma.$disconnect();
+      await app.close();
+    } catch {}
   });
 
   it('POST /api/auth/register — should register a new merchant', async () => {
     const email = `t-reg-${Date.now()}@example.com`;
     createdEmails.push(email);
 
-    const res = await request(app.getHttpServer())
-      .post('/api/auth/register')
-      .send({ email, password: 'TestPassword123!', name: 'Test', phone: '+77000000000', businessName: 'Test' });
+    const res = await request(app.getHttpServer()).post('/api/auth/register').send({
+      email,
+      password: 'TestPassword123!',
+      name: 'Test',
+      phone: '+77000000000',
+      businessName: 'Test',
+    });
 
     expect(res.status).toBe(201);
     expect(res.body.data.merchant.email).toBe(email);
@@ -49,7 +58,7 @@ describe('Auth (e2e)', () => {
       .send({ email, password: 'TestPassword123!', name: 'T', businessName: 'T' });
 
     if (first.status === 201) {
-      await new Promise(r => setTimeout(r, 1500));
+      await new Promise((r) => setTimeout(r, 1500));
       const res = await request(app.getHttpServer())
         .post('/api/auth/register')
         .send({ email, password: 'TestPassword123!', name: 'T', businessName: 'T' })
@@ -62,7 +71,12 @@ describe('Auth (e2e)', () => {
   it('POST /api/auth/register — should reject weak password', async () => {
     const res = await request(app.getHttpServer())
       .post('/api/auth/register')
-      .send({ email: `t-weak-${Date.now()}@example.com`, password: '123', name: 'T', businessName: 'T' });
+      .send({
+        email: `t-weak-${Date.now()}@example.com`,
+        password: '123',
+        name: 'T',
+        businessName: 'T',
+      });
     expect(res.status).toBe(400);
   });
 
@@ -70,7 +84,13 @@ describe('Auth (e2e)', () => {
     const email = `t-login-${Date.now()}@example.com`;
     createdEmails.push(email);
     await prisma.merchant.create({
-      data: { email, passwordHash: await bcrypt.hash('TestPassword123!', 12), name: 'L', status: 'approved', isActive: true },
+      data: {
+        email,
+        passwordHash: await bcrypt.hash('TestPassword123!', 12),
+        name: 'L',
+        status: 'approved',
+        isActive: true,
+      },
     });
 
     const res = await request(app.getHttpServer())
@@ -85,10 +105,16 @@ describe('Auth (e2e)', () => {
     const email = `t-bad-${Date.now()}@example.com`;
     createdEmails.push(email);
     await prisma.merchant.create({
-      data: { email, passwordHash: await bcrypt.hash('TestPassword123!', 12), name: 'B', status: 'approved', isActive: true },
+      data: {
+        email,
+        passwordHash: await bcrypt.hash('TestPassword123!', 12),
+        name: 'B',
+        status: 'approved',
+        isActive: true,
+      },
     });
 
-    await new Promise(r => setTimeout(r, 1500));
+    await new Promise((r) => setTimeout(r, 1500));
 
     const res = await request(app.getHttpServer())
       .post('/api/auth/login')
@@ -107,7 +133,13 @@ describe('Auth (e2e)', () => {
     const email = `t-me-${Date.now()}@example.com`;
     createdEmails.push(email);
     const merchant = await prisma.merchant.create({
-      data: { email, passwordHash: await bcrypt.hash('TestPassword123!', 12), name: 'M', status: 'approved', isActive: true },
+      data: {
+        email,
+        passwordHash: await bcrypt.hash('TestPassword123!', 12),
+        name: 'M',
+        status: 'approved',
+        isActive: true,
+      },
     });
 
     const token = jwtService.sign({ sub: merchant.id, email: merchant.email, role: 'merchant' });

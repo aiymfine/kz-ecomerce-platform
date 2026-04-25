@@ -11,17 +11,9 @@ import {
   HttpStatus,
   ParseIntPipe,
 } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { StoresService } from './stores.service';
-import {
-  createStoreSchema,
-  updateStoreSchema,
-} from './dto/store.dto';
+import { createStoreSchema, updateStoreSchema } from './dto/store.dto';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -52,10 +44,7 @@ export class StoresController {
   @ApiResponse({ status: 201, description: 'Store created' })
   @ApiResponse({ status: 409, description: 'Subdomain already taken' })
   async createStore(@CurrentUser() user: JwtPayload, @Body() body: unknown) {
-    const result = await this.storesService.createStore(
-      user.merchantId!,
-      body as any,
-    );
+    const result = await this.storesService.createStore(user.merchantId!, body as any);
     if (result && typeof result === 'object' && 'error' in result) {
       const statusMap: Record<string, number> = { CONFLICT: 409 };
       return { statusCode: statusMap[(result as any).error] || 400, ...result };
@@ -67,10 +56,7 @@ export class StoresController {
   @ApiOperation({ summary: 'Get store details' })
   @ApiResponse({ status: 200, description: 'Store details' })
   @ApiResponse({ status: 404, description: 'Store not found' })
-  async getStore(
-    @CurrentUser() user: JwtPayload,
-    @Param('id', ParseIntPipe) id: number,
-  ) {
+  async getStore(@CurrentUser() user: JwtPayload, @Param('id', ParseIntPipe) id: number) {
     return this.storesService.getStore(id, user.merchantId!);
   }
 

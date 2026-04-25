@@ -109,10 +109,7 @@ export class WebhooksService {
       meta: {
         limit: params.limit,
         hasMore: items.length > params.limit,
-        cursor:
-          items.length > params.limit
-            ? String(items[items.length - 1].id)
-            : undefined,
+        cursor: items.length > params.limit ? String(items[items.length - 1].id) : undefined,
       },
     };
   }
