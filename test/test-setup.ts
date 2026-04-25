@@ -9,27 +9,6 @@ process.env.CORS_ORIGINS = 'http://localhost:3000';
 
 jest.setTimeout(30000);
 
-// Wait for Redis to be reachable before tests start
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const { beforeAll } = require('@jest/globals');
-
-beforeAll(async () => {
-  const { default: Redis } = await import('ioredis');
-  const client = new Redis(process.env.REDIS_URL!, { lazyConnect: true, maxRetriesPerRequest: 3 });
-
-  for (let i = 0; i < 10; i++) {
-    try {
-      await client.connect();
-      await client.ping();
-      client.disconnect();
-      return;
-    } catch {
-      await new Promise((r) => setTimeout(r, 1000));
-    }
-  }
-  client.disconnect();
-}, 30000);
-
 // Helper to create a fully configured test app (same as main.ts bootstrap)
 export async function createTestApp() {
   const { NestFactory } = await import('@nestjs/core');
