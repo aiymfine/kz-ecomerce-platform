@@ -13,13 +13,7 @@ import {
   HttpStatus,
   ParseIntPipe,
 } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-  ApiQuery,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { ProductsService } from './products.service';
 import { CategoriesService } from './categories.service';
 import {
@@ -72,10 +66,7 @@ export class ProductsController {
   @ApiOperation({ summary: 'Create a new product' })
   @ApiResponse({ status: 201, description: 'Product created' })
   @ApiResponse({ status: 409, description: 'Slug already exists' })
-  async createProduct(
-    @Param('storeId', ParseIntPipe) storeId: number,
-    @Body() body: unknown,
-  ) {
+  async createProduct(@Param('storeId', ParseIntPipe) storeId: number, @Body() body: unknown) {
     const result = await this.productsService.createProduct(storeId, body as any);
     if (result && typeof result === 'object' && 'error' in result) {
       const statusMap: Record<string, number> = { CONFLICT: 409 };
@@ -179,9 +170,7 @@ export class CategoriesController {
     @Query() query: Record<string, any>,
   ) {
     const parsed = categoryFilterSchema.safeParse(query);
-    const params = parsed.success
-      ? parsed.data
-      : { tree: false, limit: 50 };
+    const params = parsed.success ? parsed.data : { tree: false, limit: 50 };
     return this.categoriesService.listCategories(storeId, params);
   }
 
@@ -190,10 +179,7 @@ export class CategoriesController {
   @UsePipes(new ZodValidationPipe(createCategorySchema))
   @ApiOperation({ summary: 'Create a category' })
   @ApiResponse({ status: 201, description: 'Category created' })
-  async createCategory(
-    @Param('storeId', ParseIntPipe) storeId: number,
-    @Body() body: unknown,
-  ) {
+  async createCategory(@Param('storeId', ParseIntPipe) storeId: number, @Body() body: unknown) {
     const result = await this.categoriesService.createCategory(storeId, body as any);
     if (result && typeof result === 'object' && 'error' in result) {
       return { statusCode: 404, ...result };

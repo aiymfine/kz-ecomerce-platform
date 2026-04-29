@@ -3,7 +3,7 @@ import { Prisma } from '@prisma/client';
 /**
  * Prisma client extension that applies tenant search_path before each query.
  * This works in conjunction with the TenantMiddleware which sets req.tenant.
- * 
+ *
  * Usage: Applied in PrismaService constructor via $extends().
  */
 export function createTenantMiddleware() {

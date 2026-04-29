@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { slugify } from '../../common/utils/slugify';
 
@@ -212,9 +208,7 @@ export class CategoriesService {
     }
 
     if (category.products.length > 0) {
-      throw new BadRequestException(
-        'Cannot delete category with products. Remove products first.',
-      );
+      throw new BadRequestException('Cannot delete category with products. Remove products first.');
     }
 
     await this.prisma.withTenant(storeId, () =>

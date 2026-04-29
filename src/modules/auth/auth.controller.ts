@@ -10,11 +10,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
-import {
-  registerSchema,
-  loginSchema,
-  refreshTokenSchema,
-} from './dto/auth.dto';
+import { registerSchema, loginSchema, refreshTokenSchema } from './dto/auth.dto';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RateLimitGuard } from '../../common/guards/rate-limit.guard';
@@ -77,9 +73,7 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'Token refreshed successfully' })
   @ApiResponse({ status: 401, description: 'Invalid or revoked refresh token' })
   async refresh(@Body() body: unknown) {
-    const result = await this.authService.refreshToken(
-      (body as any).refreshToken,
-    );
+    const result = await this.authService.refreshToken((body as any).refreshToken);
     if (result.error) {
       return { statusCode: 401, ...result };
     }

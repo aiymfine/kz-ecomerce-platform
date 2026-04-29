@@ -89,9 +89,7 @@ export class AuthService {
 
       // Check if token is blacklisted
       if (payload.jti) {
-        const blacklisted = await this.redisService.isTokenBlacklisted(
-          payload.jti,
-        );
+        const blacklisted = await this.redisService.isTokenBlacklisted(payload.jti);
         if (blacklisted) {
           return { error: 'UNAUTHORIZED', message: 'Token has been revoked' };
         }
@@ -134,10 +132,7 @@ export class AuthService {
 
       // Blacklist both tokens
       if (payload.jti) {
-        await this.redisService.blacklistToken(
-          payload.jti,
-          refreshTokenExpireDays * 24 * 60 * 60,
-        );
+        await this.redisService.blacklistToken(payload.jti, refreshTokenExpireDays * 24 * 60 * 60);
       }
 
       // Also blacklist the access token if we have its JTI

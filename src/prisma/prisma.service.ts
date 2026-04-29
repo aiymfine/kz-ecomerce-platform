@@ -1,16 +1,8 @@
-import {
-  Injectable,
-  OnModuleInit,
-  OnModuleDestroy,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 
 @Injectable()
-export class PrismaService
-  extends PrismaClient
-  implements OnModuleInit, OnModuleDestroy
-{
+export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(PrismaService.name);
 
   constructor() {
@@ -48,9 +40,7 @@ export class PrismaService
    * Sets search_path before executing the query.
    */
   async withTenant<T>(storeId: number, fn: () => Promise<T>): Promise<T> {
-    await this.$executeRawUnsafe(
-      `SET search_path TO store_${storeId}, public`,
-    );
+    await this.$executeRawUnsafe(`SET search_path TO store_${storeId}, public`);
     try {
       return await fn();
     } finally {
@@ -62,9 +52,7 @@ export class PrismaService
    * Execute raw SQL within a specific tenant schema (unsafe, for DDL).
    */
   async executeRawInTenant(storeId: number, sql: string) {
-    await this.$executeRawUnsafe(
-      `SET search_path TO store_${storeId}, public`,
-    );
+    await this.$executeRawUnsafe(`SET search_path TO store_${storeId}, public`);
     await this.$executeRawUnsafe(sql);
     await this.$executeRawUnsafe(`SET search_path TO public`);
   }

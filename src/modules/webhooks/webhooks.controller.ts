@@ -13,13 +13,7 @@ import {
   HttpStatus,
   ParseIntPipe,
 } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-  ApiQuery,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { WebhooksService } from './webhooks.service';
 import {
   createWebhookSchema,
@@ -51,10 +45,7 @@ export class WebhooksController {
   @UsePipes(new ZodValidationPipe(createWebhookSchema))
   @ApiOperation({ summary: 'Register a new webhook (returns HMAC secret)' })
   @ApiResponse({ status: 201, description: 'Webhook created with secret' })
-  async createWebhook(
-    @Param('storeId', ParseIntPipe) storeId: number,
-    @Body() body: unknown,
-  ) {
+  async createWebhook(@Param('storeId', ParseIntPipe) storeId: number, @Body() body: unknown) {
     return this.webhooksService.createWebhook(storeId, body as any);
   }
 
@@ -96,7 +87,11 @@ export class WebhooksController {
 
   @Get(':id/events')
   @ApiOperation({ summary: 'Get webhook delivery event log' })
-  @ApiQuery({ name: 'status', required: false, enum: ['pending', 'delivering', 'delivered', 'failed', 'dead_letter'] })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    enum: ['pending', 'delivering', 'delivered', 'failed', 'dead_letter'],
+  })
   @ApiQuery({ name: 'cursor', required: false, type: String })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiResponse({ status: 200, description: 'Webhook events' })
@@ -106,9 +101,7 @@ export class WebhooksController {
     @Query() query: Record<string, any>,
   ) {
     const parsed = webhookEventFilterSchema.safeParse(query);
-    const params = parsed.success
-      ? parsed.data
-      : { limit: 20 };
+    const params = parsed.success ? parsed.data : { limit: 20 };
     return this.webhooksService.getWebhookEvents(storeId, id, params);
   }
 }

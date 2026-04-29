@@ -12,9 +12,7 @@ import { envSchema } from './env.validation';
           const errors = result.error.issues
             .map((i) => `  ${i.path.join('.')}: ${i.message}`)
             .join('\n');
-          throw new Error(
-            `Environment validation failed:\n${errors}\n\nCheck your .env file.`,
-          );
+          throw new Error(`Environment validation failed:\n${errors}\n\nCheck your .env file.`);
         }
         return result.data;
       },

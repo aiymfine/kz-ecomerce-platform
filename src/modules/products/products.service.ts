@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { slugify } from '../../common/utils/slugify';
 import { buildSku, countVariantCombinations } from '../../common/utils/sku-builder';
@@ -59,10 +54,7 @@ export class ProductsService {
       meta: {
         limit: params.limit,
         hasMore: items.length > params.limit,
-        cursor:
-          items.length > params.limit
-            ? String(items[items.length - 1].id)
-            : undefined,
+        cursor: items.length > params.limit ? String(items[items.length - 1].id) : undefined,
       },
     };
   }
@@ -139,11 +131,7 @@ export class ProductsService {
     return product;
   }
 
-  async updateProduct(
-    storeId: number,
-    productId: number,
-    data: Record<string, unknown>,
-  ) {
+  async updateProduct(storeId: number, productId: number, data: Record<string, unknown>) {
     const existing = await this.prisma.withTenant(storeId, () =>
       this.prisma.product.findUnique({ where: { id: productId } }),
     );
@@ -402,11 +390,7 @@ export class ProductsService {
     return { data: variants, totalGenerated: variants.length };
   }
 
-  private async getOrCreateAttribute(
-    storeId: number,
-    type: string,
-    name: string,
-  ): Promise<number> {
+  private async getOrCreateAttribute(storeId: number, type: string, name: string): Promise<number> {
     const existing = await this.prisma.withTenant(storeId, () =>
       this.prisma.variantAttribute.findFirst({ where: { type: type as any } }),
     );

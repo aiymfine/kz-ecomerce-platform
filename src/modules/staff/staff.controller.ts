@@ -12,17 +12,9 @@ import {
   HttpStatus,
   ParseIntPipe,
 } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { StaffService } from './staff.service';
-import {
-  inviteStaffSchema,
-  updateStaffSchema,
-} from './dto/staff.dto';
+import { inviteStaffSchema, updateStaffSchema } from './dto/staff.dto';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -49,10 +41,7 @@ export class StaffController {
   @ApiOperation({ summary: 'Invite a staff member' })
   @ApiResponse({ status: 201, description: 'Staff member invited' })
   @ApiResponse({ status: 409, description: 'Email already exists' })
-  async inviteStaff(
-    @Param('storeId', ParseIntPipe) storeId: number,
-    @Body() body: unknown,
-  ) {
+  async inviteStaff(@Param('storeId', ParseIntPipe) storeId: number, @Body() body: unknown) {
     const result = await this.staffService.inviteStaff(storeId, body as any);
     if (result.error) {
       return { statusCode: 409, ...result };

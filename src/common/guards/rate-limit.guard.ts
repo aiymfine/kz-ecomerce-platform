@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  CanActivate,
-  ExecutionContext,
-  HttpException,
-} from '@nestjs/common';
+import { Injectable, CanActivate, ExecutionContext, HttpException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { RedisService } from '../redis/redis.service';
 import { RATE_LIMIT_KEY, RateLimitOptions } from '../decorators/rate-limit.decorator';
@@ -31,11 +26,7 @@ export class RateLimitGuard implements CanActivate {
       'unknown';
 
     const key = `${options.keyPrefix}:${ip}`;
-    const result = await this.redisService.rateLimit(
-      key,
-      options.limit,
-      options.windowSeconds,
-    );
+    const result = await this.redisService.rateLimit(key, options.limit, options.windowSeconds);
 
     const response = context.switchToHttp().getResponse();
     response.setHeader('X-RateLimit-Limit', options.limit);

@@ -11,9 +11,7 @@ export const rejectMerchantSchema = z.object({
 export type RejectMerchantDto = z.infer<typeof rejectMerchantSchema>;
 
 export const adminMerchantFilterSchema = z.object({
-  status: z
-    .enum(['pending', 'approved', 'rejected', 'suspended'])
-    .optional(),
+  status: z.enum(['pending', 'approved', 'rejected', 'suspended']).optional(),
   cursor: z.string().optional(),
   limit: z.coerce.number().int().min(1).max(100).default(20),
 });
