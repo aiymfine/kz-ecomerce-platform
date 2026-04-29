@@ -83,6 +83,17 @@ export class WebhooksController {
     return this.webhooksService.deleteWebhook(storeId, id);
   }
 
+  @Get(':id')
+  @ApiOperation({ summary: 'Get webhook details' })
+  @ApiResponse({ status: 200, description: 'Webhook details' })
+  @ApiResponse({ status: 404, description: 'Webhook not found' })
+  async getWebhook(
+    @Param('storeId', ParseIntPipe) storeId: number,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.webhooksService.getWebhook(storeId, id);
+  }
+
   @Get(':id/events')
   @ApiOperation({ summary: 'Get webhook delivery event log' })
   @ApiQuery({ name: 'status', required: false, enum: ['pending', 'delivering', 'delivered', 'failed', 'dead_letter'] })

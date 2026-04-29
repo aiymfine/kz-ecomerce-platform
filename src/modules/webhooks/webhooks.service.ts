@@ -14,6 +14,18 @@ export class WebhooksService {
     );
   }
 
+  async getWebhook(storeId: number, webhookId: number) {
+    const webhook = await this.prisma.withTenant(storeId, () =>
+      this.prisma.webhook.findUnique({ where: { id: webhookId } }),
+    );
+
+    if (!webhook) {
+      throw new NotFoundException('Webhook not found');
+    }
+
+    return webhook;
+  }
+
   async createWebhook(
     storeId: number,
     data: { url: string; events: string[]; isActive?: boolean },

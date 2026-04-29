@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  ForbiddenException,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 
 @Injectable()
@@ -40,6 +35,18 @@ export class StoresService {
     'store_audit_log',
   ];
 
+  private readonly tablesWithUpdatedAt = [
+    'products',
+    'product_variants',
+    'customers',
+    'carts',
+    'cart_items',
+    'orders',
+    'staff_members',
+    'theme_templates',
+    'inventory',
+  ];
+
   constructor(private prisma: PrismaService) {}
 
   async listStores(merchantId: number) {
@@ -60,15 +67,17 @@ export class StoresService {
     });
   }
 
-  async createStore(merchantId: number, data: {
-    name: string;
-    subdomain: string;
-    customDomain?: string;
-    timezone?: string;
-    currency?: string;
-    vatRate?: number;
-  }) {
-    // Check subdomain uniqueness
+  async createStore(
+    merchantId: number,
+    data: {
+      name: string;
+      subdomain: string;
+      customDomain?: string;
+      timezone?: string;
+      currency?: string;
+      vatRate?: number;
+    },
+  ) {
     const existing = await this.prisma.store.findUnique({
       where: { subdomain: data.subdomain },
     });
@@ -82,20 +91,18 @@ export class StoresService {
         name: data.name,
         subdomain: data.subdomain,
         customDomain: data.customDomain,
-        schemaName: `store_${Date.now()}`, // temporary, will update after create
+        schemaName: `store_${Date.now()}`,
         timezone: data.timezone || 'Asia/Almaty',
         currency: data.currency || 'KZT',
         vatRate: data.vatRate ?? 12,
       },
     });
 
-    // Update schemaName with actual ID
     await this.prisma.store.update({
       where: { id: store.id },
       data: { schemaName: `store_${store.id}` },
     });
 
-    // Provision tenant schema
     try {
       await this.provisionTenant(store.id);
     } catch (err) {
@@ -125,11 +132,7 @@ export class StoresService {
     return store;
   }
 
-  async updateStore(
-    storeId: number,
-    merchantId: number,
-    data: Record<string, unknown>,
-  ) {
+  async updateStore(storeId: number, merchantId: number, data: Record<string, unknown>) {
     const store = await this.prisma.store.findFirst({
       where: { id: storeId, merchantId },
     });
@@ -139,7 +142,6 @@ export class StoresService {
     }
 
     const updateData: any = { ...data };
-    // Remove undefined values
     Object.keys(updateData).forEach(
       (key) => updateData[key] === undefined && delete updateData[key],
     );
@@ -151,22 +153,28 @@ export class StoresService {
   }
 
   private async provisionTenant(storeId: number) {
-    this.logger.log(`Provisioning tenant schema for store ${storeId}`);
+    const schema = `store_${storeId}`;
+    this.logger.log(`Provisioning tenant schema ${schema}`);
 
     await this.prisma.$executeRawUnsafe(`BEGIN`);
 
     try {
-      await this.prisma.$executeRawUnsafe(
-        `CREATE SCHEMA IF NOT EXISTS store_${storeId}`,
-      );
+      await this.prisma.$executeRawUnsafe(`CREATE SCHEMA IF NOT EXISTS ${schema}`);
 
       for (const table of this.tenantTables) {
         await this.prisma.$executeRawUnsafe(
-          `CREATE TABLE IF NOT EXISTS store_${storeId}.${table} (LIKE public.${table} INCLUDING ALL)`,
+          `CREATE TABLE IF NOT EXISTS ${schema}.${table} (LIKE public.${table} INCLUDING ALL)`,
         );
       }
 
-      // Default categories — each INSERT as separate statement
+      // Fix updated_at: add DEFAULT NOW() so raw SQL works
+      for (const table of this.tablesWithUpdatedAt) {
+        await this.prisma.$executeRawUnsafe(
+          `ALTER TABLE ${schema}.${table} ALTER COLUMN updated_at SET DEFAULT NOW()`,
+        );
+      }
+
+      // Default categories
       const categories = [
         ['Все товары', 'all', '/', 0, 0],
         ['Новинки', 'new', '/', 0, 1],
@@ -174,15 +182,9 @@ export class StoresService {
       ];
       for (const [name, slug, path, depth, sortOrder] of categories) {
         await this.prisma.$executeRawUnsafe(
-          `SET search_path = store_${storeId}, public`,
-        );
-        await this.prisma.$executeRawUnsafe(
-          `INSERT INTO categories (name, slug, path, depth, sort_order) VALUES ('${name}', '${slug}', '${path}', ${depth}, ${sortOrder})`,
+          `INSERT INTO ${schema}.categories (name, slug, path, depth, sort_order) VALUES ('${name}', '${slug}', '${path}', ${depth}, ${sortOrder})`,
         );
       }
-      await this.prisma.$executeRawUnsafe(
-        `SET search_path = public`,
-      );
 
       await this.prisma.$executeRawUnsafe(`COMMIT`);
 
@@ -195,7 +197,7 @@ export class StoresService {
         },
       });
 
-      this.logger.log(`Tenant store_${storeId} provisioned successfully`);
+      this.logger.log(`Tenant ${schema} provisioned successfully`);
     } catch (err) {
       await this.prisma.$executeRawUnsafe(`ROLLBACK`);
       throw err;

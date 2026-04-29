@@ -25,6 +25,30 @@ export class StaffService {
     );
   }
 
+  async getStaff(storeId: number, staffId: number) {
+    const staffMember = await this.prisma.withTenant(storeId, () =>
+      this.prisma.staffMember.findUnique({
+        where: { id: staffId },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          role: true,
+          permissions: true,
+          isActive: true,
+          invitedAt: true,
+          lastLoginAt: true,
+        },
+      }),
+    );
+
+    if (!staffMember) {
+      throw new NotFoundException('Staff member not found');
+    }
+
+    return staffMember;
+  }
+
   async inviteStaff(
     storeId: number,
     data: { email: string; name: string; role: string; permissions?: any },

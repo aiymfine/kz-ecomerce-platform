@@ -133,6 +133,32 @@ export class ProductsController {
   ) {
     return this.productsService.generateVariantMatrix(storeId, id, body as any);
   }
+
+  @Patch(':id/variants/:variantId')
+  @ApiOperation({ summary: 'Update variant price, weight, barcode' })
+  @ApiResponse({ status: 200, description: 'Variant updated' })
+  @ApiResponse({ status: 404, description: 'Variant not found' })
+  async updateVariant(
+    @Param('storeId', ParseIntPipe) storeId: number,
+    @Param('id', ParseIntPipe) id: number,
+    @Param('variantId', ParseIntPipe) variantId: number,
+    @Body() body: any,
+  ) {
+    return this.productsService.updateVariant(storeId, id, variantId, body);
+  }
+
+  @Delete(':id/variants/:variantId')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Delete variant' })
+  @ApiResponse({ status: 200, description: 'Variant deleted' })
+  @ApiResponse({ status: 404, description: 'Variant not found' })
+  async deleteVariant(
+    @Param('storeId', ParseIntPipe) storeId: number,
+    @Param('id', ParseIntPipe) id: number,
+    @Param('variantId', ParseIntPipe) variantId: number,
+  ) {
+    return this.productsService.deleteVariant(storeId, id, variantId);
+  }
 }
 
 @ApiTags('Categories')

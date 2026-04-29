@@ -56,6 +56,17 @@ async function bootstrap() {
     .addTag('Categories', 'Category tree with materialized path')
     .addTag('Webhooks', 'Webhook registration and event delivery log')
     .addTag('Staff', 'Staff invitation and management')
+    .addTag('Customers', 'Customer profile and address management')
+    .addTag('Storefront', 'Public storefront API and customer auth')
+    .addTag('Cart', 'Shopping cart management')
+    .addTag('Orders', 'Order management and fulfillment')
+    .addTag('Inventory', 'Warehouse and stock management')
+    .addTag('Payments', 'Payment processing and refunds')
+    .addTag('Discounts', 'Promo codes and discount validation')
+    .addTag('Subscriptions', 'Subscription boxes and billing')
+    .addTag('Abandoned Carts', 'Cart recovery management')
+    .addTag('Analytics', 'Sales, product, and customer analytics')
+    .addTag('Templates', 'Theme template management and rendering')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

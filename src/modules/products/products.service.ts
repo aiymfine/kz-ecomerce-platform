@@ -202,6 +202,67 @@ export class ProductsService {
     );
   }
 
+  async updateVariant(
+    storeId: number,
+    productId: number,
+    variantId: number,
+    data: {
+      sku?: string;
+      priceTiyin?: number;
+      compareAtPriceTiyin?: number;
+      barcode?: string;
+      weightGrams?: number;
+      isActive?: boolean;
+      position?: number;
+    },
+  ) {
+    // Verify variant belongs to this product
+    const variant = await this.prisma.withTenant(storeId, () =>
+      this.prisma.productVariant.findFirst({
+        where: { id: variantId, productId },
+      }),
+    );
+
+    if (!variant) {
+      throw new NotFoundException('Variant not found');
+    }
+
+    const updateData: any = {};
+    if (data.sku !== undefined) updateData.sku = data.sku;
+    if (data.priceTiyin !== undefined) updateData.priceTiyin = data.priceTiyin;
+    if (data.compareAtPriceTiyin !== undefined) updateData.compareAtPriceTiyin = data.compareAtPriceTiyin;
+    if (data.barcode !== undefined) updateData.barcode = data.barcode;
+    if (data.weightGrams !== undefined) updateData.weightGrams = data.weightGrams;
+    if (data.isActive !== undefined) updateData.isActive = data.isActive;
+    if (data.position !== undefined) updateData.position = data.position;
+
+    return this.prisma.withTenant(storeId, () =>
+      this.prisma.productVariant.update({
+        where: { id: variantId },
+        data: updateData,
+        include: { attributeValues: { include: { attribute: true } } },
+      }),
+    );
+  }
+
+  async deleteVariant(storeId: number, productId: number, variantId: number) {
+    const variant = await this.prisma.withTenant(storeId, () =>
+      this.prisma.productVariant.findFirst({
+        where: { id: variantId, productId },
+      }),
+    );
+
+    if (!variant) {
+      throw new NotFoundException('Variant not found');
+    }
+
+    await this.prisma.withTenant(storeId, () =>
+      this.prisma.productVariant.delete({ where: { id: variantId } }),
+    );
+
+    return { message: 'Variant deleted' };
+  }
+
   async generateVariantMatrix(
     storeId: number,
     productId: number,

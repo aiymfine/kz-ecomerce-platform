@@ -60,6 +60,17 @@ export class StaffController {
     return result;
   }
 
+  @Get(':id')
+  @ApiOperation({ summary: 'Get staff member details' })
+  @ApiResponse({ status: 200, description: 'Staff member details' })
+  @ApiResponse({ status: 404, description: 'Staff member not found' })
+  async getStaff(
+    @Param('storeId', ParseIntPipe) storeId: number,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.staffService.getStaff(storeId, id);
+  }
+
   @Patch(':id')
   @UsePipes(new ZodValidationPipe(updateStaffSchema))
   @ApiOperation({ summary: 'Update staff role/permissions' })

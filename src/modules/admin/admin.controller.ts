@@ -115,6 +115,24 @@ export class AdminController {
     return this.adminService.listStores({ cursor, limit });
   }
 
+  @Post('stores/:id/suspend')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Suspend a specific store' })
+  @ApiResponse({ status: 200, description: 'Store suspended' })
+  @ApiResponse({ status: 404, description: 'Store not found' })
+  async suspendStore(@Param('id', ParseIntPipe) id: number) {
+    return this.adminService.suspendStore(id);
+  }
+
+  @Post('stores/:id/activate')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Activate a suspended store' })
+  @ApiResponse({ status: 200, description: 'Store activated' })
+  @ApiResponse({ status: 404, description: 'Store not found' })
+  async activateStore(@Param('id', ParseIntPipe) id: number) {
+    return this.adminService.activateStore(id);
+  }
+
   // ==================== Analytics ====================
 
   @Get('analytics')
