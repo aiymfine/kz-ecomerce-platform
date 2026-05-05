@@ -6,10 +6,7 @@ import { RedisService } from '../../common/redis/redis.service';
 import { QueueService } from '../../common/queue/queue.service';
 import * as bcrypt from 'bcryptjs';
 import { randomUUID, randomInt } from 'crypto';
-import {
-  RegisterDto,
-  LoginDto,
-} from './dto/auth.dto';
+import { RegisterDto, LoginDto } from './dto/auth.dto';
 import type { JwtPayload } from '../../common/guards/jwt-auth.guard';
 
 @Injectable()
@@ -74,6 +71,9 @@ export class AuthService {
       merchantId: merchant.id,
       emailVerified: false,
     });
+
+    // Log verification code for demo/testing
+    console.log(`📧 Verification code for ${merchant.email}: ${verificationCode}`);
 
     // Enqueue verification email
     try {
@@ -182,6 +182,8 @@ export class AuthService {
       },
     });
 
+    console.log(`📧 Verification code for ${merchant.email}: ${verificationCode}`);
+
     try {
       await this.queueService.enqueueEmail({
         type: 'verification',
@@ -220,6 +222,8 @@ export class AuthService {
     const appUrl = this.configService.get<string>('APP_URL', 'http://localhost:3001');
     const resetLink = `${appUrl}/reset-password?token=${token}`;
 
+    console.log(`🔑 Password reset token for ${merchant.email}: ${token}`);
+
     try {
       await this.queueService.enqueueEmail({
         type: 'password-reset',
@@ -249,7 +253,7 @@ export class AuthService {
       },
     });
 
-    let matchedMerchant: typeof merchants[0] | null = null;
+    let matchedMerchant: (typeof merchants)[0] | null = null;
     for (const merchant of merchants) {
       const isValid = await bcrypt.compare(token, merchant.resetPasswordToken!);
       if (isValid) {
@@ -315,10 +319,7 @@ export class AuthService {
           'JWT_REFRESH_TOKEN_EXPIRE_DAYS',
           7,
         );
-        await this.redisService.blacklistToken(
-          payload.jti,
-          refreshTokenExpireDays * 24 * 60 * 60,
-        );
+        await this.redisService.blacklistToken(payload.jti, refreshTokenExpireDays * 24 * 60 * 60);
       }
 
       const tokens = await this.generateTokens({
@@ -463,7 +464,14 @@ export class AuthService {
   }
 
   private sanitizeMerchant(merchant: any) {
-    const { passwordHash, verificationCode, verificationCodeExpiresAt, resetPasswordToken, resetPasswordExpiresAt, ...safe } = merchant;
+    const {
+      passwordHash,
+      verificationCode,
+      verificationCodeExpiresAt,
+      resetPasswordToken,
+      resetPasswordExpiresAt,
+      ...safe
+    } = merchant;
     return safe;
   }
 }
