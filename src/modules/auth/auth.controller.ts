@@ -7,6 +7,7 @@ import {
   UsePipes,
   HttpCode,
   HttpStatus,
+  HttpException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
@@ -37,9 +38,10 @@ export class AuthController {
     if (result.error) {
       const statusMap: Record<string, number> = {
         CONFLICT: 409,
+        WEAK_PASSWORD: 400,
       };
       const statusCode = statusMap[result.error] || 400;
-      return { statusCode, ...result };
+      throw new HttpException({ statusCode, error: result.error, message: result.message }, statusCode);
     }
     return result;
   }
@@ -61,7 +63,7 @@ export class AuthController {
         FORBIDDEN: 403,
       };
       const statusCode = statusMap[result.error] || 400;
-      return { statusCode, ...result };
+      throw new HttpException({ statusCode, error: result.error, message: result.message }, statusCode);
     }
     return result;
   }
@@ -94,7 +96,7 @@ export class AuthController {
         FORBIDDEN: 403,
       };
       const statusCode = statusMap[result.error] || 400;
-      return { statusCode, ...result };
+      throw new HttpException({ statusCode, error: result.error, message: result.message }, statusCode);
     }
     return result;
   }

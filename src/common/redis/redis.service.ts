@@ -5,12 +5,19 @@ import Redis from 'ioredis';
 @Injectable()
 export class RedisService implements OnModuleDestroy {
   private readonly logger = new Logger(RedisService.name);
-  private readonly client: Redis;
+  private readonly client: Redis | null = null;
   private readonly prefix: string;
+  private readonly available: boolean;
 
   constructor(private readonly configService: ConfigService) {
-    const redisUrl = this.configService.get<string>('REDIS_URL')!;
+    const redisUrl = this.configService.get<string>('REDIS_URL');
     this.prefix = 'shopbuilder:';
+    this.available = !!redisUrl;
+
+    if (!redisUrl) {
+      this.logger.warn('REDIS_URL not set — Redis features (rate limiting, token blacklist) are disabled');
+      return;
+    }
 
     this.client = new Redis(redisUrl, {
       maxRetriesPerRequest: 3,
@@ -30,19 +37,28 @@ export class RedisService implements OnModuleDestroy {
   }
 
   async onModuleDestroy() {
-    await this.client.quit();
-    this.logger.log('Disconnected from Redis');
+    if (this.client) {
+      await this.client.quit();
+      this.logger.log('Disconnected from Redis');
+    }
   }
 
   private key(key: string): string {
     return `${this.prefix}${key}`;
   }
 
+  private ensure(): Redis {
+    if (!this.client) throw new Error('Redis not configured');
+    return this.client;
+  }
+
   async get(key: string): Promise<string | null> {
+    if (!this.client) return null;
     return this.client.get(this.key(key));
   }
 
   async set(key: string, value: string, ttlSeconds?: number): Promise<void> {
+    if (!this.client) return;
     if (ttlSeconds) {
       await this.client.setex(this.key(key), ttlSeconds, value);
     } else {
@@ -51,23 +67,28 @@ export class RedisService implements OnModuleDestroy {
   }
 
   async del(key: string): Promise<void> {
+    if (!this.client) return;
     await this.client.del(this.key(key));
   }
 
   async exists(key: string): Promise<boolean> {
+    if (!this.client) return false;
     const result = await this.client.exists(this.key(key));
     return result === 1;
   }
 
   async ttl(key: string): Promise<number> {
+    if (!this.client) return 0;
     return this.client.ttl(this.key(key));
   }
 
   async incr(key: string): Promise<number> {
+    if (!this.client) return 0;
     return this.client.incr(this.key(key));
   }
 
   async expire(key: string, seconds: number): Promise<void> {
+    if (!this.client) return;
     await this.client.expire(this.key(key), seconds);
   }
 
@@ -112,7 +133,7 @@ export class RedisService implements OnModuleDestroy {
     return this.exists(`blacklist:${jti}`);
   }
 
-  getClient(): Redis {
+  getClient(): Redis | null {
     return this.client;
   }
 }

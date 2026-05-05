@@ -33,6 +33,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
         const obj = exResponse as Record<string, unknown>;
         message = (obj.message as string) || exception.message;
         error = (obj.error as string) || exception.name;
+        if (obj.details !== undefined) details = obj.details;
 
         // Handle class-validator array of messages
         if (Array.isArray(obj.message)) {

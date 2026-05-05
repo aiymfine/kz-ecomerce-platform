@@ -25,9 +25,9 @@ export const transferInventorySchema = z.object({
 export type TransferInventoryDto = z.infer<typeof transferInventorySchema>;
 
 export const nearestWarehouseSchema = z.object({
-  variant_ids: z.array(z.number().int().positive()).min(1),
-  customer_latitude: z.number().min(-90).max(90),
-  customer_longitude: z.number().min(-180).max(180),
+  variant_ids: z.array(z.coerce.number().int().positive()).min(1),
+  customer_latitude: z.coerce.number().min(-90).max(90),
+  customer_longitude: z.coerce.number().min(-180).max(180),
 });
 
 export type NearestWarehouseDto = z.infer<typeof nearestWarehouseSchema>;

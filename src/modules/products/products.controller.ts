@@ -62,11 +62,13 @@ export class ProductsController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  @UsePipes(new ZodValidationPipe(createProductSchema))
   @ApiOperation({ summary: 'Create a new product' })
   @ApiResponse({ status: 201, description: 'Product created' })
   @ApiResponse({ status: 409, description: 'Slug already exists' })
-  async createProduct(@Param('storeId', ParseIntPipe) storeId: number, @Body() body: unknown) {
+  async createProduct(
+    @Param('storeId', ParseIntPipe) storeId: number,
+    @Body(new ZodValidationPipe(createProductSchema)) body: unknown,
+  ) {
     const result = await this.productsService.createProduct(storeId, body as any);
     if (result && typeof result === 'object' && 'error' in result) {
       const statusMap: Record<string, number> = { CONFLICT: 409 };

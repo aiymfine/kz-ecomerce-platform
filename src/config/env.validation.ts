@@ -5,7 +5,7 @@ export const envSchema = z.object({
   PORT: z.coerce.number().default(3000),
   DATABASE_URL: z.string().min(1),
   DATABASE_POOL_SIZE: z.coerce.number().default(20),
-  REDIS_URL: z.string().min(1),
+  REDIS_URL: z.string().min(1).optional(),
   JWT_SECRET_KEY: z.string().min(32),
   JWT_ALGORITHM: z.string().default('HS256'),
   JWT_ACCESS_TOKEN_EXPIRE_MINUTES: z.coerce.number().default(30),
