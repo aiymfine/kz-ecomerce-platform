@@ -85,12 +85,13 @@ Workers are BullMQ-ready stubs — structured for real queue integration:
 
 | Metric | Count |
 |--------|-------|
-| Modules | 17 |
-| Source files (modules) | 77 |
-| Worker files | 7 |
-| Shared utilities/guards/pipes | 22 |
+| Modules | 18 |
+| Source files (modules) | 82 |
+| Worker files | 9 |
+| Shared utilities/guards/pipes | 23 |
 | Prisma data models | 34 |
 | Tenant tables per schema | 30+ |
+| API Endpoints | 116+ |
 
 ## 🚀 Quick Start
 
@@ -144,9 +145,13 @@ Once running: **Swagger UI** at http://localhost:3000/docs | **API base** at htt
 ### Authentication
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/api/auth/register` | Register merchant |
+| POST | `/api/auth/register` | Register merchant (sends verification email) |
+| POST | `/api/auth/verify-email` | Verify email with 6-digit code |
+| POST | `/api/auth/resend-verification` | Resend verification code |
 | POST | `/api/auth/login` | Login |
-| POST | `/api/auth/refresh` | Refresh access token |
+| POST | `/api/auth/forgot-password` | Request password reset email |
+| POST | `/api/auth/reset-password` | Reset password with token |
+| POST | `/api/auth/refresh` | Refresh access token (rotation enabled) |
 | POST | `/api/auth/logout` | Logout |
 | GET | `/api/auth/me` | Current merchant profile |
 | POST | `/api/auth/admin/login` | Admin login |
@@ -308,6 +313,48 @@ pnpm test:cov
 | CI/CD | GitHub Actions |
 | Package Manager | pnpm |
 
+## 📧 Email Verification
+
+Merchants must verify their email before accessing protected routes:
+
+1. **Register** → receive 6-digit verification code via email
+2. **POST /api/auth/verify-email** → submit code to activate account
+3. **POST /api/auth/resend-verification** → request a new code if expired
+
+Unverified merchants receive `403 Forbidden` on protected endpoints.
+
+## 🔑 Password Reset
+
+1. **POST /api/auth/forgot-password** → receive reset link via email
+2. **POST /api/auth/reset-password** → submit new password with token
+
+Reset tokens expire after 1 hour. Tokens are bcrypt-hashed in the database.
+
+## ⚡ Background Workers
+
+Run workers separately from the main application:
+
+```bash
+pnpm worker:start
+```
+
+Workers process:
+- **Email queue** — sends verification, password reset, order confirmation, and payment receipt emails
+- **Abandoned cart queue** — marks stale carts as abandoned
+
+Workers use BullMQ with Redis and include retry logic (3 attempts, exponential backoff).
+
+## 🔒 Security Features
+
+- JWT access + refresh tokens with rotation
+- RBAC guards (merchant, super_admin, support)
+- VerifiedGuard (blocks unverified users from protected routes)
+- Rate limiting on all auth endpoints (Redis-backed token bucket)
+- Password strength validation (min 8 chars, uppercase + digit)
+- bcryptjs password hashing (cost 12)
+- Token blacklisting on logout and refresh rotation
+- HMAC-SHA256 webhook signatures
+
 ## 📁 Project Structure
 
 ```
@@ -317,14 +364,15 @@ src/
 │   ├── decorators/      # Custom decorators (@Roles, @CurrentUser, @RateLimit, @Tenant)
 │   ├── dto/             # Shared DTOs (pagination)
 │   ├── filters/         # HTTP exception filters
-│   ├── guards/          # JWT, Roles, Admin, Rate-limit guards
+│   ├── guards/          # JWT, Roles, Admin, Verified, Rate-limit guards
 │   ├── interceptors/    # Logging, response transform
 │   ├── middleware/       # Tenant middleware (search_path routing)
 │   ├── pipes/           # Zod validation pipe
+│   ├── queue/           # BullMQ queue module & service
 │   ├── redis/           # Redis module & service
 │   └── utils/           # Haversine, SKU builder, slugify, tiyin math
 ├── config/              # Environment config & validation
-├── modules/             # 17 feature modules
+├── modules/             # 18 feature modules
 │   ├── abandoned-carts/
 │   ├── admin/
 │   ├── analytics/
@@ -333,6 +381,7 @@ src/
 │   ├── checkout/
 │   ├── customers/
 │   ├── discounts/
+│   ├── email/           # Nodemailer email service
 │   ├── inventory/
 │   ├── orders/
 │   ├── payments/
@@ -345,7 +394,9 @@ src/
 │   ├── warehouses/
 │   └── webhooks/
 ├── prisma/              # Prisma service, module, middleware
-└── workers/             # 7 BullMQ-ready worker stubs
+└── workers/             # BullMQ workers & processors
+    ├── processors/      # Email & abandoned cart processors
+    └── *.worker.ts      # Worker stubs
 ```
 
 ## 📝 Environment Variables

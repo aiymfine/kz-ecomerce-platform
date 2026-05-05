@@ -9,6 +9,7 @@ export interface JwtPayload {
   role: string;
   storeId?: number;
   merchantId?: number;
+  emailVerified?: boolean;
   jti?: string;
   iat?: number;
   exp?: number;

@@ -11,6 +11,11 @@ export const envSchema = z.object({
   JWT_ACCESS_TOKEN_EXPIRE_MINUTES: z.coerce.number().default(30),
   JWT_REFRESH_TOKEN_EXPIRE_DAYS: z.coerce.number().default(7),
   CORS_ORIGINS: z.string().default('http://localhost:3000'),
+  SMTP_HOST: z.string().min(1, 'SMTP_HOST is required'),
+  SMTP_PORT: z.coerce.number().default(587),
+  SMTP_USER: z.string().min(1, 'SMTP_USER is required'),
+  SMTP_PASSWORD: z.string().min(1, 'SMTP_PASSWORD is required'),
+  SMTP_FROM: z.string().optional().default('').transform(v => v || undefined),
 });
 
 export type EnvConfig = z.infer<typeof envSchema>;

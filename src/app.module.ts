@@ -2,6 +2,8 @@ import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { AppConfigModule } from './config/config.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { RedisModule } from './common/redis/redis.module';
+import { QueueModule } from './common/queue/queue.module';
+import { EmailModule } from './modules/email/email.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { StoresModule } from './modules/stores/stores.module';
@@ -29,6 +31,8 @@ import { TenantMiddleware } from './common/middleware/tenant.middleware';
     AppConfigModule,
     PrismaModule,
     RedisModule,
+    QueueModule,
+    EmailModule,
     AuditModule,
     AuthModule,
     AdminModule,

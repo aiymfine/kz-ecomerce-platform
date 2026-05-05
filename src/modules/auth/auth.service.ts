@@ -3,9 +3,13 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
 import { RedisService } from '../../common/redis/redis.service';
+import { QueueService } from '../../common/queue/queue.service';
 import * as bcrypt from 'bcryptjs';
-import { randomUUID } from 'crypto';
-import { RegisterDto, LoginDto } from './dto/auth.dto';
+import { randomUUID, randomInt } from 'crypto';
+import {
+  RegisterDto,
+  LoginDto,
+} from './dto/auth.dto';
 import type { JwtPayload } from '../../common/guards/jwt-auth.guard';
 
 @Injectable()
@@ -15,6 +19,7 @@ export class AuthService {
     private jwtService: JwtService,
     private configService: ConfigService,
     private redisService: RedisService,
+    private queueService: QueueService,
   ) {}
 
   private validatePasswordStrength(password: string): string | null {
@@ -22,6 +27,10 @@ export class AuthService {
     if (!/[A-Z]/.test(password)) return 'Password must contain at least one uppercase letter';
     if (!/[0-9]/.test(password)) return 'Password must contain at least one digit';
     return null;
+  }
+
+  private generateVerificationCode(): string {
+    return String(randomInt(100000, 999999));
   }
 
   async register(dto: RegisterDto) {
@@ -42,6 +51,10 @@ export class AuthService {
     // Hash password with cost 12
     const passwordHash = await bcrypt.hash(dto.password, 12);
 
+    // Generate verification code
+    const verificationCode = this.generateVerificationCode();
+    const verificationCodeExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
     const merchant = await this.prisma.merchant.create({
       data: {
         email: dto.email,
@@ -49,6 +62,8 @@ export class AuthService {
         name: dto.name,
         phone: dto.phone,
         businessName: dto.businessName,
+        verificationCode,
+        verificationCodeExpiresAt,
       },
     });
 
@@ -57,7 +72,19 @@ export class AuthService {
       email: merchant.email,
       role: 'merchant',
       merchantId: merchant.id,
+      emailVerified: false,
     });
+
+    // Enqueue verification email
+    try {
+      await this.queueService.enqueueEmail({
+        type: 'verification',
+        to: merchant.email,
+        data: { code: verificationCode },
+      });
+    } catch {
+      // Non-blocking — queue may not be available
+    }
 
     return {
       merchant: this.sanitizeMerchant(merchant),
@@ -88,6 +115,7 @@ export class AuthService {
       email: merchant.email,
       role: 'merchant',
       merchantId: merchant.id,
+      emailVerified: merchant.emailVerified,
     });
 
     return {
@@ -96,15 +124,181 @@ export class AuthService {
     };
   }
 
+  async verifyEmail(email: string, code: string) {
+    const merchant = await this.prisma.merchant.findUnique({
+      where: { email },
+    });
+
+    if (!merchant) {
+      return { error: 'NOT_FOUND', message: 'User not found' };
+    }
+
+    if (merchant.emailVerified) {
+      return { message: 'Email is already verified' };
+    }
+
+    if (
+      !merchant.verificationCode ||
+      merchant.verificationCode !== code ||
+      !merchant.verificationCodeExpiresAt ||
+      merchant.verificationCodeExpiresAt < new Date()
+    ) {
+      return { error: 'BAD_REQUEST', message: 'Invalid or expired verification code' };
+    }
+
+    await this.prisma.merchant.update({
+      where: { id: merchant.id },
+      data: {
+        emailVerified: true,
+        verificationCode: null,
+        verificationCodeExpiresAt: null,
+      },
+    });
+
+    return { message: 'Email verified successfully' };
+  }
+
+  async resendVerification(email: string) {
+    const merchant = await this.prisma.merchant.findUnique({
+      where: { email },
+    });
+
+    if (!merchant) {
+      return { error: 'NOT_FOUND', message: 'User not found' };
+    }
+
+    if (merchant.emailVerified) {
+      return { error: 'BAD_REQUEST', message: 'Email is already verified' };
+    }
+
+    const verificationCode = this.generateVerificationCode();
+    const verificationCodeExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+    await this.prisma.merchant.update({
+      where: { id: merchant.id },
+      data: {
+        verificationCode,
+        verificationCodeExpiresAt,
+      },
+    });
+
+    try {
+      await this.queueService.enqueueEmail({
+        type: 'verification',
+        to: merchant.email,
+        data: { code: verificationCode },
+      });
+    } catch {
+      // Non-blocking
+    }
+
+    return { message: 'Verification code sent' };
+  }
+
+  async forgotPassword(email: string) {
+    const merchant = await this.prisma.merchant.findUnique({
+      where: { email },
+    });
+
+    // Always return success to prevent email enumeration
+    if (!merchant) {
+      return { message: 'If the email exists, a reset link has been sent' };
+    }
+
+    const token = randomUUID();
+    const hashedToken = await bcrypt.hash(token, 10);
+    const resetPasswordExpiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+    await this.prisma.merchant.update({
+      where: { id: merchant.id },
+      data: {
+        resetPasswordToken: hashedToken,
+        resetPasswordExpiresAt,
+      },
+    });
+
+    const appUrl = this.configService.get<string>('APP_URL', 'http://localhost:3001');
+    const resetLink = `${appUrl}/reset-password?token=${token}`;
+
+    try {
+      await this.queueService.enqueueEmail({
+        type: 'password-reset',
+        to: merchant.email,
+        data: { resetLink },
+      });
+    } catch {
+      // Non-blocking
+    }
+
+    return { message: 'If the email exists, a reset link has been sent' };
+  }
+
+  async resetPassword(token: string, newPassword: string) {
+    // Validate password strength
+    const passwordError = this.validatePasswordStrength(newPassword);
+    if (passwordError) {
+      return { error: 'WEAK_PASSWORD', message: passwordError };
+    }
+
+    // Find merchant by checking all merchants with a reset token
+    // We need to iterate because the token is hashed
+    const merchants = await this.prisma.merchant.findMany({
+      where: {
+        resetPasswordToken: { not: null },
+        resetPasswordExpiresAt: { gte: new Date() },
+      },
+    });
+
+    let matchedMerchant: typeof merchants[0] | null = null;
+    for (const merchant of merchants) {
+      const isValid = await bcrypt.compare(token, merchant.resetPasswordToken!);
+      if (isValid) {
+        matchedMerchant = merchant;
+        break;
+      }
+    }
+
+    if (!matchedMerchant) {
+      return { error: 'BAD_REQUEST', message: 'Invalid or expired reset token' };
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, 12);
+
+    await this.prisma.merchant.update({
+      where: { id: matchedMerchant.id },
+      data: {
+        passwordHash,
+        resetPasswordToken: null,
+        resetPasswordExpiresAt: null,
+      },
+    });
+
+    // Blacklist all existing tokens for this user
+    const refreshTokenExpireDays = this.configService.get<number>(
+      'JWT_REFRESH_TOKEN_EXPIRE_DAYS',
+      7,
+    );
+    await this.redisService.blacklistToken(
+      `user:${matchedMerchant.id}:all`,
+      refreshTokenExpireDays * 24 * 60 * 60,
+    );
+
+    return { message: 'Password reset successfully' };
+  }
+
   async refreshToken(refreshToken: string) {
     try {
-      const payload = this.jwtService.verify<JwtPayload>(refreshToken);
+      const payload = this.jwtService.verify(refreshToken);
 
-      // Check if token is blacklisted
+      if (payload.type !== 'refresh') {
+        return { error: 'UNAUTHORIZED', message: 'Not a refresh token' };
+      }
+
+      // Check if token is blacklisted (rotation: each refresh token used once)
       if (payload.jti) {
         const blacklisted = await this.redisService.isTokenBlacklisted(payload.jti);
         if (blacklisted) {
-          return { error: 'UNAUTHORIZED', message: 'Token has been revoked' };
+          return { error: 'UNAUTHORIZED', message: 'Token has been revoked (reuse detected)' };
         }
       }
 
@@ -115,11 +309,24 @@ export class AuthService {
         return { error: 'UNAUTHORIZED', message: 'User not found' };
       }
 
+      // Refresh token rotation: blacklist the old refresh token
+      if (payload.jti) {
+        const refreshTokenExpireDays = this.configService.get<number>(
+          'JWT_REFRESH_TOKEN_EXPIRE_DAYS',
+          7,
+        );
+        await this.redisService.blacklistToken(
+          payload.jti,
+          refreshTokenExpireDays * 24 * 60 * 60,
+        );
+      }
+
       const tokens = await this.generateTokens({
         sub: merchant.id,
         email: merchant.email,
         role: 'merchant',
         merchantId: merchant.id,
+        emailVerified: merchant.emailVerified,
       });
 
       return {
@@ -134,10 +341,6 @@ export class AuthService {
   async logout(refreshToken: string) {
     try {
       const payload = this.jwtService.verify<JwtPayload>(refreshToken);
-      const accessTokenExpireMinutes = this.configService.get<number>(
-        'JWT_ACCESS_TOKEN_EXPIRE_MINUTES',
-        30,
-      );
       const refreshTokenExpireDays = this.configService.get<number>(
         'JWT_REFRESH_TOKEN_EXPIRE_DAYS',
         7,
@@ -148,8 +351,6 @@ export class AuthService {
         await this.redisService.blacklistToken(payload.jti, refreshTokenExpireDays * 24 * 60 * 60);
       }
 
-      // Also blacklist the access token if we have its JTI
-      // The refresh token payload contains the original jti
       return { message: 'Logged out successfully' };
     } catch {
       // Even if token verification fails, just return success
@@ -208,6 +409,7 @@ export class AuthService {
       sub: admin.id,
       email: admin.email,
       role: admin.role,
+      emailVerified: true,
     });
 
     return {
@@ -227,6 +429,7 @@ export class AuthService {
     role: string;
     merchantId?: number;
     storeId?: number;
+    emailVerified?: boolean;
   }) {
     const jti = randomUUID();
     const accessTokenExpireMinutes = this.configService.get<number>(
@@ -260,7 +463,7 @@ export class AuthService {
   }
 
   private sanitizeMerchant(merchant: any) {
-    const { passwordHash, ...safe } = merchant;
+    const { passwordHash, verificationCode, verificationCodeExpiresAt, resetPasswordToken, resetPasswordExpiresAt, ...safe } = merchant;
     return safe;
   }
 }

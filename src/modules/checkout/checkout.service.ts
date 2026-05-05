@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { PaymentsService } from '../payments/payments.service';
 import { DiscountsService } from '../discounts/discounts.service';
+import { QueueService } from '../../common/queue/queue.service';
 
 export interface CheckoutInput {
   customerId: number;
@@ -27,6 +28,7 @@ export class CheckoutService {
     private prisma: PrismaService,
     private paymentsService: PaymentsService,
     private discountsService: DiscountsService,
+    private queueService: QueueService,
   ) {}
 
   async processCheckout(storeId: number, input: CheckoutInput) {
@@ -168,6 +170,13 @@ export class CheckoutService {
         });
 
         // Create order items
+        const orderItems: Array<{
+          productTitle: string;
+          variantSku: string;
+          quantity: number;
+          unitPriceTiyin: number;
+        }> = [];
+
         for (const item of cart.items) {
           const variant = variantMap.get(item.variantId)!;
           // Get product title
@@ -175,12 +184,20 @@ export class CheckoutService {
             where: { id: variant.productId },
           });
 
+          const orderItem = {
+            productTitle: product?.title || 'Unknown',
+            variantSku: variant.sku,
+            quantity: item.quantity,
+            unitPriceTiyin: variant.priceTiyin,
+          };
+          orderItems.push(orderItem);
+
           await tx.orderItem.create({
             data: {
               orderId: newOrder.id,
               variantId: item.variantId,
-              productTitle: product?.title || 'Unknown',
-              variantSku: variant.sku,
+              productTitle: orderItem.productTitle,
+              variantSku: orderItem.variantSku,
               quantity: item.quantity,
               unitPriceTiyin: variant.priceTiyin,
               totalPriceTiyin: item.quantity * variant.priceTiyin,
@@ -241,19 +258,40 @@ export class CheckoutService {
           data: { status: 'converted' },
         });
 
-        return newOrder;
+        return { order: newOrder, orderItems };
       });
     });
 
     // Step 15: Initiate payment (outside transaction)
     const payment = await this.paymentsService.initiatePayment(storeId, {
-      orderId: order.id,
+      orderId: order.order.id,
       provider: input.paymentProvider,
       idempotencyKey: input.idempotencyKey,
     });
 
+    // Enqueue order confirmation email
+    try {
+      await this.queueService.enqueueEmail({
+        type: 'order-confirmation',
+        to: customer.email,
+        data: {
+          orderNumber: order.order.orderNumber,
+          items: order.orderItems.map((item) => ({
+            title: item.productTitle,
+            sku: item.variantSku,
+            quantity: item.quantity,
+            price: item.unitPriceTiyin,
+          })),
+          total: totalTiyin,
+          currency: 'KZT',
+        },
+      });
+    } catch {
+      // Non-blocking — email queue may not be available
+    }
+
     return {
-      order,
+      order: order.order,
       payment,
     };
   }

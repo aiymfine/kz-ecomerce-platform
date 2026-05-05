@@ -46,9 +46,6 @@ describe('Auth (e2e)', () => {
     expect(res.body.data).toHaveProperty('refreshToken');
   });
 
-  // NOTE: These two tests may fail in test environments where Redis rate limiter
-  // blocks requests. In production these work correctly. The rate limiter is tested
-  // implicitly — every other auth test proves endpoints work when not rate-limited.
   it.skip('POST /api/auth/register — should reject duplicate email (rate limiter blocks in test)', async () => {
     const email = `t-dup-${Date.now()}@example.com`;
     createdEmails.push(email);
@@ -169,10 +166,350 @@ describe('Auth (e2e)', () => {
     }
   });
 
+  it('POST /api/auth/refresh — should throw HttpException on invalid token (consistent error handling)', async () => {
+    const res = await request(app.getHttpServer())
+      .post('/api/auth/refresh')
+      .send({ refreshToken: 'invalid-token' });
+
+    expect(res.status).toBe(401);
+    expect(res.body).toHaveProperty('statusCode');
+    expect(res.body).toHaveProperty('error');
+    expect(res.body).toHaveProperty('message');
+  });
+
   it('POST /api/auth/logout — should work', async () => {
     const res = await request(app.getHttpServer())
       .post('/api/auth/logout')
       .send({ refreshToken: 'some-token' });
     expect([200, 201, 204, 403]).toContain(res.status);
+  });
+
+  it('POST /api/auth/verify-email — should verify email with correct code', async () => {
+    // Register a merchant
+    const email = `t-verify-${Date.now()}@example.com`;
+    createdEmails.push(email);
+    await prisma.merchant.create({
+      data: {
+        email,
+        passwordHash: await bcrypt.hash('TestPassword123!', 12),
+        name: 'Verify Test',
+        emailVerified: false,
+        verificationCode: '123456',
+        verificationCodeExpiresAt: new Date(Date.now() + 10 * 60 * 1000),
+      },
+    });
+
+    const res = await request(app.getHttpServer())
+      .post('/api/auth/verify-email')
+      .send({ email, code: '123456' });
+
+    expect(res.status).toBe(200);
+    expect(res.body.data).toHaveProperty('emailVerified', true);
+  });
+
+  it('POST /api/auth/verify-email — should reject wrong code', async () => {
+    const email = `t-verify-wrong-${Date.now()}@example.com`;
+    createdEmails.push(email);
+    await prisma.merchant.create({
+      data: {
+        email,
+        passwordHash: await bcrypt.hash('TestPassword123!', 12),
+        name: 'Verify Wrong',
+        emailVerified: false,
+        verificationCode: '123456',
+        verificationCodeExpiresAt: new Date(Date.now() + 10 * 60 * 1000),
+      },
+    });
+
+    const res = await request(app.getHttpServer())
+      .post('/api/auth/verify-email')
+      .send({ email, code: '000000' });
+
+    expect(res.status).toBe(400);
+  });
+
+  it('POST /api/auth/forgot-password — should return 200 even if email exists', async () => {
+    // Use an existing email
+    const email = createdEmails[0] || `t-forgot-${Date.now()}@example.com`;
+    const res = await request(app.getHttpServer())
+      .post('/api/auth/forgot-password')
+      .send({ email });
+
+    // Always returns 200 to not reveal if email exists
+    expect(res.status).toBe(200);
+  });
+});
+
+describe('Email Verification (e2e)', () => {
+  let app: any;
+  let prisma: PrismaService;
+  const createdEmails: string[] = [];
+
+  beforeAll(async () => {
+    app = await createTestApp();
+    prisma = app.get(PrismaService);
+  });
+
+  afterAll(async () => {
+    for (const email of createdEmails) {
+      try {
+        await prisma.merchant.deleteMany({ where: { email } });
+      } catch {}
+    }
+    try {
+      await prisma.$disconnect();
+      await app.close();
+    } catch {}
+  });
+
+  it('POST /api/auth/register — should register with emailVerified=false', async () => {
+    const email = `t-verify-${Date.now()}@example.com`;
+    createdEmails.push(email);
+
+    const res = await request(app.getHttpServer())
+      .post('/api/auth/register')
+      .send({ email, password: 'TestPassword123!', name: 'V', businessName: 'V' });
+
+    expect(res.status).toBe(201);
+    expect(res.body.data.merchant.emailVerified).toBe(false);
+  });
+
+  it('POST /api/auth/verify-email — should verify with correct code', async () => {
+    const email = `t-vcode-${Date.now()}@example.com`;
+    createdEmails.push(email);
+
+    // Create merchant with known verification code
+    await prisma.merchant.create({
+      data: {
+        email,
+        passwordHash: await bcrypt.hash('TestPassword123!', 12),
+        name: 'VC',
+        emailVerified: false,
+        verificationCode: '123456',
+        verificationCodeExpiresAt: new Date(Date.now() + 10 * 60 * 1000),
+      },
+    });
+
+    const res = await request(app.getHttpServer())
+      .post('/api/auth/verify-email')
+      .send({ email, code: '123456' });
+
+    expect(res.status).toBe(200);
+    expect(res.body.data.message).toContain('verified');
+
+    // Verify in DB
+    const merchant = await prisma.merchant.findUnique({ where: { email } });
+    expect(merchant?.emailVerified).toBe(true);
+  });
+
+  it('POST /api/auth/verify-email — should reject wrong code', async () => {
+    const email = `t-vbad-${Date.now()}@example.com`;
+    createdEmails.push(email);
+
+    await prisma.merchant.create({
+      data: {
+        email,
+        passwordHash: await bcrypt.hash('TestPassword123!', 12),
+        name: 'VB',
+        emailVerified: false,
+        verificationCode: '123456',
+        verificationCodeExpiresAt: new Date(Date.now() + 10 * 60 * 1000),
+      },
+    });
+
+    const res = await request(app.getHttpServer())
+      .post('/api/auth/verify-email')
+      .send({ email, code: '000000' });
+
+    expect(res.status).toBe(400);
+  });
+
+  it('POST /api/auth/verify-email — should reject expired code', async () => {
+    const email = `t-vexp-${Date.now()}@example.com`;
+    createdEmails.push(email);
+
+    await prisma.merchant.create({
+      data: {
+        email,
+        passwordHash: await bcrypt.hash('TestPassword123!', 12),
+        name: 'VE',
+        emailVerified: false,
+        verificationCode: '123456',
+        verificationCodeExpiresAt: new Date(Date.now() - 1000), // expired
+      },
+    });
+
+    const res = await request(app.getHttpServer())
+      .post('/api/auth/verify-email')
+      .send({ email, code: '123456' });
+
+    expect(res.status).toBe(400);
+  });
+
+  it('POST /api/auth/resend-verification — should resend code', async () => {
+    const email = `t-vresend-${Date.now()}@example.com`;
+    createdEmails.push(email);
+
+    await prisma.merchant.create({
+      data: {
+        email,
+        passwordHash: await bcrypt.hash('TestPassword123!', 12),
+        name: 'VR',
+        emailVerified: false,
+      },
+    });
+
+    const res = await request(app.getHttpServer())
+      .post('/api/auth/resend-verification')
+      .send({ email });
+
+    expect(res.status).toBe(200);
+  });
+});
+
+describe('Password Reset (e2e)', () => {
+  let app: any;
+  let prisma: PrismaService;
+  const createdEmails: string[] = [];
+
+  beforeAll(async () => {
+    app = await createTestApp();
+    prisma = app.get(PrismaService);
+  });
+
+  afterAll(async () => {
+    for (const email of createdEmails) {
+      try {
+        await prisma.merchant.deleteMany({ where: { email } });
+      } catch {}
+    }
+    try {
+      await prisma.$disconnect();
+      await app.close();
+    } catch {}
+  });
+
+  it('POST /api/auth/forgot-password — should return success even for unknown email', async () => {
+    const res = await request(app.getHttpServer())
+      .post('/api/auth/forgot-password')
+      .send({ email: 'nonexistent@example.com' });
+
+    expect(res.status).toBe(200);
+  });
+
+  it('POST /api/auth/forgot-password — should send reset for existing email', async () => {
+    const email = `t-forgot-${Date.now()}@example.com`;
+    createdEmails.push(email);
+
+    await prisma.merchant.create({
+      data: {
+        email,
+        passwordHash: await bcrypt.hash('TestPassword123!', 12),
+        name: 'FP',
+        status: 'approved',
+        isActive: true,
+      },
+    });
+
+    const res = await request(app.getHttpServer())
+      .post('/api/auth/forgot-password')
+      .send({ email });
+
+    expect(res.status).toBe(200);
+  });
+
+  it('POST /api/auth/reset-password — should reject invalid token', async () => {
+    const res = await request(app.getHttpServer())
+      .post('/api/auth/reset-password')
+      .send({ token: 'invalid-token', newPassword: 'NewPassword123!' });
+
+    expect(res.status).toBe(400);
+  });
+
+  it('POST /api/auth/reset-password — should reject weak password', async () => {
+    const res = await request(app.getHttpServer())
+      .post('/api/auth/reset-password')
+      .send({ token: 'any-token', newPassword: '123' });
+
+    expect(res.status).toBe(400);
+  });
+});
+
+describe('Refresh Token Rotation (e2e)', () => {
+  let app: any;
+  let prisma: PrismaService;
+  const createdEmails: string[] = [];
+
+  beforeAll(async () => {
+    app = await createTestApp();
+    prisma = app.get(PrismaService);
+  });
+
+  afterAll(async () => {
+    for (const email of createdEmails) {
+      try {
+        await prisma.merchant.deleteMany({ where: { email } });
+      } catch {}
+    }
+    try {
+      await prisma.$disconnect();
+      await app.close();
+    } catch {}
+  });
+
+  it('POST /api/auth/refresh — should issue new tokens and blacklist old refresh token', async () => {
+    const email = `t-rot-${Date.now()}@example.com`;
+    createdEmails.push(email);
+
+    const reg = await request(app.getHttpServer())
+      .post('/api/auth/register')
+      .send({ email, password: 'TestPassword123!', name: 'ROT', businessName: 'ROT' });
+
+    expect(reg.status).toBe(201);
+    const oldRefreshToken = reg.body.data.refreshToken;
+
+    // Use the refresh token
+    const refresh1 = await request(app.getHttpServer())
+      .post('/api/auth/refresh')
+      .send({ refreshToken: oldRefreshToken });
+
+    expect(refresh1.status).toBe(200);
+    expect(refresh1.body.data).toHaveProperty('accessToken');
+    expect(refresh1.body.data).toHaveProperty('refreshToken');
+    const newRefreshToken = refresh1.body.data.refreshToken;
+    expect(newRefreshToken).not.toBe(oldRefreshToken);
+
+    // Try to reuse the old refresh token — should fail
+    const refresh2 = await request(app.getHttpServer())
+      .post('/api/auth/refresh')
+      .send({ refreshToken: oldRefreshToken });
+
+    expect(refresh2.status).toBe(401);
+  });
+
+  it('POST /api/auth/refresh — new refresh token should work', async () => {
+    const email = `t-rot2-${Date.now()}@example.com`;
+    createdEmails.push(email);
+
+    const reg = await request(app.getHttpServer())
+      .post('/api/auth/register')
+      .send({ email, password: 'TestPassword123!', name: 'RO2', businessName: 'RO2' });
+
+    expect(reg.status).toBe(201);
+
+    // First rotation
+    const refresh1 = await request(app.getHttpServer())
+      .post('/api/auth/refresh')
+      .send({ refreshToken: reg.body.data.refreshToken });
+
+    expect(refresh1.status).toBe(200);
+
+    // Second rotation with new token — should work
+    const refresh2 = await request(app.getHttpServer())
+      .post('/api/auth/refresh')
+      .send({ refreshToken: refresh1.body.data.refreshToken });
+
+    expect(refresh2.status).toBe(200);
+    expect(refresh2.body.data).toHaveProperty('accessToken');
   });
 });

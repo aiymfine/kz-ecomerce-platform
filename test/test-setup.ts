@@ -7,6 +7,10 @@ process.env.DATABASE_URL =
 process.env.JWT_SECRET_KEY =
   process.env.JWT_SECRET_KEY || 'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2';
 process.env.CORS_ORIGINS = 'http://localhost:3000';
+// Required for env validation
+process.env.SMTP_HOST = process.env.SMTP_HOST || 'smtp.test.com';
+process.env.SMTP_USER = process.env.SMTP_USER || 'test@test.com';
+process.env.SMTP_PASSWORD = process.env.SMTP_PASSWORD || 'testpassword';
 
 jest.setTimeout(30000);
 
