@@ -49,8 +49,14 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     if (!this.tenantClients.has(storeId)) {
       const baseUrl = process.env.DATABASE_URL!;
       const url = new URL(baseUrl);
-      // search_path: tenant schema first (for tables), then public (for enum types)
-      url.searchParams.set('schema', `store_${storeId},public`);
+      // Don't use Prisma's schema param — it prefixes BOTH tables AND enums with the schema name.
+      // Instead, set PostgreSQL search_path so unqualified names resolve correctly:
+      //   - Tables → found in store_X first (tenant data)
+      //   - Enums → not in store_X, falls back to public (shared enum types)
+      url.searchParams.set(
+        'options',
+        `-csearch_path=store_${storeId},public`,
+      );
       const client = new PrismaClient({
         datasourceUrl: url.toString(),
       });
