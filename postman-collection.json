@@ -37,36 +37,10 @@
   "item": [
     {
       "name": "0. Setup (run these first)",
-      "description": "⚠️ Run these requests in order to bootstrap the demo environment. Tokens are auto-saved into collection variables.",
+      "description": "⚠️ Run these 2 requests in order. Uses seed accounts (npx prisma db seed). Tokens are auto-saved into collection variables.\n\nSeed accounts:\n• Merchant: merchant1@example.com / Merchant123\n• Admin: admin@shopbuilder.kz / Admin123456",
       "item": [
         {
-          "name": "1. Register Merchant",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/auth/register",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "auth",
-                "register"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"merchant1@example.com\",\n  \"password\": \"Merchant123\",\n  \"name\": \"Aibek\",\n  \"businessName\": \"Demo Shop\"\n}"
-            }
-          }
-        },
-        {
-          "name": "2. Login Merchant",
+          "name": "1. Login Merchant",
           "event": [
             {
               "listen": "test",
@@ -76,6 +50,7 @@
                   "const res = pm.response.json();",
                   "if (res.accessToken) {",
                   "  pm.collectionVariables.set('merchant_token', res.accessToken);",
+                  "  pm.collectionVariables.set('merchant_email', 'merchant1@example.com');",
                   "}",
                   "if (res.refreshToken) {",
                   "  pm.collectionVariables.set('refresh_token', res.refreshToken);",
@@ -104,12 +79,12 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"{{merchant_email}}\",\n  \"password\": \"Merchant123\"\n}"
+              "raw": "{\n  \"email\": \"merchant1@example.com\",\n  \"password\": \"Merchant123\"\n}"
             }
           }
         },
         {
-          "name": "3. Login Admin",
+          "name": "2. Login Admin",
           "event": [
             {
               "listen": "test",
@@ -148,59 +123,6 @@
               "raw": "{\n  \"email\": \"admin@shopbuilder.kz\",\n  \"password\": \"Admin123456\"\n}"
             }
           }
-        },
-        {
-          "name": "4. Approve Merchant",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/admin/merchants/1/approve",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "admin",
-                "merchants",
-                "1",
-                "approve"
-              ]
-            }
-          }
-        },
-        {
-          "name": "5. Create Store",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{merchant_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/stores",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "stores"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Demo Store\",\n  \"subdomain\": \"demo\",\n  \"description\": \"Defence demo store\"\n}"
-            }
-          }
         }
       ]
     },
@@ -230,7 +152,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"newmerchant@example.com\",\n  \"password\": \"Merchant123\",\n  \"name\": \"New Merchant\",\n  \"businessName\": \"New Store\"\n}"
+              "raw": "{\n  \"email\": \"newmerchant@test.com\",\n  \"password\": \"Merchant123\",\n  \"name\": \"New Merchant\",\n  \"businessName\": \"New Store\"\n}"
             }
           }
         },
