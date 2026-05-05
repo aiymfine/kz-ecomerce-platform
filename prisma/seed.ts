@@ -73,13 +73,7 @@ async function provisionTenant(storeId: number) {
   await prisma.$executeRawUnsafe(`DROP SCHEMA IF EXISTS ${schema} CASCADE`);
   await prisma.$executeRawUnsafe(`CREATE SCHEMA ${schema}`);
 
-  // Create enum types in tenant schema (quoted to preserve PascalCase casing)
-  for (const [enumName, values] of Object.entries(tenantEnumTypes)) {
-    const valuesStr = values.map((v) => `'${v}'`).join(', ');
-    await prisma.$executeRawUnsafe(
-      `CREATE TYPE "${schema}"."${enumName}" AS ENUM (${valuesStr})`,
-    );
-  }
+  // Note: enum types are in public schema, referenced via search_path (store_X,public)
 
   // Create tables using LIKE
   for (const table of tenantTables) {

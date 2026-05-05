@@ -49,7 +49,8 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     if (!this.tenantClients.has(storeId)) {
       const baseUrl = process.env.DATABASE_URL!;
       const url = new URL(baseUrl);
-      url.searchParams.set('schema', `store_${storeId}`);
+      // search_path: tenant schema first (for tables), then public (for enum types)
+      url.searchParams.set('schema', `store_${storeId},public`);
       const client = new PrismaClient({
         datasourceUrl: url.toString(),
       });
