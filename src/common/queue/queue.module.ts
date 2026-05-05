@@ -13,7 +13,13 @@ import { QueueService } from './queue.service';
         const redisUrl = configService.get<string>('REDIS_URL');
         const connection = redisUrl
           ? { url: redisUrl }
-          : { host: '127.0.0.1', port: 6379 };
+          : {
+              host: '127.0.0.1',
+              port: 6379,
+              connectTimeout: 3000,
+              maxRetriesPerRequest: 1,
+              retryStrategy: () => null, // Don't retry — fail fast when Redis is unavailable
+            };
         return {
           connection,
           defaultJobOptions: {
