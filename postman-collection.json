@@ -705,7 +705,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"options\": {\n    \"Size\": [\"S\", \"M\", \"L\"],\n    \"Color\": [\"Black\", \"White\"]\n  }\n}"
+              "raw": "{\n  \"sizes\": [\n    \"S\",\n    \"M\",\n    \"L\"\n  ],\n  \"colors\": [\n    \"Black\",\n    \"White\"\n  ],\n  \"basePriceTiyin\": 15990000,\n  \"compareAtPriceTiyin\": 19990000\n}"
             }
           }
         }
