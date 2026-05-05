@@ -204,10 +204,10 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\"email\":\"{{merchant_email}}\",\"code\":\"123456\"}"
+              "raw": "{\n  \"email\": \"newmerchant@test.com\",\n  \"code\": \"PASTE_CODE_FROM_CONSOLE\"\n}"
             }
           },
-          "description": "⚠️ This only works with a NEW registered account (not seed accounts). Run Register first, then check server console for the 6-digit code, and paste it here."
+          "description": "⚠️ Register a NEW account first (Auth > Register), then paste the 6-digit code from server console. Does NOT work with seed accounts."
         },
         {
           "name": "Resend Verification",
@@ -231,9 +231,10 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"{{merchant_email}}\"\n}"
+              "raw": "{\n  \"email\": \"newmerchant@test.com\"\n}"
             }
-          }
+          },
+          "description": "⚠️ Resends code to a NEW registered account. Seed accounts are already verified."
         },
         {
           "name": "Forgot Password",
@@ -283,9 +284,10 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"token\": \"YOUR_TOKEN\",\n  \"newPassword\": \"NewPassword123!\"\n}"
+              "raw": "{\n  \"token\": \"PASTE_TOKEN_FROM_CONSOLE\",\n  \"newPassword\": \"NewPassword123!\"\n}"
             }
-          }
+          },
+          "description": "⚠️ Call Forgot Password first, then paste the token from server console/email."
         },
         {
           "name": "Refresh Token",
@@ -668,7 +670,8 @@
                 "1"
               ]
             }
-          }
+          },
+          "description": "Seed slugs: samsung-galaxy-a54, airpods-pro, iphone-15-case-black, nike-air-max-42, laptop-backpack-black"
         },
         {
           "name": "Generate Variants",
@@ -856,7 +859,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"variantId\": 1,\n  \"warehouseId\": 1,\n  \"quantityAvailable\": 100,\n  \"lowStockThreshold\": 5\n}"
+              "raw": "{\n  \"variant_id\": 1,\n  \"warehouse_id\": 1,\n  \"quantity_available\": 100,\n  \"low_stock_threshold\": 5\n}"
             }
           }
         },
@@ -894,7 +897,7 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/stores/{{store_id}}/inventory/nearest-warehouse?variantIds=1&customerLatitude=43.2389&customerLongitude=76.8896",
+              "raw": "{{base_url}}/stores/{{store_id}}/inventory/nearest-warehouse?variant_ids=1&customer_latitude=43.2389&customer_longitude=76.8896",
               "host": [
                 "{{base_url}}"
               ],
@@ -978,7 +981,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"variantId\": 1,\n  \"quantity\": 2\n}"
+              "raw": "{\n  \"variant_id\": 1,\n  \"quantity\": 2\n}"
             }
           }
         },
@@ -1040,7 +1043,8 @@
               "mode": "raw",
               "raw": "{\n  \"customerEmail\": \"customer@test.com\",\n  \"shippingAddress\": {\n    \"city\": \"Almaty\",\n    \"address\": \"Test 1\"\n  }\n}"
             }
-          }
+          },
+          "description": "⚠️ Checkout is a service, not a standalone route. May need to create an order via the orders module first."
         }
       ]
     },
@@ -1093,7 +1097,8 @@
                 "ORD-001"
               ]
             }
-          }
+          },
+          "description": "⚠️ Needs a real order number. Create a checkout first, then use its order_number."
         }
       ]
     },
@@ -1158,6 +1163,10 @@
                 "SAVE10",
                 "validate"
               ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cart_subtotal_tiyin\": 5000000\n}"
             }
           }
         }
@@ -1194,7 +1203,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"staff@test.com\",\n  \"role\": \"staff\"\n}"
+              "raw": "{\n  \"email\": \"staff@test.com\",\n  \"name\": \"Staff Member\",\n  \"role\": \"inventory_manager\"\n}"
             }
           }
         },
@@ -1233,7 +1242,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/storefront/products",
+              "raw": "{{base_url}}/storefront/products?storeId={{store_id}}",
               "host": [
                 "{{base_url}}"
               ],
@@ -1250,7 +1259,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/storefront/products/tshirt",
+              "raw": "{{base_url}}/storefront/products/samsung-galaxy-a54?storeId={{store_id}}",
               "host": [
                 "{{base_url}}"
               ],
@@ -1260,7 +1269,8 @@
                 "tshirt"
               ]
             }
-          }
+          },
+          "description": "Seed slugs: samsung-galaxy-a54, airpods-pro, iphone-15-case-black, nike-air-max-42, laptop-backpack-black"
         },
         {
           "name": "Browse Categories",
@@ -1268,7 +1278,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/storefront/categories",
+              "raw": "{{base_url}}/storefront/categories?storeId={{store_id}}",
               "host": [
                 "{{base_url}}"
               ],
