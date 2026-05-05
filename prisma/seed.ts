@@ -153,7 +153,7 @@ async function main() {
   const adminPassword = await bcrypt.hash('Admin123456', 12);
   const admin = await prisma.platformAdmin.upsert({
     where: { email: 'admin@shopbuilder.kz' },
-    update: {},
+    update: { passwordHash: adminPassword },
     create: {
       email: 'admin@shopbuilder.kz',
       passwordHash: adminPassword,
@@ -168,7 +168,7 @@ async function main() {
   const m1Pass = await bcrypt.hash('Merchant123', 12);
   const merchant1 = await prisma.merchant.upsert({
     where: { email: 'merchant1@example.com' },
-    update: {},
+    update: { passwordHash: m1Pass },
     create: {
       email: 'merchant1@example.com',
       passwordHash: m1Pass,
@@ -184,7 +184,7 @@ async function main() {
   const m2Pass = await bcrypt.hash('Merchant123', 12);
   const merchant2 = await prisma.merchant.upsert({
     where: { email: 'merchant2@example.com' },
-    update: {},
+    update: { passwordHash: m2Pass },
     create: {
       email: 'merchant2@example.com',
       passwordHash: m2Pass,
