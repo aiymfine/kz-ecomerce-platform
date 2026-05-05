@@ -12,6 +12,9 @@ import * as path from 'path';
 const logger = new Logger('Bootstrap');
 
 function validateEnv() {
+  // Skip validation in test environment
+  if (process.env.NODE_ENV === 'test') return;
+
   const required = ['DATABASE_URL', 'JWT_SECRET_KEY', 'SMTP_HOST'];
   const missing = required.filter((key) => !process.env[key]);
 

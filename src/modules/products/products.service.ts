@@ -32,8 +32,8 @@ export class ProductsService {
       where.categories = { some: { id: params.categoryId } };
     }
 
-    const items = await this.prisma.withTenant(storeId, () =>
-      this.prisma.product.findMany({
+    const items = await this.prisma.withTenant(storeId, (client) =>
+      client.product.findMany({
         where,
         take: params.limit + 1,
         cursor: params.cursor ? { id: parseInt(params.cursor) } : undefined,
@@ -75,15 +75,15 @@ export class ProductsService {
     const slug = data.slug || slugify(data.title);
 
     // Check slug uniqueness within tenant
-    const existing = await this.prisma.withTenant(storeId, () =>
-      this.prisma.product.findUnique({ where: { slug } }),
+    const existing = await this.prisma.withTenant(storeId, (client) =>
+      client.product.findUnique({ where: { slug } }),
     );
     if (existing) {
       return { error: 'CONFLICT', message: 'Product slug already exists' };
     }
 
-    const product = await this.prisma.withTenant(storeId, () =>
-      this.prisma.product.create({
+    const product = await this.prisma.withTenant(storeId, (client) =>
+      client.product.create({
         data: {
           title: data.title,
           slug,
@@ -106,8 +106,8 @@ export class ProductsService {
   }
 
   async getProduct(storeId: number, productId: number) {
-    const product = await this.prisma.withTenant(storeId, () =>
-      this.prisma.product.findUnique({
+    const product = await this.prisma.withTenant(storeId, (client) =>
+      client.product.findUnique({
         where: { id: productId },
         include: {
           variants: {
@@ -132,8 +132,8 @@ export class ProductsService {
   }
 
   async updateProduct(storeId: number, productId: number, data: Record<string, unknown>) {
-    const existing = await this.prisma.withTenant(storeId, () =>
-      this.prisma.product.findUnique({ where: { id: productId } }),
+    const existing = await this.prisma.withTenant(storeId, (client) =>
+      client.product.findUnique({ where: { id: productId } }),
     );
 
     if (!existing) {
@@ -150,8 +150,8 @@ export class ProductsService {
       const categoryIds = updateData.categoryIds;
       delete updateData.categoryIds;
 
-      return this.prisma.withTenant(storeId, () =>
-        this.prisma.product.update({
+      return this.prisma.withTenant(storeId, (client) =>
+        client.product.update({
           where: { id: productId },
           data: {
             ...updateData,
@@ -164,8 +164,8 @@ export class ProductsService {
       );
     }
 
-    return this.prisma.withTenant(storeId, () =>
-      this.prisma.product.update({
+    return this.prisma.withTenant(storeId, (client) =>
+      client.product.update({
         where: { id: productId },
         data: updateData,
         include: { variants: true, categories: true },
@@ -174,16 +174,16 @@ export class ProductsService {
   }
 
   async archiveProduct(storeId: number, productId: number) {
-    const existing = await this.prisma.withTenant(storeId, () =>
-      this.prisma.product.findUnique({ where: { id: productId } }),
+    const existing = await this.prisma.withTenant(storeId, (client) =>
+      client.product.findUnique({ where: { id: productId } }),
     );
 
     if (!existing) {
       throw new NotFoundException('Product not found');
     }
 
-    return this.prisma.withTenant(storeId, () =>
-      this.prisma.product.update({
+    return this.prisma.withTenant(storeId, (client) =>
+      client.product.update({
         where: { id: productId },
         data: { status: 'archived' },
       }),
@@ -205,8 +205,8 @@ export class ProductsService {
     },
   ) {
     // Verify variant belongs to this product
-    const variant = await this.prisma.withTenant(storeId, () =>
-      this.prisma.productVariant.findFirst({
+    const variant = await this.prisma.withTenant(storeId, (client) =>
+      client.productVariant.findFirst({
         where: { id: variantId, productId },
       }),
     );
@@ -224,8 +224,8 @@ export class ProductsService {
     if (data.isActive !== undefined) updateData.isActive = data.isActive;
     if (data.position !== undefined) updateData.position = data.position;
 
-    return this.prisma.withTenant(storeId, () =>
-      this.prisma.productVariant.update({
+    return this.prisma.withTenant(storeId, (client) =>
+      client.productVariant.update({
         where: { id: variantId },
         data: updateData,
         include: { attributeValues: { include: { attribute: true } } },
@@ -234,8 +234,8 @@ export class ProductsService {
   }
 
   async deleteVariant(storeId: number, productId: number, variantId: number) {
-    const variant = await this.prisma.withTenant(storeId, () =>
-      this.prisma.productVariant.findFirst({
+    const variant = await this.prisma.withTenant(storeId, (client) =>
+      client.productVariant.findFirst({
         where: { id: variantId, productId },
       }),
     );
@@ -244,8 +244,8 @@ export class ProductsService {
       throw new NotFoundException('Variant not found');
     }
 
-    await this.prisma.withTenant(storeId, () =>
-      this.prisma.productVariant.delete({ where: { id: variantId } }),
+    await this.prisma.withTenant(storeId, (client) =>
+      client.productVariant.delete({ where: { id: variantId } }),
     );
 
     return { message: 'Variant deleted' };
@@ -262,8 +262,8 @@ export class ProductsService {
       compareAtPriceTiyin?: number;
     },
   ) {
-    const product = await this.prisma.withTenant(storeId, () =>
-      this.prisma.product.findUnique({ where: { id: productId } }),
+    const product = await this.prisma.withTenant(storeId, (client) =>
+      client.product.findUnique({ where: { id: productId } }),
     );
 
     if (!product) {
@@ -315,12 +315,12 @@ export class ProductsService {
         material: combo.material,
       });
 
-      const variant = await this.prisma.withTenant(storeId, async () => {
+      const variant = await this.prisma.withTenant(storeId, async (client) => {
         // Create attribute values
         const attributeValuesData: any[] = [];
 
         if (combo.size) {
-          const attr = await this.prisma.variantAttribute.upsert({
+          const attr = await client.variantAttribute.upsert({
             where: { id: await this.getOrCreateAttribute(storeId, 'size', 'Size') },
             create: { name: 'Size', type: 'size' },
             update: {},
@@ -333,7 +333,7 @@ export class ProductsService {
         }
 
         if (combo.color) {
-          const attr = await this.prisma.variantAttribute.upsert({
+          const attr = await client.variantAttribute.upsert({
             where: { id: await this.getOrCreateAttribute(storeId, 'color', 'Color') },
             create: { name: 'Color', type: 'color' },
             update: {},
@@ -346,7 +346,7 @@ export class ProductsService {
         }
 
         if (combo.material) {
-          const attr = await this.prisma.variantAttribute.upsert({
+          const attr = await client.variantAttribute.upsert({
             where: { id: await this.getOrCreateAttribute(storeId, 'material', 'Material') },
             create: { name: 'Material', type: 'material' },
             update: {},
@@ -359,14 +359,14 @@ export class ProductsService {
         }
 
         // Check SKU uniqueness
-        const existingSku = await this.prisma.productVariant.findUnique({
+        const existingSku = await client.productVariant.findUnique({
           where: { sku },
         });
         if (existingSku) {
           return null; // Skip duplicate SKU
         }
 
-        return this.prisma.productVariant.create({
+        return client.productVariant.create({
           data: {
             productId,
             sku,
@@ -391,14 +391,14 @@ export class ProductsService {
   }
 
   private async getOrCreateAttribute(storeId: number, type: string, name: string): Promise<number> {
-    const existing = await this.prisma.withTenant(storeId, () =>
-      this.prisma.variantAttribute.findFirst({ where: { type: type as any } }),
+    const existing = await this.prisma.withTenant(storeId, (client) =>
+      client.variantAttribute.findFirst({ where: { type: type as any } }),
     );
 
     if (existing) return existing.id;
 
-    const created = await this.prisma.withTenant(storeId, () =>
-      this.prisma.variantAttribute.create({
+    const created = await this.prisma.withTenant(storeId, (client) =>
+      client.variantAttribute.create({
         data: { name, type: type as any },
       }),
     );

@@ -41,8 +41,8 @@ export class OrdersService {
     const where: any = {};
     if (params.status) where.status = params.status;
 
-    const items = await this.prisma.withTenant(storeId, () =>
-      this.prisma.order.findMany({
+    const items = await this.prisma.withTenant(storeId, (client) =>
+      client.order.findMany({
         where,
         take: params.limit + 1,
         cursor: params.cursor ? { id: parseInt(params.cursor) } : undefined,
@@ -58,8 +58,8 @@ export class OrdersService {
   }
 
   async getOrderByNumber(storeId: number, orderNumber: string) {
-    const order = await this.prisma.withTenant(storeId, () =>
-      this.prisma.order.findUnique({
+    const order = await this.prisma.withTenant(storeId, (client) =>
+      client.order.findUnique({
         where: { orderNumber },
         include: {
           items: true,
@@ -77,8 +77,8 @@ export class OrdersService {
   }
 
   async updateOrderStatus(storeId: number, orderId: number, newStatus: OrderStatus) {
-    const order = await this.prisma.withTenant(storeId, () =>
-      this.prisma.order.findUnique({ where: { id: orderId } }),
+    const order = await this.prisma.withTenant(storeId, (client) =>
+      client.order.findUnique({ where: { id: orderId } }),
     );
 
     if (!order) {
@@ -92,8 +92,8 @@ export class OrdersService {
       );
     }
 
-    return this.prisma.withTenant(storeId, () =>
-      this.prisma.order.update({
+    return this.prisma.withTenant(storeId, (client) =>
+      client.order.update({
         where: { id: orderId },
         data: { status: newStatus as any },
         include: { items: true, payments: true },
@@ -106,8 +106,8 @@ export class OrdersService {
     orderId: number,
     data: { warehouseId: number; items: { order_item_id: number; quantity: number }[] },
   ) {
-    const order = await this.prisma.withTenant(storeId, () =>
-      this.prisma.order.findUnique({ where: { id: orderId } }),
+    const order = await this.prisma.withTenant(storeId, (client) =>
+      client.order.findUnique({ where: { id: orderId } }),
     );
 
     if (!order) {
@@ -118,8 +118,8 @@ export class OrdersService {
       throw new BadRequestException('Order must be confirmed or processing to create fulfillment');
     }
 
-    return this.prisma.withTenant(storeId, () =>
-      this.prisma.orderFulfillment.create({
+    return this.prisma.withTenant(storeId, (client) =>
+      client.orderFulfillment.create({
         data: {
           orderId,
           warehouseId: data.warehouseId,
@@ -135,8 +135,8 @@ export class OrdersService {
     fulfillmentId: number,
     data: { tracking_number?: string; status?: string },
   ) {
-    const fulfillment = await this.prisma.withTenant(storeId, () =>
-      this.prisma.orderFulfillment.findFirst({
+    const fulfillment = await this.prisma.withTenant(storeId, (client) =>
+      client.orderFulfillment.findFirst({
         where: { id: fulfillmentId, orderId },
       }),
     );
@@ -152,8 +152,8 @@ export class OrdersService {
       if (data.status === 'shipped') updateData.shippedAt = new Date();
     }
 
-    return this.prisma.withTenant(storeId, () =>
-      this.prisma.orderFulfillment.update({
+    return this.prisma.withTenant(storeId, (client) =>
+      client.orderFulfillment.update({
         where: { id: fulfillmentId },
         data: updateData,
       }),

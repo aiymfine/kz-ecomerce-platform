@@ -19,8 +19,8 @@ export class StorefrontService {
   ) {}
 
   async register(storeId: number, dto: { email: string; password: string; first_name: string; last_name?: string; phone?: string }) {
-    const existing = await this.prisma.withTenant(storeId, () =>
-      this.prisma.customer.findUnique({
+    const existing = await this.prisma.withTenant(storeId, (client) =>
+      client.customer.findUnique({
         where: { email: dto.email },
       }),
     );
@@ -30,8 +30,8 @@ export class StorefrontService {
 
     const passwordHash = await bcrypt.hash(dto.password, 12);
 
-    const customer = await this.prisma.withTenant(storeId, () =>
-      this.prisma.customer.create({
+    const customer = await this.prisma.withTenant(storeId, (client) =>
+      client.customer.create({
         data: {
           email: dto.email,
           passwordHash,
@@ -56,8 +56,8 @@ export class StorefrontService {
   }
 
   async login(storeId: number, dto: { email: string; password: string }) {
-    const customer = await this.prisma.withTenant(storeId, () =>
-      this.prisma.customer.findUnique({
+    const customer = await this.prisma.withTenant(storeId, (client) =>
+      client.customer.findUnique({
         where: { email: dto.email },
       }),
     );
@@ -72,8 +72,8 @@ export class StorefrontService {
     }
 
     // Update last login
-    await this.prisma.withTenant(storeId, () =>
-      this.prisma.customer.update({
+    await this.prisma.withTenant(storeId, (client) =>
+      client.customer.update({
         where: { id: customer.id },
         data: { lastLoginAt: new Date() },
       }),
@@ -107,8 +107,8 @@ export class StorefrontService {
         return { error: 'UNAUTHORIZED', message: 'Invalid token' };
       }
 
-      const customer = await this.prisma.withTenant(payload.storeId, () =>
-        this.prisma.customer.findUnique({
+      const customer = await this.prisma.withTenant(payload.storeId, (client) =>
+        client.customer.findUnique({
           where: { id: payload.sub },
         }),
       );
@@ -172,8 +172,8 @@ export class StorefrontService {
       where.categories = { some: { id: params.categoryId } };
     }
 
-    const items = await this.prisma.withTenant(storeId, () =>
-      this.prisma.product.findMany({
+    const items = await this.prisma.withTenant(storeId, (client) =>
+      client.product.findMany({
         where,
         take: params.limit + 1,
         cursor: params.cursor ? { id: parseInt(params.cursor) } : undefined,
@@ -199,8 +199,8 @@ export class StorefrontService {
   }
 
   async getProductBySlug(storeId: number, slug: string) {
-    const product = await this.prisma.withTenant(storeId, () =>
-      this.prisma.product.findFirst({
+    const product = await this.prisma.withTenant(storeId, (client) =>
+      client.product.findFirst({
         where: { slug, status: 'active' },
         include: {
           images: { orderBy: { position: 'asc' } },
@@ -226,8 +226,8 @@ export class StorefrontService {
   }
 
   async listCategories(storeId: number) {
-    const categories = await this.prisma.withTenant(storeId, () =>
-      this.prisma.category.findMany({
+    const categories = await this.prisma.withTenant(storeId, (client) =>
+      client.category.findMany({
         where: { isActive: true },
         orderBy: [{ depth: 'asc' }, { sortOrder: 'asc' }],
       }),
@@ -252,8 +252,8 @@ export class StorefrontService {
   }
 
   async getCategoryProducts(storeId: number, slug: string, params: { cursor?: string; limit: number; sort: 'asc' | 'desc' }) {
-    const category = await this.prisma.withTenant(storeId, () =>
-      this.prisma.category.findFirst({
+    const category = await this.prisma.withTenant(storeId, (client) =>
+      client.category.findFirst({
         where: { slug, isActive: true },
       }),
     );
@@ -263,16 +263,20 @@ export class StorefrontService {
     }
 
     // Use materialized path to find products in this category and all subcategories
-    const categoryIds = await this.prisma.withTenant(storeId, () =>
-      this.prisma.$queryRawUnsafe<{ id: number }[]>(
-        `SELECT id FROM categories WHERE path LIKE '${category.path}%' AND is_active = true`,
-      ),
+    const categoryIds = await this.prisma.withTenant(storeId, (client) =>
+      client.category.findMany({
+        where: {
+          path: { startsWith: category.path },
+          isActive: true,
+        },
+        select: { id: true },
+      }),
     );
 
     const ids = categoryIds.map((c) => c.id);
 
-    const items = await this.prisma.withTenant(storeId, () =>
-      this.prisma.product.findMany({
+    const items = await this.prisma.withTenant(storeId, (client) =>
+      client.product.findMany({
         where: {
           status: 'active',
           categories: { some: { categoryId: { in: ids } } },

@@ -4,6 +4,7 @@ import { PrismaClient } from '@prisma/client';
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(PrismaService.name);
+  private tenantClients: Map<number, PrismaClient> = new Map();
 
   constructor() {
     super({
@@ -31,29 +32,39 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
   }
 
   async onModuleDestroy() {
+    for (const [, client] of this.tenantClients) {
+      await client.$disconnect();
+    }
+    this.tenantClients.clear();
     await this.$disconnect();
     this.logger.log('Disconnected from database');
   }
 
   /**
-   * Execute raw SQL within a specific tenant schema.
-   * Sets search_path before executing the query.
+   * Get or create a cached PrismaClient for a specific tenant schema.
+   * Uses Prisma's official multi-tenancy approach: connection URL with schema parameter.
+   * No raw SQL needed.
    */
-  async withTenant<T>(storeId: number, fn: () => Promise<T>): Promise<T> {
-    await this.$executeRawUnsafe(`SET search_path TO store_${storeId}, public`);
-    try {
-      return await fn();
-    } finally {
-      await this.$executeRawUnsafe(`SET search_path TO public`);
+  getTenantClient(storeId: number): PrismaClient {
+    if (!this.tenantClients.has(storeId)) {
+      const baseUrl = process.env.DATABASE_URL!;
+      const url = new URL(baseUrl);
+      url.searchParams.set('schema', `store_${storeId}`);
+      const client = new PrismaClient({
+        datasourceUrl: url.toString(),
+      });
+      this.tenantClients.set(storeId, client);
     }
+    return this.tenantClients.get(storeId)!;
   }
 
   /**
-   * Execute raw SQL within a specific tenant schema (unsafe, for DDL).
+   * Execute a function within a tenant context.
+   * The callback receives a PrismaClient connected to the tenant's schema.
+   * All Prisma operations inside the callback use the tenant's schema automatically.
    */
-  async executeRawInTenant(storeId: number, sql: string) {
-    await this.$executeRawUnsafe(`SET search_path TO store_${storeId}, public`);
-    await this.$executeRawUnsafe(sql);
-    await this.$executeRawUnsafe(`SET search_path TO public`);
+  async withTenant<T>(storeId: number, fn: (client: PrismaClient) => Promise<T>): Promise<T> {
+    const client = this.getTenantClient(storeId);
+    return fn(client);
   }
 }

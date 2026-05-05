@@ -8,8 +8,8 @@ export class StaffService {
   constructor(private prisma: PrismaService) {}
 
   async listStaff(storeId: number) {
-    return this.prisma.withTenant(storeId, () =>
-      this.prisma.staffMember.findMany({
+    return this.prisma.withTenant(storeId, (client) =>
+      client.staffMember.findMany({
         orderBy: { invitedAt: 'desc' },
         select: {
           id: true,
@@ -26,8 +26,8 @@ export class StaffService {
   }
 
   async getStaff(storeId: number, staffId: number) {
-    const staffMember = await this.prisma.withTenant(storeId, () =>
-      this.prisma.staffMember.findUnique({
+    const staffMember = await this.prisma.withTenant(storeId, (client) =>
+      client.staffMember.findUnique({
         where: { id: staffId },
         select: {
           id: true,
@@ -54,8 +54,8 @@ export class StaffService {
     data: { email: string; name: string; role: string; permissions?: any },
   ) {
     // Check if email already exists in tenant
-    const existing = await this.prisma.withTenant(storeId, () =>
-      this.prisma.staffMember.findUnique({ where: { email: data.email } }),
+    const existing = await this.prisma.withTenant(storeId, (client) =>
+      client.staffMember.findUnique({ where: { email: data.email } }),
     );
     if (existing) {
       return { error: 'CONFLICT', message: 'Staff member with this email already exists' };
@@ -65,8 +65,8 @@ export class StaffService {
     const tempPassword = randomBytes(16).toString('hex');
     const passwordHash = await bcrypt.hash(tempPassword, 12);
 
-    const staffMember = await this.prisma.withTenant(storeId, () =>
-      this.prisma.staffMember.create({
+    const staffMember = await this.prisma.withTenant(storeId, (client) =>
+      client.staffMember.create({
         data: {
           email: data.email,
           name: data.name,
@@ -97,8 +97,8 @@ export class StaffService {
     staffId: number,
     data: { role?: string; permissions?: any; isActive?: boolean },
   ) {
-    const existing = await this.prisma.withTenant(storeId, () =>
-      this.prisma.staffMember.findUnique({ where: { id: staffId } }),
+    const existing = await this.prisma.withTenant(storeId, (client) =>
+      client.staffMember.findUnique({ where: { id: staffId } }),
     );
 
     if (!existing) {
@@ -110,8 +110,8 @@ export class StaffService {
     if (data.permissions !== undefined) updateData.permissions = data.permissions;
     if (data.isActive !== undefined) updateData.isActive = data.isActive;
 
-    return this.prisma.withTenant(storeId, () =>
-      this.prisma.staffMember.update({
+    return this.prisma.withTenant(storeId, (client) =>
+      client.staffMember.update({
         where: { id: staffId },
         data: updateData,
         select: {
@@ -128,16 +128,16 @@ export class StaffService {
   }
 
   async removeStaff(storeId: number, staffId: number) {
-    const existing = await this.prisma.withTenant(storeId, () =>
-      this.prisma.staffMember.findUnique({ where: { id: staffId } }),
+    const existing = await this.prisma.withTenant(storeId, (client) =>
+      client.staffMember.findUnique({ where: { id: staffId } }),
     );
 
     if (!existing) {
       throw new NotFoundException('Staff member not found');
     }
 
-    await this.prisma.withTenant(storeId, () =>
-      this.prisma.staffMember.delete({ where: { id: staffId } }),
+    await this.prisma.withTenant(storeId, (client) =>
+      client.staffMember.delete({ where: { id: staffId } }),
     );
 
     return { message: 'Staff member removed' };

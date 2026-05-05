@@ -19,8 +19,8 @@ export class PaymentsService {
     idempotencyKey: string;
   }) {
     // Validate order
-    const order = await this.prisma.withTenant(storeId, () =>
-      this.prisma.order.findUnique({
+    const order = await this.prisma.withTenant(storeId, (client) =>
+      client.order.findUnique({
         where: { id: data.orderId },
       }),
     );
@@ -36,8 +36,8 @@ export class PaymentsService {
     }
 
     // Idempotency check
-    const existing = await this.prisma.withTenant(storeId, () =>
-      this.prisma.payment.findUnique({
+    const existing = await this.prisma.withTenant(storeId, (client) =>
+      client.payment.findUnique({
         where: { idempotencyKey: data.idempotencyKey },
       }),
     );
@@ -47,8 +47,8 @@ export class PaymentsService {
     }
 
     // Create payment
-    const payment = await this.prisma.withTenant(storeId, () =>
-      this.prisma.payment.create({
+    const payment = await this.prisma.withTenant(storeId, (client) =>
+      client.payment.create({
         data: {
           orderId: data.orderId,
           provider: data.provider,
@@ -62,8 +62,8 @@ export class PaymentsService {
 
     // For manual payment, update order status immediately
     if (data.provider === 'manual') {
-      await this.prisma.withTenant(storeId, () =>
-        this.prisma.order.update({
+      await this.prisma.withTenant(storeId, (client) =>
+        client.order.update({
           where: { id: data.orderId },
           data: { status: 'confirmed' },
         }),
@@ -101,8 +101,8 @@ export class PaymentsService {
       throw new BadRequestException('Missing payment_id or status in callback');
     }
 
-    const payment = await this.prisma.withTenant(storeId, () =>
-      this.prisma.payment.findUnique({ where: { id: paymentId } }),
+    const payment = await this.prisma.withTenant(storeId, (client) =>
+      client.payment.findUnique({ where: { id: paymentId } }),
     );
 
     if (!payment) {
@@ -111,8 +111,8 @@ export class PaymentsService {
 
     const newStatus = status === 'success' ? 'succeeded' : 'failed';
 
-    const updated = await this.prisma.withTenant(storeId, () =>
-      this.prisma.payment.update({
+    const updated = await this.prisma.withTenant(storeId, (client) =>
+      client.payment.update({
         where: { id: paymentId },
         data: {
           status: newStatus,
@@ -124,15 +124,15 @@ export class PaymentsService {
 
     // Update order status on success
     if (newStatus === 'succeeded') {
-      await this.prisma.withTenant(storeId, () =>
-        this.prisma.order.update({
+      await this.prisma.withTenant(storeId, (client) =>
+        client.order.update({
           where: { id: payment.orderId },
           data: { status: 'confirmed' },
         }),
       );
     } else {
-      await this.prisma.withTenant(storeId, () =>
-        this.prisma.order.update({
+      await this.prisma.withTenant(storeId, (client) =>
+        client.order.update({
           where: { id: payment.orderId },
           data: { status: 'payment_failed' },
         }),
@@ -146,8 +146,8 @@ export class PaymentsService {
     amountTiyin: number;
     reason?: string;
   }) {
-    const payment = await this.prisma.withTenant(storeId, () =>
-      this.prisma.payment.findUnique({
+    const payment = await this.prisma.withTenant(storeId, (client) =>
+      client.payment.findUnique({
         where: { id: paymentId },
       }),
     );
@@ -171,8 +171,8 @@ export class PaymentsService {
     const isFullRefund = data.amountTiyin === payment.amountTiyin;
 
     // Create refund payment record (negative amount)
-    const refundPayment = await this.prisma.withTenant(storeId, () =>
-      this.prisma.payment.create({
+    const refundPayment = await this.prisma.withTenant(storeId, (client) =>
+      client.payment.create({
         data: {
           orderId: payment.orderId,
           provider: payment.provider,
@@ -190,8 +190,8 @@ export class PaymentsService {
 
     // Update original payment status if full refund
     if (isFullRefund) {
-      await this.prisma.withTenant(storeId, () =>
-        this.prisma.payment.update({
+      await this.prisma.withTenant(storeId, (client) =>
+        client.payment.update({
           where: { id: paymentId },
           data: { status: 'refunded' },
         }),
@@ -199,8 +199,8 @@ export class PaymentsService {
     }
 
     // Check if all payments for the order are refunded
-    const allPayments = await this.prisma.withTenant(storeId, () =>
-      this.prisma.payment.findMany({
+    const allPayments = await this.prisma.withTenant(storeId, (client) =>
+      client.payment.findMany({
         where: { orderId: payment.orderId },
       }),
     );
@@ -214,8 +214,8 @@ export class PaymentsService {
       .reduce((sum, p) => sum + Math.abs(p.amountTiyin), 0);
 
     if (totalPaid <= totalRefunded) {
-      await this.prisma.withTenant(storeId, () =>
-        this.prisma.order.update({
+      await this.prisma.withTenant(storeId, (client) =>
+        client.order.update({
           where: { id: payment.orderId },
           data: { status: 'refunded' },
         }),
@@ -226,16 +226,16 @@ export class PaymentsService {
   }
 
   async getPaymentsByOrder(storeId: number, orderId: number) {
-    const order = await this.prisma.withTenant(storeId, () =>
-      this.prisma.order.findUnique({ where: { id: orderId } }),
+    const order = await this.prisma.withTenant(storeId, (client) =>
+      client.order.findUnique({ where: { id: orderId } }),
     );
 
     if (!order) {
       throw new NotFoundException('Order not found');
     }
 
-    return this.prisma.withTenant(storeId, () =>
-      this.prisma.payment.findMany({
+    return this.prisma.withTenant(storeId, (client) =>
+      client.payment.findMany({
         where: { orderId },
         orderBy: { createdAt: 'desc' },
       }),

@@ -7,16 +7,16 @@ export class WebhooksService {
   constructor(private prisma: PrismaService) {}
 
   async listWebhooks(storeId: number) {
-    return this.prisma.withTenant(storeId, () =>
-      this.prisma.webhook.findMany({
+    return this.prisma.withTenant(storeId, (client) =>
+      client.webhook.findMany({
         orderBy: { createdAt: 'desc' },
       }),
     );
   }
 
   async getWebhook(storeId: number, webhookId: number) {
-    const webhook = await this.prisma.withTenant(storeId, () =>
-      this.prisma.webhook.findUnique({ where: { id: webhookId } }),
+    const webhook = await this.prisma.withTenant(storeId, (client) =>
+      client.webhook.findUnique({ where: { id: webhookId } }),
     );
 
     if (!webhook) {
@@ -32,8 +32,8 @@ export class WebhooksService {
   ) {
     const secret = randomBytes(32).toString('hex');
 
-    const webhook = await this.prisma.withTenant(storeId, () =>
-      this.prisma.webhook.create({
+    const webhook = await this.prisma.withTenant(storeId, (client) =>
+      client.webhook.create({
         data: {
           url: data.url,
           events: data.events as any,
@@ -54,8 +54,8 @@ export class WebhooksService {
     webhookId: number,
     data: { url?: string; events?: string[]; isActive?: boolean },
   ) {
-    const existing = await this.prisma.withTenant(storeId, () =>
-      this.prisma.webhook.findUnique({ where: { id: webhookId } }),
+    const existing = await this.prisma.withTenant(storeId, (client) =>
+      client.webhook.findUnique({ where: { id: webhookId } }),
     );
 
     if (!existing) {
@@ -67,8 +67,8 @@ export class WebhooksService {
     if (data.events !== undefined) updateData.events = data.events;
     if (data.isActive !== undefined) updateData.isActive = data.isActive;
 
-    return this.prisma.withTenant(storeId, () =>
-      this.prisma.webhook.update({
+    return this.prisma.withTenant(storeId, (client) =>
+      client.webhook.update({
         where: { id: webhookId },
         data: updateData,
       }),
@@ -76,16 +76,16 @@ export class WebhooksService {
   }
 
   async deleteWebhook(storeId: number, webhookId: number) {
-    const existing = await this.prisma.withTenant(storeId, () =>
-      this.prisma.webhook.findUnique({ where: { id: webhookId } }),
+    const existing = await this.prisma.withTenant(storeId, (client) =>
+      client.webhook.findUnique({ where: { id: webhookId } }),
     );
 
     if (!existing) {
       throw new NotFoundException('Webhook not found');
     }
 
-    await this.prisma.withTenant(storeId, () =>
-      this.prisma.webhook.delete({ where: { id: webhookId } }),
+    await this.prisma.withTenant(storeId, (client) =>
+      client.webhook.delete({ where: { id: webhookId } }),
     );
 
     return { message: 'Webhook deleted' };
@@ -96,8 +96,8 @@ export class WebhooksService {
     webhookId: number,
     params: { status?: string; cursor?: string; limit: number },
   ) {
-    const webhook = await this.prisma.withTenant(storeId, () =>
-      this.prisma.webhook.findUnique({ where: { id: webhookId } }),
+    const webhook = await this.prisma.withTenant(storeId, (client) =>
+      client.webhook.findUnique({ where: { id: webhookId } }),
     );
 
     if (!webhook) {
@@ -107,8 +107,8 @@ export class WebhooksService {
     const where: any = { webhookId };
     if (params.status) where.status = params.status;
 
-    const items = await this.prisma.withTenant(storeId, () =>
-      this.prisma.webhookEvent.findMany({
+    const items = await this.prisma.withTenant(storeId, (client) =>
+      client.webhookEvent.findMany({
         where,
         take: params.limit + 1,
         cursor: params.cursor ? { id: parseInt(params.cursor) } : undefined,

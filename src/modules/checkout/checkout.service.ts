@@ -33,15 +33,15 @@ export class CheckoutService {
 
   async processCheckout(storeId: number, input: CheckoutInput) {
     // Pre-flight validation (outside transaction)
-    const customer = await this.prisma.withTenant(storeId, () =>
-      this.prisma.customer.findUnique({ where: { id: input.customerId } }),
+    const customer = await this.prisma.withTenant(storeId, (client) =>
+      client.customer.findUnique({ where: { id: input.customerId } }),
     );
     if (!customer) {
       throw new Error('Customer not found');
     }
 
-    const cart = await this.prisma.withTenant(storeId, () =>
-      this.prisma.cart.findFirst({
+    const cart = await this.prisma.withTenant(storeId, (client) =>
+      client.cart.findFirst({
         where: { id: input.cartId, customerId: input.customerId, status: 'active' },
         include: { items: true },
       }),
@@ -52,8 +52,8 @@ export class CheckoutService {
 
     // Validate all variants
     const variantIds = cart.items.map((item) => item.variantId);
-    const variants = await this.prisma.withTenant(storeId, () =>
-      this.prisma.productVariant.findMany({
+    const variants = await this.prisma.withTenant(storeId, (client) =>
+      client.productVariant.findMany({
         where: { id: { in: variantIds }, isActive: true },
       }),
     );
@@ -133,8 +133,8 @@ export class CheckoutService {
     const totalTiyin = subtotalTiyin - discountTiyin + shippingTiyin + vatTiyin;
 
     // ACID transaction: steps 9-14
-    const order = await this.prisma.withTenant(storeId, async () => {
-      return this.prisma.$transaction(async (tx) => {
+    const order = await this.prisma.withTenant(storeId, async (client) => {
+      return client.$transaction(async (tx) => {
         // Generate order number
         const count = await tx.order.count();
         const orderNumber = `ORD-${String(count + 1).padStart(8, '0')}`;

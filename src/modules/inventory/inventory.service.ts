@@ -14,8 +14,8 @@ export class InventoryService {
   constructor(private prisma: PrismaService) {}
 
   async listInventory(storeId: number, params: { cursor?: string; limit: number }) {
-    const items = await this.prisma.withTenant(storeId, () =>
-      this.prisma.inventory.findMany({
+    const items = await this.prisma.withTenant(storeId, (client) =>
+      client.inventory.findMany({
         take: params.limit + 1,
         cursor: params.cursor ? { id: parseInt(params.cursor) } : undefined,
         orderBy: { updatedAt: 'desc' },
@@ -34,8 +34,8 @@ export class InventoryService {
   }
 
   async listByWarehouse(storeId: number, warehouseId: number) {
-    const items = await this.prisma.withTenant(storeId, () =>
-      this.prisma.inventory.findMany({
+    const items = await this.prisma.withTenant(storeId, (client) =>
+      client.inventory.findMany({
         where: { warehouseId },
       }),
     );
@@ -44,8 +44,8 @@ export class InventoryService {
   }
 
   async listByVariant(storeId: number, variantId: number) {
-    const items = await this.prisma.withTenant(storeId, () =>
-      this.prisma.inventory.findMany({
+    const items = await this.prisma.withTenant(storeId, (client) =>
+      client.inventory.findMany({
         where: { variantId },
       }),
     );
@@ -62,8 +62,8 @@ export class InventoryService {
       lowStockThreshold: number;
     },
   ) {
-    const result = await this.prisma.withTenant(storeId, () =>
-      this.prisma.inventory.upsert({
+    const result = await this.prisma.withTenant(storeId, (client) =>
+      client.inventory.upsert({
         where: {
           variantId_warehouseId: {
             variantId: data.variantId,
@@ -88,31 +88,29 @@ export class InventoryService {
   }
 
   async adjustInventory(storeId: number, id: number, quantityChange: number) {
-    return this.prisma.withTenant(storeId, async () => {
-      const result = await this.prisma.$queryRawUnsafe<any[]>(
-        `SELECT quantity_available FROM inventory WHERE id = $1 FOR UPDATE`,
-        id,
-      );
+    return this.prisma.withTenant(storeId, (client) =>
+      client.$transaction(async (tx) => {
+        const record = await tx.inventory.findUnique({
+          where: { id },
+        });
+        if (!record) {
+          throw new NotFoundException('Inventory record not found');
+        }
 
-      if (!result.length) {
-        throw new NotFoundException('Inventory record not found');
-      }
+        const newQuantity = record.quantityAvailable + quantityChange;
+        if (newQuantity < 0) {
+          throw new BadRequestException(
+            'Insufficient stock: quantity would go below zero',
+          );
+        }
 
-      const newQuantity = result[0].quantity_available + quantityChange;
-      if (newQuantity < 0) {
-        throw new BadRequestException(
-          'Insufficient stock: quantity would go below zero',
-        );
-      }
-
-      const updated = await this.prisma.$queryRawUnsafe<any[]>(
-        `UPDATE inventory SET quantity_available = $1, updated_at = NOW() WHERE id = $2 RETURNING *`,
-        newQuantity,
-        id,
-      );
-
-      return updated[0];
-    });
+        const updated = await tx.inventory.update({
+          where: { id },
+          data: { quantityAvailable: newQuantity },
+        });
+        return updated;
+      }, { isolationLevel: 'Serializable' }),
+    );
   }
 
   async transferInventory(
@@ -124,42 +122,49 @@ export class InventoryService {
       quantity: number;
     },
   ) {
-    return this.prisma.withTenant(storeId, async () => {
-      return this.prisma.$transaction(async () => {
-        const fromResult = await this.prisma.$queryRawUnsafe<any[]>(
-          `SELECT quantity_available FROM inventory WHERE variant_id = $1 AND warehouse_id = $2 FOR UPDATE`,
-          data.variantId,
-          data.fromWarehouseId,
-        );
+    return this.prisma.withTenant(storeId, (client) =>
+      client.$transaction(async (tx) => {
+        const fromRecord = await tx.inventory.findFirst({
+          where: {
+            variantId: data.variantId,
+            warehouseId: data.fromWarehouseId,
+          },
+        });
 
-        if (!fromResult.length) {
+        if (!fromRecord) {
           throw new NotFoundException('Source inventory not found');
         }
 
-        if (fromResult[0].quantity_available < data.quantity) {
+        if (fromRecord.quantityAvailable < data.quantity) {
           throw new BadRequestException('Insufficient stock at source warehouse');
         }
 
-        await this.prisma.$queryRawUnsafe(
-          `UPDATE inventory SET quantity_available = quantity_available - $1, updated_at = NOW() WHERE variant_id = $2 AND warehouse_id = $3`,
-          data.quantity,
-          data.variantId,
-          data.fromWarehouseId,
-        );
+        await tx.inventory.update({
+          where: { id: fromRecord.id },
+          data: { quantityAvailable: { decrement: data.quantity } },
+        });
 
-        await this.prisma.$queryRawUnsafe(
-          `INSERT INTO inventory (variant_id, warehouse_id, quantity_available, quantity_reserved, low_stock_threshold, created_at, updated_at)
-           VALUES ($1, $2, $3, 0, 5, NOW(), NOW())
-           ON CONFLICT (variant_id, warehouse_id)
-           DO UPDATE SET quantity_available = inventory.quantity_available + $3, updated_at = NOW()`,
-          data.variantId,
-          data.toWarehouseId,
-          data.quantity,
-        );
+        // Upsert destination
+        await tx.inventory.upsert({
+          where: {
+            variantId_warehouseId: {
+              variantId: data.variantId,
+              warehouseId: data.toWarehouseId,
+            },
+          },
+          create: {
+            variantId: data.variantId,
+            warehouseId: data.toWarehouseId,
+            quantityAvailable: data.quantity,
+          },
+          update: {
+            quantityAvailable: { increment: data.quantity },
+          },
+        });
 
         return { message: 'Transfer completed' };
-      });
-    });
+      }, { isolationLevel: 'Serializable' }),
+    );
   }
 
   async findNearestWarehouse(
@@ -168,36 +173,44 @@ export class InventoryService {
     customerLatitude: number,
     customerLongitude: number,
   ) {
-    return this.prisma.withTenant(storeId, async () => {
-      const variantPlaceholders = variantIds.map((_, i) => `$${i + 3}`).join(',');
-      const query = `
-        SELECT
-          w.id as "warehouse_id",
-          w.name as "warehouse_name",
-          w.city,
-          w.latitude,
-          w.longitude,
-          i.variant_id,
-          i.quantity_available,
-          6371 * acos(
-            LEAST(1.0, cos(radians($1)) * cos(radians(w.latitude)) *
-            cos(radians(w.longitude) - radians($2)) +
-            sin(radians($1)) * sin(radians(w.latitude)))
-          ) AS "distance_km"
-        FROM warehouses w
-        JOIN inventory i ON i.warehouse_id = w.id
-        WHERE w.is_active = true
-          AND i.variant_id IN (${variantPlaceholders})
-          AND i.quantity_available > 0
-        ORDER BY "distance_km" ASC
-      `;
+    return this.prisma.withTenant(storeId, async (client) => {
+      // Get all active warehouses
+      const warehouses = await client.warehouse.findMany({
+        where: { isActive: true },
+      });
+      const warehouseIds = new Set(warehouses.map(w => w.id));
+      const warehouseMap = new Map(warehouses.map(w => [w.id, w]));
 
-      const results = await this.prisma.$queryRawUnsafe<any[]>(
-        query,
-        customerLatitude,
-        customerLongitude,
-        ...variantIds,
-      );
+      // Get all inventory for requested variants at active warehouses
+      const inventories = await client.inventory.findMany({
+        where: {
+          variantId: { in: variantIds },
+          warehouseId: { in: [...warehouseIds] },
+          quantityAvailable: { gt: 0 },
+        },
+      });
+
+      // Deduplicate and aggregate quantities per warehouse
+      const qtyMap = new Map<number, number>();
+      for (const inv of inventories) {
+        qtyMap.set(inv.warehouseId, (qtyMap.get(inv.warehouseId) || 0) + inv.quantityAvailable);
+      }
+
+      // Calculate distances using the Haversine utility and sort
+      const { haversineDistance } = await import('../../common/utils/haversine');
+      const results = Array.from(warehouseMap.entries())
+        .filter(([id]) => qtyMap.has(id))
+        .filter(([, w]) => w.latitude !== null && w.longitude !== null)
+        .map(([id, w]) => ({
+          warehouse_id: w.id,
+          warehouse_name: w.name,
+          city: w.city,
+          latitude: w.latitude,
+          longitude: w.longitude,
+          distance_km: haversineDistance(customerLatitude, customerLongitude, w.latitude!, w.longitude!),
+          quantity_available: qtyMap.get(id) || 0,
+        }))
+        .sort((a, b) => a.distance_km - b.distance_km);
 
       return results;
     });
@@ -210,14 +223,14 @@ export class InventoryService {
     const warehouseIds = [...new Set(items.map((i) => i.warehouseId))];
 
     const [variants, warehouses] = await Promise.all([
-      this.prisma.withTenant(storeId, () =>
-        this.prisma.productVariant.findMany({
+      this.prisma.withTenant(storeId, (client) =>
+        client.productVariant.findMany({
           where: { id: { in: variantIds } },
           include: { product: { select: { title: true } } },
         }),
       ),
-      this.prisma.withTenant(storeId, () =>
-        this.prisma.warehouse.findMany({
+      this.prisma.withTenant(storeId, (client) =>
+        client.warehouse.findMany({
           where: { id: { in: warehouseIds } },
         }),
       ),

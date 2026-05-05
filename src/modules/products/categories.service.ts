@@ -19,8 +19,8 @@ export class CategoriesService {
       where.parentId = params.parentId;
     }
 
-    const items = await this.prisma.withTenant(storeId, () =>
-      this.prisma.category.findMany({
+    const items = await this.prisma.withTenant(storeId, (client) =>
+      client.category.findMany({
         where,
         orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
         take: params.limit,
@@ -31,8 +31,8 @@ export class CategoriesService {
   }
 
   async getCategoryTree(storeId: number) {
-    const categories = await this.prisma.withTenant(storeId, () =>
-      this.prisma.category.findMany({
+    const categories = await this.prisma.withTenant(storeId, (client) =>
+      client.category.findMany({
         orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
       }),
     );
@@ -58,8 +58,8 @@ export class CategoriesService {
   }
 
   async getCategory(storeId: number, categoryId: number) {
-    const category = await this.prisma.withTenant(storeId, () =>
-      this.prisma.category.findUnique({
+    const category = await this.prisma.withTenant(storeId, (client) =>
+      client.category.findUnique({
         where: { id: categoryId },
         include: {
           children: {
@@ -93,8 +93,8 @@ export class CategoriesService {
     let depth = 0;
 
     if (data.parentId) {
-      const parent = await this.prisma.withTenant(storeId, () =>
-        this.prisma.category.findUnique({ where: { id: data.parentId } }),
+      const parent = await this.prisma.withTenant(storeId, (client) =>
+        client.category.findUnique({ where: { id: data.parentId } }),
       );
       if (!parent) {
         return { error: 'NOT_FOUND', message: 'Parent category not found' };
@@ -102,8 +102,8 @@ export class CategoriesService {
       // We'll compute the actual path after creation since we need the new ID
     }
 
-    const category = await this.prisma.withTenant(storeId, async () => {
-      const created = await this.prisma.category.create({
+    const category = await this.prisma.withTenant(storeId, async (client) => {
+      const created = await client.category.create({
         data: {
           name: data.name,
           slug,
@@ -115,7 +115,7 @@ export class CategoriesService {
 
       // Update path with the new ID
       if (data.parentId) {
-        const parent = await this.prisma.category.findUnique({
+        const parent = await client.category.findUnique({
           where: { id: data.parentId },
         });
         if (parent) {
@@ -127,7 +127,7 @@ export class CategoriesService {
         depth = 0;
       }
 
-      return this.prisma.category.update({
+      return client.category.update({
         where: { id: created.id },
         data: { path, depth },
       });
@@ -147,8 +147,8 @@ export class CategoriesService {
       isActive?: boolean;
     },
   ) {
-    const existing = await this.prisma.withTenant(storeId, () =>
-      this.prisma.category.findUnique({ where: { id: categoryId } }),
+    const existing = await this.prisma.withTenant(storeId, (client) =>
+      client.category.findUnique({ where: { id: categoryId } }),
     );
 
     if (!existing) {
@@ -163,8 +163,8 @@ export class CategoriesService {
         updateData.path = `/${categoryId}/`;
         updateData.depth = 0;
       } else {
-        const newParent = await this.prisma.withTenant(storeId, () =>
-          this.prisma.category.findUnique({ where: { id: data.parentId! } }),
+        const newParent = await this.prisma.withTenant(storeId, (client) =>
+          client.category.findUnique({ where: { id: data.parentId! } }),
         );
         if (!newParent) {
           throw new NotFoundException('Parent category not found');
@@ -178,8 +178,8 @@ export class CategoriesService {
       (key) => updateData[key] === undefined && delete updateData[key],
     );
 
-    return this.prisma.withTenant(storeId, () =>
-      this.prisma.category.update({
+    return this.prisma.withTenant(storeId, (client) =>
+      client.category.update({
         where: { id: categoryId },
         data: updateData,
       }),
@@ -187,8 +187,8 @@ export class CategoriesService {
   }
 
   async deleteCategory(storeId: number, categoryId: number) {
-    const category = await this.prisma.withTenant(storeId, () =>
-      this.prisma.category.findUnique({
+    const category = await this.prisma.withTenant(storeId, (client) =>
+      client.category.findUnique({
         where: { id: categoryId },
         include: {
           children: true,
@@ -211,8 +211,8 @@ export class CategoriesService {
       throw new BadRequestException('Cannot delete category with products. Remove products first.');
     }
 
-    await this.prisma.withTenant(storeId, () =>
-      this.prisma.category.delete({ where: { id: categoryId } }),
+    await this.prisma.withTenant(storeId, (client) =>
+      client.category.delete({ where: { id: categoryId } }),
     );
 
     return { message: 'Category deleted' };

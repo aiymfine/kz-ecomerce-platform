@@ -8,8 +8,8 @@ export class WarehousesService {
   constructor(private prisma: PrismaService) {}
 
   async listWarehouses(storeId: number) {
-    return this.prisma.withTenant(storeId, () =>
-      this.prisma.warehouse.findMany({
+    return this.prisma.withTenant(storeId, (client) =>
+      client.warehouse.findMany({
         where: {},
         orderBy: { createdAt: 'desc' },
       }),
@@ -17,8 +17,8 @@ export class WarehousesService {
   }
 
   async getWarehouse(storeId: number, warehouseId: number) {
-    const warehouse = await this.prisma.withTenant(storeId, () =>
-      this.prisma.warehouse.findUnique({
+    const warehouse = await this.prisma.withTenant(storeId, (client) =>
+      client.warehouse.findUnique({
         where: { id: warehouseId },
       }),
     );
@@ -40,8 +40,8 @@ export class WarehousesService {
       longitude?: number;
     },
   ) {
-    return this.prisma.withTenant(storeId, () =>
-      this.prisma.warehouse.create({
+    return this.prisma.withTenant(storeId, (client) =>
+      client.warehouse.create({
         data: {
           name: data.name,
           address: data.address,
@@ -74,8 +74,8 @@ export class WarehousesService {
       }
     });
 
-    return this.prisma.withTenant(storeId, () =>
-      this.prisma.warehouse.update({
+    return this.prisma.withTenant(storeId, (client) =>
+      client.warehouse.update({
         where: { id: warehouseId },
         data: updateData,
       }),
@@ -86,8 +86,8 @@ export class WarehousesService {
     await this.getWarehouse(storeId, warehouseId); // ensure exists
 
     // Check for inventory records
-    const inventoryCount = await this.prisma.withTenant(storeId, () =>
-      this.prisma.inventory.count({
+    const inventoryCount = await this.prisma.withTenant(storeId, (client) =>
+      client.inventory.count({
         where: { warehouseId },
       }),
     );
@@ -99,8 +99,8 @@ export class WarehousesService {
       };
     }
 
-    return this.prisma.withTenant(storeId, () =>
-      this.prisma.warehouse.delete({
+    return this.prisma.withTenant(storeId, (client) =>
+      client.warehouse.delete({
         where: { id: warehouseId },
       }),
     );

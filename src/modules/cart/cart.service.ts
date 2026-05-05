@@ -16,8 +16,8 @@ export class CartService {
     if (!items.length) return items;
 
     const variantIds = [...new Set(items.map((i: any) => i.variantId))];
-    const variants = await this.prisma.withTenant(storeId, () =>
-      this.prisma.productVariant.findMany({
+    const variants = await this.prisma.withTenant(storeId, (client) =>
+      client.productVariant.findMany({
         where: { id: { in: variantIds } },
         include: { product: { select: { title: true } } },
       }),
@@ -32,16 +32,16 @@ export class CartService {
   }
 
   async getCart(storeId: number, customerId: number) {
-    let cart = await this.prisma.withTenant(storeId, () =>
-      this.prisma.cart.findFirst({
+    let cart = await this.prisma.withTenant(storeId, (client) =>
+      client.cart.findFirst({
         where: { customerId, status: 'active' },
         include: { items: true },
       }),
     );
 
     if (!cart) {
-      cart = await this.prisma.withTenant(storeId, () =>
-        this.prisma.cart.create({
+      cart = await this.prisma.withTenant(storeId, (client) =>
+        client.cart.create({
           data: { customerId, status: 'active' },
           include: { items: true },
         }),
@@ -55,37 +55,37 @@ export class CartService {
   }
 
   async addItem(storeId: number, customerId: number, variantId: number, quantity: number) {
-    let cart = await this.prisma.withTenant(storeId, () =>
-      this.prisma.cart.findFirst({
+    let cart = await this.prisma.withTenant(storeId, (client) =>
+      client.cart.findFirst({
         where: { customerId, status: 'active' },
       }),
     );
 
     if (!cart) {
-      cart = await this.prisma.withTenant(storeId, () =>
-        this.prisma.cart.create({
+      cart = await this.prisma.withTenant(storeId, (client) =>
+        client.cart.create({
           data: { customerId, status: 'active' },
         }),
       );
     }
 
-    const existingItem = await this.prisma.withTenant(storeId, () =>
-      this.prisma.cartItem.findFirst({
+    const existingItem = await this.prisma.withTenant(storeId, (client) =>
+      client.cartItem.findFirst({
         where: { cartId: cart.id, variantId },
       }),
     );
 
     let item;
     if (existingItem) {
-      item = await this.prisma.withTenant(storeId, () =>
-        this.prisma.cartItem.update({
+      item = await this.prisma.withTenant(storeId, (client) =>
+        client.cartItem.update({
           where: { id: existingItem.id },
           data: { quantity: existingItem.quantity + quantity },
         }),
       );
     } else {
-      item = await this.prisma.withTenant(storeId, () =>
-        this.prisma.cartItem.create({
+      item = await this.prisma.withTenant(storeId, (client) =>
+        client.cartItem.create({
           data: { cartId: cart.id, variantId, quantity },
         }),
       );
@@ -96,8 +96,8 @@ export class CartService {
   }
 
   async updateItemQuantity(storeId: number, customerId: number, itemId: number, quantity: number) {
-    const item = await this.prisma.withTenant(storeId, () =>
-      this.prisma.cartItem.findFirst({
+    const item = await this.prisma.withTenant(storeId, (client) =>
+      client.cartItem.findFirst({
         where: {
           id: itemId,
           cart: { customerId, status: 'active' },
@@ -109,8 +109,8 @@ export class CartService {
       throw new NotFoundException('Cart item not found');
     }
 
-    const updated = await this.prisma.withTenant(storeId, () =>
-      this.prisma.cartItem.update({
+    const updated = await this.prisma.withTenant(storeId, (client) =>
+      client.cartItem.update({
         where: { id: itemId },
         data: { quantity },
       }),
@@ -121,8 +121,8 @@ export class CartService {
   }
 
   async removeItem(storeId: number, customerId: number, itemId: number) {
-    const item = await this.prisma.withTenant(storeId, () =>
-      this.prisma.cartItem.findFirst({
+    const item = await this.prisma.withTenant(storeId, (client) =>
+      client.cartItem.findFirst({
         where: {
           id: itemId,
           cart: { customerId, status: 'active' },
@@ -134,16 +134,16 @@ export class CartService {
       throw new NotFoundException('Cart item not found');
     }
 
-    await this.prisma.withTenant(storeId, () =>
-      this.prisma.cartItem.delete({ where: { id: itemId } }),
+    await this.prisma.withTenant(storeId, (client) =>
+      client.cartItem.delete({ where: { id: itemId } }),
     );
 
     return { message: 'Item removed' };
   }
 
   async clearCart(storeId: number, customerId: number) {
-    const cart = await this.prisma.withTenant(storeId, () =>
-      this.prisma.cart.findFirst({
+    const cart = await this.prisma.withTenant(storeId, (client) =>
+      client.cart.findFirst({
         where: { customerId, status: 'active' },
       }),
     );
@@ -152,8 +152,8 @@ export class CartService {
       throw new NotFoundException('Active cart not found');
     }
 
-    await this.prisma.withTenant(storeId, () =>
-      this.prisma.cartItem.deleteMany({ where: { cartId: cart.id } }),
+    await this.prisma.withTenant(storeId, (client) =>
+      client.cartItem.deleteMany({ where: { cartId: cart.id } }),
     );
 
     return { message: 'Cart cleared' };

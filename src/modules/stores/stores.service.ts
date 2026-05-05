@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 
 @Injectable()
@@ -156,37 +157,39 @@ export class StoresService {
     const schema = `store_${storeId}`;
     this.logger.log(`Provisioning tenant schema ${schema}`);
 
-    await this.prisma.$executeRawUnsafe(`BEGIN`);
+    await this.prisma.$executeRaw(Prisma.sql`BEGIN`);
 
     try {
-      await this.prisma.$executeRawUnsafe(`CREATE SCHEMA IF NOT EXISTS ${schema}`);
+      await this.prisma.$executeRaw(
+        Prisma.sql`CREATE SCHEMA IF NOT EXISTS ${Prisma.raw(schema)}`,
+      );
 
       for (const table of this.tenantTables) {
-        await this.prisma.$executeRawUnsafe(
-          `CREATE TABLE IF NOT EXISTS ${schema}.${table} (LIKE public.${table} INCLUDING ALL)`,
+        await this.prisma.$executeRaw(
+          Prisma.sql`CREATE TABLE IF NOT EXISTS ${Prisma.raw(`${schema}.${table}`)} (LIKE public.${Prisma.raw(table)} INCLUDING ALL)`,
         );
       }
 
-      // Fix updated_at: add DEFAULT NOW() so raw SQL works
+      // Fix updated_at: add DEFAULT NOW() so ORM operations work
       for (const table of this.tablesWithUpdatedAt) {
-        await this.prisma.$executeRawUnsafe(
-          `ALTER TABLE ${schema}.${table} ALTER COLUMN updated_at SET DEFAULT NOW()`,
+        await this.prisma.$executeRaw(
+          Prisma.sql`ALTER TABLE ${Prisma.raw(`${schema}.${table}`)} ALTER COLUMN updated_at SET DEFAULT NOW()`,
         );
       }
 
       // Default categories
       const categories = [
-        ['Все товары', 'all', '/', 0, 0],
-        ['Новинки', 'new', '/', 0, 1],
-        ['Распродажа', 'sale', '/', 0, 2],
+        { name: 'Все товары', slug: 'all', path: '/', depth: 0, sortOrder: 0 },
+        { name: 'Новинки', slug: 'new', path: '/', depth: 0, sortOrder: 1 },
+        { name: 'Распродажа', slug: 'sale', path: '/', depth: 0, sortOrder: 2 },
       ];
-      for (const [name, slug, path, depth, sortOrder] of categories) {
-        await this.prisma.$executeRawUnsafe(
-          `INSERT INTO ${schema}.categories (name, slug, path, depth, sort_order) VALUES ('${name}', '${slug}', '${path}', ${depth}, ${sortOrder})`,
+      for (const cat of categories) {
+        await this.prisma.$executeRaw(
+          Prisma.sql`INSERT INTO ${Prisma.raw(`${schema}.categories`)} (name, slug, path, depth, sort_order) VALUES (${cat.name}, ${cat.slug}, ${cat.path}, ${cat.depth}, ${cat.sortOrder})`,
         );
       }
 
-      await this.prisma.$executeRawUnsafe(`COMMIT`);
+      await this.prisma.$executeRaw(Prisma.sql`COMMIT`);
 
       await this.prisma.tenantProvisioningLog.create({
         data: {
@@ -199,7 +202,7 @@ export class StoresService {
 
       this.logger.log(`Tenant ${schema} provisioned successfully`);
     } catch (err) {
-      await this.prisma.$executeRawUnsafe(`ROLLBACK`);
+      await this.prisma.$executeRaw(Prisma.sql`ROLLBACK`);
       throw err;
     }
   }

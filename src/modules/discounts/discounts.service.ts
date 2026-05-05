@@ -28,16 +28,16 @@ export class DiscountsService {
       throw new BadRequestException('Percentage value must be between 1 and 90');
     }
 
-    const existing = await this.prisma.withTenant(storeId, () =>
-      this.prisma.promoCode.findUnique({ where: { code: data.code.toUpperCase() } }),
+    const existing = await this.prisma.withTenant(storeId, (client) =>
+      client.promoCode.findUnique({ where: { code: data.code.toUpperCase() } }),
     );
 
     if (existing) {
       throw new BadRequestException('Promo code already exists');
     }
 
-    return this.prisma.withTenant(storeId, () =>
-      this.prisma.promoCode.create({
+    return this.prisma.withTenant(storeId, (client) =>
+      client.promoCode.create({
         data: {
           code: data.code.toUpperCase(),
           type: data.type,
@@ -58,8 +58,8 @@ export class DiscountsService {
     cursor?: string;
     limit: number;
   }) {
-    const items = await this.prisma.withTenant(storeId, () =>
-      this.prisma.promoCode.findMany({
+    const items = await this.prisma.withTenant(storeId, (client) =>
+      client.promoCode.findMany({
         take: params.limit + 1,
         cursor: params.cursor ? { id: parseInt(params.cursor) } : undefined,
         orderBy: { createdAt: 'desc' },
@@ -80,8 +80,8 @@ export class DiscountsService {
   }
 
   async getPromoCode(storeId: number, id: number) {
-    const promo = await this.prisma.withTenant(storeId, () =>
-      this.prisma.promoCode.findUnique({ where: { id } }),
+    const promo = await this.prisma.withTenant(storeId, (client) =>
+      client.promoCode.findUnique({ where: { id } }),
     );
 
     if (!promo) {
@@ -92,8 +92,8 @@ export class DiscountsService {
   }
 
   async updatePromoCode(storeId: number, id: number, data: Record<string, unknown>) {
-    const existing = await this.prisma.withTenant(storeId, () =>
-      this.prisma.promoCode.findUnique({ where: { id } }),
+    const existing = await this.prisma.withTenant(storeId, (client) =>
+      client.promoCode.findUnique({ where: { id } }),
     );
 
     if (!existing) {
@@ -115,8 +115,8 @@ export class DiscountsService {
     if (updateData.startsAt) updateData.startsAt = new Date(updateData.startsAt as string);
     if (updateData.expiresAt) updateData.expiresAt = new Date(updateData.expiresAt as string);
 
-    return this.prisma.withTenant(storeId, () =>
-      this.prisma.promoCode.update({
+    return this.prisma.withTenant(storeId, (client) =>
+      client.promoCode.update({
         where: { id },
         data: updateData,
       }),
@@ -124,16 +124,16 @@ export class DiscountsService {
   }
 
   async deletePromoCode(storeId: number, id: number) {
-    const existing = await this.prisma.withTenant(storeId, () =>
-      this.prisma.promoCode.findUnique({ where: { id } }),
+    const existing = await this.prisma.withTenant(storeId, (client) =>
+      client.promoCode.findUnique({ where: { id } }),
     );
 
     if (!existing) {
       throw new NotFoundException('Promo code not found');
     }
 
-    return this.prisma.withTenant(storeId, () =>
-      this.prisma.promoCode.update({
+    return this.prisma.withTenant(storeId, (client) =>
+      client.promoCode.update({
         where: { id },
         data: { isActive: false },
       }),
@@ -145,8 +145,8 @@ export class DiscountsService {
     cartSubtotalTiyin: number;
     customerId?: number;
   }) {
-    const promo = await this.prisma.withTenant(storeId, () =>
-      this.prisma.promoCode.findUnique({
+    const promo = await this.prisma.withTenant(storeId, (client) =>
+      client.promoCode.findUnique({
         where: { code: data.code.toUpperCase() },
       }),
     );
@@ -180,8 +180,8 @@ export class DiscountsService {
 
     // Check first buyer
     if (promo.firstBuyerOnly && data.customerId) {
-      const orderCount = await this.prisma.withTenant(storeId, () =>
-        this.prisma.order.count({
+      const orderCount = await this.prisma.withTenant(storeId, (client) =>
+        client.order.count({
           where: { customerId: data.customerId },
         }),
       );
@@ -192,8 +192,8 @@ export class DiscountsService {
 
     // Check max per customer
     if (data.customerId) {
-      const customerUsage = await this.prisma.withTenant(storeId, () =>
-        this.prisma.orderDiscount.count({
+      const customerUsage = await this.prisma.withTenant(storeId, (client) =>
+        client.orderDiscount.count({
           where: {
             promoCodeId: promo.id,
             order: { customerId: data.customerId },

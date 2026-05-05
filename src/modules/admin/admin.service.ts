@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { rejectMerchantSchema } from './dto/admin.dto';
 import * as crypto from 'crypto';
@@ -398,31 +399,27 @@ export class AdminService {
   async provisionTenant(storeId: number) {
     this.logger.log(`Provisioning tenant schema for store ${storeId}`);
 
-    await this.prisma.$executeRawUnsafe(`BEGIN`);
+    await this.prisma.$executeRaw(Prisma.sql`BEGIN`);
 
     try {
       // Create schema
-      await this.prisma.$executeRawUnsafe(`CREATE SCHEMA IF NOT EXISTS store_${storeId}`);
+      await this.prisma.$executeRaw(
+        Prisma.sql`CREATE SCHEMA IF NOT EXISTS ${Prisma.raw(`store_${storeId}`)}`,
+      );
 
       // Create all tenant tables using LIKE public.tablename
       for (const table of this.tenantTables) {
-        await this.prisma.$executeRawUnsafe(`
-          CREATE TABLE IF NOT EXISTS store_${storeId}.${table} (
-            LIKE public.${table} INCLUDING ALL
-          )`);
+        await this.prisma.$executeRaw(
+          Prisma.sql`CREATE TABLE IF NOT EXISTS ${Prisma.raw(`store_${storeId}.${table}`)} (LIKE public.${Prisma.raw(table)} INCLUDING ALL)`,
+        );
       }
 
       // Insert default categories
-      await this.prisma.$executeRawUnsafe(`
-        SET search_path = store_${storeId}, public;
-        INSERT INTO categories (name, slug, path, depth, sort_order) VALUES
-          ('Все товары', 'all', '/', 0, 0),
-          ('Новинки', 'new', '/', 0, 1),
-          ('Распродажа', 'sale', '/', 0, 2);
-        SET search_path = public;
-      `);
+      await this.prisma.$executeRaw(
+        Prisma.sql`SET search_path = ${Prisma.raw(`store_${storeId}`)}, public; INSERT INTO categories (name, slug, path, depth, sort_order) VALUES ('Все товары', 'all', '/', 0, 0), ('Новинки', 'new', '/', 0, 1), ('Распродажа', 'sale', '/', 0, 2); SET search_path = public;`,
+      );
 
-      await this.prisma.$executeRawUnsafe(`COMMIT`);
+      await this.prisma.$executeRaw(Prisma.sql`COMMIT`);
 
       await this.prisma.tenantProvisioningLog.create({
         data: {
@@ -435,7 +432,7 @@ export class AdminService {
 
       this.logger.log(`Tenant schema store_${storeId} provisioned successfully`);
     } catch (err) {
-      await this.prisma.$executeRawUnsafe(`ROLLBACK`);
+      await this.prisma.$executeRaw(Prisma.sql`ROLLBACK`);
       this.logger.error(`Failed to provision tenant: ${err}`);
       throw err;
     }

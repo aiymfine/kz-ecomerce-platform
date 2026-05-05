@@ -7,8 +7,8 @@ export class CustomersService {
   constructor(private prisma: PrismaService) {}
 
   async getMe(storeId: number, customerId: number) {
-    const customer = await this.prisma.withTenant(storeId, () =>
-      this.prisma.customer.findUnique({
+    const customer = await this.prisma.withTenant(storeId, (client) =>
+      client.customer.findUnique({
         where: { id: customerId },
       }),
     );
@@ -21,8 +21,8 @@ export class CustomersService {
   }
 
   async updateMe(storeId: number, customerId: number, dto: UpdateCustomerDto) {
-    const customer = await this.prisma.withTenant(storeId, () =>
-      this.prisma.customer.findUnique({
+    const customer = await this.prisma.withTenant(storeId, (client) =>
+      client.customer.findUnique({
         where: { id: customerId },
       }),
     );
@@ -36,8 +36,8 @@ export class CustomersService {
     if (dto.last_name !== undefined) updateData.lastName = dto.last_name;
     if (dto.phone !== undefined) updateData.phone = dto.phone;
 
-    const updated = await this.prisma.withTenant(storeId, () =>
-      this.prisma.customer.update({
+    const updated = await this.prisma.withTenant(storeId, (client) =>
+      client.customer.update({
         where: { id: customerId },
         data: updateData,
       }),
@@ -47,8 +47,8 @@ export class CustomersService {
   }
 
   async listAddresses(storeId: number, customerId: number) {
-    return this.prisma.withTenant(storeId, () =>
-      this.prisma.address.findMany({
+    return this.prisma.withTenant(storeId, (client) =>
+      client.address.findMany({
         where: { customerId },
         orderBy: [{ isDefault: 'desc' }, { createdAt: 'desc' }],
       }),
@@ -74,8 +74,8 @@ export class CustomersService {
       data.isDefault = true;
     }
 
-    return this.prisma.withTenant(storeId, () =>
-      this.prisma.address.create({ data }),
+    return this.prisma.withTenant(storeId, (client) =>
+      client.address.create({ data }),
     );
   }
 
@@ -85,8 +85,8 @@ export class CustomersService {
     addressId: number,
     dto: UpdateAddressDto,
   ) {
-    const address = await this.prisma.withTenant(storeId, () =>
-      this.prisma.address.findFirst({
+    const address = await this.prisma.withTenant(storeId, (client) =>
+      client.address.findFirst({
         where: { id: addressId, customerId },
       }),
     );
@@ -113,8 +113,8 @@ export class CustomersService {
       updateData.isDefault = dto.is_default;
     }
 
-    return this.prisma.withTenant(storeId, () =>
-      this.prisma.address.update({
+    return this.prisma.withTenant(storeId, (client) =>
+      client.address.update({
         where: { id: addressId },
         data: updateData,
       }),
@@ -122,8 +122,8 @@ export class CustomersService {
   }
 
   async deleteAddress(storeId: number, customerId: number, addressId: number) {
-    const address = await this.prisma.withTenant(storeId, () =>
-      this.prisma.address.findFirst({
+    const address = await this.prisma.withTenant(storeId, (client) =>
+      client.address.findFirst({
         where: { id: addressId, customerId },
       }),
     );
@@ -132,8 +132,8 @@ export class CustomersService {
       throw new NotFoundException('Address not found');
     }
 
-    await this.prisma.withTenant(storeId, () =>
-      this.prisma.address.delete({
+    await this.prisma.withTenant(storeId, (client) =>
+      client.address.delete({
         where: { id: addressId },
       }),
     );
@@ -142,8 +142,8 @@ export class CustomersService {
   }
 
   async setDefaultAddress(storeId: number, customerId: number, addressId: number) {
-    const address = await this.prisma.withTenant(storeId, () =>
-      this.prisma.address.findFirst({
+    const address = await this.prisma.withTenant(storeId, (client) =>
+      client.address.findFirst({
         where: { id: addressId, customerId },
       }),
     );
@@ -154,23 +154,23 @@ export class CustomersService {
 
     await this.clearDefaultAddress(storeId, customerId);
 
-    await this.prisma.withTenant(storeId, () =>
-      this.prisma.address.update({
+    await this.prisma.withTenant(storeId, (client) =>
+      client.address.update({
         where: { id: addressId },
         data: { isDefault: true },
       }),
     );
 
-    return this.prisma.withTenant(storeId, () =>
-      this.prisma.address.findFirst({
+    return this.prisma.withTenant(storeId, (client) =>
+      client.address.findFirst({
         where: { id: addressId },
       }),
     );
   }
 
   private async clearDefaultAddress(storeId: number, customerId: number) {
-    await this.prisma.withTenant(storeId, () =>
-      this.prisma.address.updateMany({
+    await this.prisma.withTenant(storeId, (client) =>
+      client.address.updateMany({
         where: { customerId, isDefault: true },
         data: { isDefault: false },
       }),
