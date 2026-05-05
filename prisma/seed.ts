@@ -34,6 +34,24 @@ const tenantTables = [
   'store_audit_log',
 ];
 
+// Enum types needed in tenant schemas (name → values)
+const tenantEnumTypes: Record<string, string[]> = {
+  ProductStatus: ['draft', 'active', 'archived'],
+  AttributeType: ['size', 'color', 'material'],
+  CartStatus: ['active', 'abandoned', 'converted'],
+  OrderStatus: ['payment_pending', 'payment_failed', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded'],
+  ShippingMethod: ['choco', 'kazpost', 'self_pickup'],
+  PaymentProvider: ['kaspi_pay', 'halyk_bank', 'manual'],
+  PaymentStatus: ['pending', 'processing', 'succeeded', 'failed', 'refunded'],
+  DiscountType: ['percentage', 'fixed_amount', 'free_shipping'],
+  WebhookEventStatus: ['pending', 'delivering', 'delivered', 'failed', 'dead_letter'],
+  BillingCycle: ['weekly', 'bi_weekly', 'monthly'],
+  SubscriptionStatus: ['active', 'paused', 'cancelled', 'dunning'],
+  StaffRole: ['inventory_manager', 'order_processor', 'analytics_viewer'],
+  AbandonedCartStatus: ['pending', 'recovering', 'converted', 'expired'],
+  ActorType: ['merchant', 'staff', 'customer'],
+};
+
 // Tables with updated_at but NO database default (Prisma @updatedAt)
 const tablesWithUpdatedAt = [
   'products',
@@ -54,6 +72,14 @@ async function provisionTenant(storeId: number) {
   // Drop existing and recreate
   await prisma.$executeRawUnsafe(`DROP SCHEMA IF EXISTS ${schema} CASCADE`);
   await prisma.$executeRawUnsafe(`CREATE SCHEMA ${schema}`);
+
+  // Create enum types in tenant schema
+  for (const [enumName, values] of Object.entries(tenantEnumTypes)) {
+    const valuesStr = values.map((v) => `'${v}'`).join(', ');
+    await prisma.$executeRawUnsafe(
+      `CREATE TYPE ${schema}.${enumName} AS ENUM (${valuesStr})`,
+    );
+  }
 
   // Create tables using LIKE
   for (const table of tenantTables) {
