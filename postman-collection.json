@@ -48,12 +48,15 @@
                 "type": "text/javascript",
                 "exec": [
                   "const res = pm.response.json();",
+                  "console.log('Login response keys:', Object.keys(res));",
                   "if (res.accessToken) {",
                   "  pm.collectionVariables.set('merchant_token', res.accessToken);",
                   "  pm.collectionVariables.set('merchant_email', 'merchant1@example.com');",
                   "}",
                   "if (res.refreshToken) {",
                   "  pm.collectionVariables.set('refresh_token', res.refreshToken);",
+                  "} else {",
+                  "  console.log('WARNING: No refreshToken in response!');",
                   "}"
                 ]
               }
