@@ -188,7 +188,7 @@ async function main() {
   const m1Pass = await bcrypt.hash('Merchant123', 12);
   const merchant1 = await prisma.merchant.upsert({
     where: { email: 'merchant1@example.com' },
-    update: { passwordHash: m1Pass },
+    update: { passwordHash: m1Pass, isActive: true, status: 'approved' },
     create: {
       email: 'merchant1@example.com',
       passwordHash: m1Pass,
@@ -205,7 +205,7 @@ async function main() {
   const m2Pass = await bcrypt.hash('Merchant123', 12);
   const merchant2 = await prisma.merchant.upsert({
     where: { email: 'merchant2@example.com' },
-    update: { passwordHash: m2Pass },
+    update: { passwordHash: m2Pass, isActive: true, status: 'approved' },
     create: {
       email: 'merchant2@example.com',
       passwordHash: m2Pass,
