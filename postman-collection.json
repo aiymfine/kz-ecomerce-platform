@@ -204,9 +204,10 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"{{merchant_email}}\",\n  \"code\": \"123456\"\n}"
+              "raw": "{\"email\":\"{{merchant_email}}\",\"code\":\"123456\"}"
             }
-          }
+          },
+          "description": "⚠️ This only works with a NEW registered account (not seed accounts). Run Register first, then check server console for the 6-digit code, and paste it here."
         },
         {
           "name": "Resend Verification",

@@ -177,6 +177,7 @@ async function main() {
       businessName: 'TechShop KZ',
       status: 'approved',
       isActive: true,
+      emailVerified: true,
     },
   });
   console.log(`  ✓ Merchant 1: ${merchant1.email} (password: Merchant123)`);
@@ -193,6 +194,7 @@ async function main() {
       businessName: 'FashionStore KZ',
       status: 'approved',
       isActive: true,
+      emailVerified: true,
     },
   });
   console.log(`  ✓ Merchant 2: ${merchant2.email} (password: Merchant123)\n`);
