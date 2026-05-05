@@ -1,17 +1,98 @@
-# ShopBuilder — Shopify Clone for Local Kazakh Merchants
+# ShopBuilder — E-Commerce SaaS Platform for Local Kazakh Merchants
 
-E-commerce platform built with **NestJS 10**, **TypeScript 5**, **Prisma 5**, **PostgreSQL 15**, and **Redis 7**.
+> A Shopify-clone built as a multi-tenant SaaS: one platform, many independent stores.
 
-## Architecture
+## 📌 What Is This?
 
-- **Multi-tenancy**: Schema-per-tenant with `search_path` middleware
-- **Auth**: JWT access (30min) + refresh (7d) tokens, bcryptjs hashing
-- **Validation**: Zod schemas bridged to NestJS pipes
-- **Rate limiting**: Redis token bucket (5 req/min on auth endpoints)
-- **Audit logging**: Global interceptor captures all state-changing requests
-- **API Docs**: Swagger at `/docs`
+ShopBuilder is a **B2B2C e-commerce SaaS platform** where merchants sign up, get their own online store (with isolated data), and can manage products, inventory, orders, payments, and more — all through a REST API.
 
-## Quick Start
+**Think Shopify, but localized for Kazakhstan** (Kaspi Pay, Halyk Bank, tiyin-based pricing, Haversine warehouse routing).
+
+## 🏗 Architecture
+
+| Decision | Implementation |
+|----------|---------------|
+| **Multi-tenancy** | Schema-per-tenant — each merchant gets their own PostgreSQL schema (30+ tables) with automatic `search_path` routing via middleware |
+| **Authentication** | JWT access tokens (30 min) + refresh tokens (7 days), bcryptjs cost 12 |
+| **Authorization** | RBAC guards (merchant, super_admin, support), AdminGuard for platform-level routes |
+| **Validation** | Zod schemas + class-validator, custom `ZodValidationPipe` |
+| **Rate Limiting** | Redis-backed token bucket (5 req/min on auth endpoints) |
+| **Audit Logging** | Global interceptor — logs every state-changing request (who, what, when, IP) |
+| **Monetary Values** | All amounts stored in **tiyin** (1 KZT = 100 tiyin) to avoid floating-point errors |
+| **API Documentation** | Swagger/OpenAPI at `/docs` |
+
+## 🧱 Modules (17 total)
+
+### Core Infrastructure
+
+| Module | Description |
+|--------|-------------|
+| **Auth** | Register, login, logout, refresh, `/me`. Password hashing, JWT, RBAC roles, rate limiting |
+| **Admin** | Merchant CRUD, approve/reject/suspend, store management, platform analytics, audit log viewer |
+| **Staff** | Invite staff to stores, manage roles & permissions, remove access |
+| **Stores** | Merchant store configuration and management |
+
+### E-Commerce
+
+| Module | Description |
+|--------|-------------|
+| **Products** | Full CRUD, **variant matrix** (Size × Color × Material, up to 100 combos, auto SKU generation), **category tree** (materialized path) |
+| **Customers** | Customer profiles, addresses, order history |
+| **Storefront** | Public catalog API — browse products, categories, product detail by slug |
+| **Cart** | Shopping cart — add, update quantity, remove items, clear |
+| **Checkout** | **Full ACID transaction** — cart → order → payment → inventory reservation in one atomic operation. Any failure = full rollback |
+| **Orders** | Order lifecycle, status tracking, fulfillment management |
+| **Inventory** | **Atomic stock adjustments** via `SELECT FOR UPDATE` (prevents race conditions). Transfer between warehouses. **Haversine distance** calculation for nearest-warehouse routing |
+| **Warehouses** | Multi-warehouse management with geographic coordinates |
+| **Payments** | Payment initiation, Kaspi Pay & Halyk Bank callbacks, refund processing (architecture ready for real gateway integration) |
+| **Discounts** | Promo codes — create, validate, apply to orders |
+
+### Business Features
+
+| Module | Description |
+|--------|-------------|
+| **Subscriptions** | Subscription box billing — create boxes, subscribe customers |
+| **Abandoned Carts** | Track abandoned carts, recovery logic for automated email sequences |
+| **Webhooks** | CRUD + HMAC-SHA256 signatures, event delivery logging, retry counts, exponential backoff |
+| **Templates** | Nunjucks sandboxed template engine for customizable store themes |
+| **Analytics** | Sales dashboard, product performance, customer analytics, inventory status |
+
+## ⚙ Background Workers (7)
+
+Workers are BullMQ-ready stubs — structured for real queue integration:
+
+| Worker | Purpose |
+|--------|---------|
+| `webhook.worker` | Dispatches events to webhook URLs with retry logic |
+| `emails.worker` | Transactional email queue (registration, orders, recovery) |
+| `inventory.worker` | Async stock reservation and release |
+| `audit.worker` | Batch audit log processing |
+| `billing.worker` | Subscription billing cycles |
+| `abandoned-carts.worker` | Recovery email sequences for abandoned carts |
+| `main` | Orchestrator entry point |
+
+## 🛡 Security
+
+- **JWT + RBAC** — all routes protected by role-based guards
+- **Rate limiting** — Redis-backed, prevents brute-force on auth
+- **Input validation** — Zod + class-validator on every DTO
+- **CORS** — configured for cross-origin requests
+- **Audit interceptor** — every state change is logged
+- **Schema isolation** — tenants cannot access each other's data
+- **Atomic operations** — `SELECT FOR UPDATE` prevents inventory race conditions
+
+## 📊 Project Stats
+
+| Metric | Count |
+|--------|-------|
+| Modules | 17 |
+| Source files (modules) | 77 |
+| Worker files | 7 |
+| Shared utilities/guards/pipes | 22 |
+| Prisma data models | 34 |
+| Tenant tables per schema | 30+ |
+
+## 🚀 Quick Start
 
 ### Prerequisites
 
@@ -36,7 +117,7 @@ cp .env.example .env
 # Run migrations
 npx prisma migrate dev --name init
 
-# Seed database
+# Seed database (admin + 2 merchants + stores + sample products)
 npx prisma db seed
 
 # Start development server
@@ -56,15 +137,11 @@ docker-compose exec app npx prisma migrate deploy
 docker-compose exec app npx prisma db seed
 ```
 
-## API Documentation
+## 📡 API Endpoints
 
-Once running, visit:
-- **Swagger UI**: http://localhost:3000/docs
-- **API base**: http://localhost:3000/api
+Once running: **Swagger UI** at http://localhost:3000/docs | **API base** at http://localhost:3000/api
 
-### Key Endpoints
-
-#### Authentication
+### Authentication
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | POST | `/api/auth/register` | Register merchant |
@@ -74,7 +151,7 @@ Once running, visit:
 | GET | `/api/auth/me` | Current merchant profile |
 | POST | `/api/auth/admin/login` | Admin login |
 
-#### Platform Admin
+### Platform Admin
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/api/admin/merchants` | List all merchants |
@@ -88,15 +165,19 @@ Once running, visit:
 | GET | `/api/admin/analytics` | Platform analytics |
 | GET | `/api/admin/audit-log` | Platform audit log |
 
-#### Stores
+### Stores & Staff
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/api/stores` | List merchant's stores |
 | POST | `/api/stores` | Create store |
 | GET | `/api/stores/:id` | Store details |
 | PATCH | `/api/stores/:id` | Update store |
+| GET | `/api/stores/:storeId/staff` | List staff |
+| POST | `/api/stores/:storeId/staff` | Invite staff |
+| PATCH | `/api/stores/:storeId/staff/:id` | Update role/permissions |
+| DELETE | `/api/stores/:storeId/staff/:id` | Remove staff |
 
-#### Products & Categories
+### Products & Categories
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/api/stores/:storeId/products` | List products |
@@ -112,7 +193,7 @@ Once running, visit:
 | PATCH | `/api/stores/:storeId/categories/:id` | Update category |
 | DELETE | `/api/stores/:storeId/categories/:id` | Delete category |
 
-#### Warehouses & Inventory
+### Warehouses & Inventory
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/api/stores/:storeId/warehouses` | List warehouses |
@@ -125,7 +206,17 @@ Once running, visit:
 | POST | `/api/stores/:storeId/inventory/transfer` | Transfer between warehouses |
 | GET | `/api/stores/:storeId/inventory/nearest-warehouse` | Nearest warehouse (Haversine) |
 
-#### Orders & Checkout
+### Cart & Checkout
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/stores/:storeId/cart` | Get/create cart |
+| POST | `/api/stores/:storeId/cart/items` | Add item to cart |
+| PATCH | `/api/stores/:storeId/cart/items/:id` | Update item quantity |
+| DELETE | `/api/stores/:storeId/cart/items/:id` | Remove item |
+| DELETE | `/api/stores/:storeId/cart` | Clear cart |
+| POST | `/api/stores/:storeId/checkout` | Checkout (ACID transaction) |
+
+### Orders
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/api/stores/:storeId/orders` | List orders |
@@ -134,7 +225,7 @@ Once running, visit:
 | POST | `/api/stores/:storeId/orders/:id/fulfill` | Create fulfillment |
 | PATCH | `/api/stores/:storeId/orders/:id/fulfillments/:fulfillmentId` | Update fulfillment |
 
-#### Payments & Discounts
+### Payments & Discounts
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | POST | `/api/stores/:storeId/payments/initiate` | Initiate payment |
@@ -146,16 +237,7 @@ Once running, visit:
 | GET | `/api/stores/:storeId/promo-codes` | List promo codes |
 | POST | `/api/stores/:storeId/promo-codes/:code/validate` | Validate promo code |
 
-#### Cart
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/stores/:storeId/cart` | Get/create cart |
-| POST | `/api/stores/:storeId/cart/items` | Add item to cart |
-| PATCH | `/api/stores/:storeId/cart/items/:id` | Update item quantity |
-| DELETE | `/api/stores/:storeId/cart/items/:id` | Remove item |
-| DELETE | `/api/stores/:storeId/cart` | Clear cart |
-
-#### Customers & Storefront
+### Customers & Storefront
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | POST | `/api/storefront/auth/register` | Customer registration |
@@ -167,19 +249,15 @@ Once running, visit:
 | GET | `/api/stores/:storeId/customers/me` | Customer profile |
 | GET | `/api/stores/:storeId/customers/me/addresses` | Customer addresses |
 
-#### Webhooks, Staff, Subscriptions
+### Webhooks, Subscriptions, Analytics, Templates
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/api/stores/:storeId/webhooks` | List webhooks |
 | POST | `/api/stores/:storeId/webhooks` | Create webhook |
-| GET | `/api/stores/:storeId/staff` | List staff |
-| POST | `/api/stores/:storeId/staff` | Invite staff |
+| PATCH | `/api/stores/:storeId/webhooks/:id` | Update webhook |
+| DELETE | `/api/stores/:storeId/webhooks/:id` | Delete webhook |
 | POST | `/api/stores/:storeId/subscription-boxes` | Create subscription box |
 | POST | `/api/stores/:storeId/subscriptions/subscribe` | Subscribe to box |
-
-#### Analytics & Templates
-| Method | Endpoint | Description |
-|--------|----------|-------------|
 | GET | `/api/stores/:storeId/analytics/sales` | Sales dashboard |
 | GET | `/api/stores/:storeId/analytics/products` | Product performance |
 | GET | `/api/stores/:storeId/analytics/customers` | Customer analytics |
@@ -187,11 +265,7 @@ Once running, visit:
 | GET | `/api/stores/:storeId/templates` | List templates |
 | POST | `/api/stores/:storeId/templates/:id/render` | Render template |
 
-## Monetary Values
-
-All monetary values are stored in **tiyin** (1 KZT = 100 tiyin).
-
-## Testing
+## 🧪 Testing
 
 ```bash
 # Run all tests
@@ -204,7 +278,7 @@ pnpm test -- test/auth.spec.ts
 pnpm test:cov
 ```
 
-## Scripts
+## 📜 Scripts
 
 | Script | Description |
 |--------|-------------|
@@ -218,10 +292,66 @@ pnpm test:cov
 | `pnpm prisma:migrate:dev` | Create and apply migration |
 | `pnpm prisma:seed` | Seed database |
 
-## Environment Variables
+## 🔧 Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Language | TypeScript 5.x (strict mode) |
+| Framework | NestJS 10+ |
+| ORM | Prisma 5+ |
+| Database | PostgreSQL 15 |
+| Cache / Queue | Redis 7 (ioredis) |
+| Validation | Zod + class-validator |
+| Auth | Passport + JWT |
+| API Docs | Swagger / OpenAPI |
+| Containers | Docker + docker-compose |
+| CI/CD | GitHub Actions |
+| Package Manager | pnpm |
+
+## 📁 Project Structure
+
+```
+src/
+├── common/              # Shared infrastructure
+│   ├── audit/           # Global audit interceptor & service
+│   ├── decorators/      # Custom decorators (@Roles, @CurrentUser, @RateLimit, @Tenant)
+│   ├── dto/             # Shared DTOs (pagination)
+│   ├── filters/         # HTTP exception filters
+│   ├── guards/          # JWT, Roles, Admin, Rate-limit guards
+│   ├── interceptors/    # Logging, response transform
+│   ├── middleware/       # Tenant middleware (search_path routing)
+│   ├── pipes/           # Zod validation pipe
+│   ├── redis/           # Redis module & service
+│   └── utils/           # Haversine, SKU builder, slugify, tiyin math
+├── config/              # Environment config & validation
+├── modules/             # 17 feature modules
+│   ├── abandoned-carts/
+│   ├── admin/
+│   ├── analytics/
+│   ├── auth/
+│   ├── cart/
+│   ├── checkout/
+│   ├── customers/
+│   ├── discounts/
+│   ├── inventory/
+│   ├── orders/
+│   ├── payments/
+│   ├── products/
+│   ├── staff/
+│   ├── storefront/
+│   ├── stores/
+│   ├── subscriptions/
+│   ├── templates/
+│   ├── warehouses/
+│   └── webhooks/
+├── prisma/              # Prisma service, module, middleware
+└── workers/             # 7 BullMQ-ready worker stubs
+```
+
+## 📝 Environment Variables
 
 See `.env.example` for all configuration options.
 
-## License
+## 📄 License
 
 University Final Project
