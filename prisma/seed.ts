@@ -150,7 +150,7 @@ async function main() {
 
   // 1. Create platform admin
   console.log('1. Creating platform admin...');
-  const adminPassword = await bcrypt.hash('admin123456', 12);
+  const adminPassword = await bcrypt.hash('Admin123456', 12);
   const admin = await prisma.platformAdmin.upsert({
     where: { email: 'admin@shopbuilder.kz' },
     update: {},
@@ -161,11 +161,11 @@ async function main() {
       role: 'super_admin',
     },
   });
-  console.log(`  ✓ Admin: ${admin.email} (password: admin123456)\n`);
+  console.log(`  ✓ Admin: ${admin.email} (password: Admin123456)\n`);
 
   // 2. Create merchants
   console.log('2. Creating merchants...');
-  const m1Pass = await bcrypt.hash('merchant123', 12);
+  const m1Pass = await bcrypt.hash('Merchant123', 12);
   const merchant1 = await prisma.merchant.upsert({
     where: { email: 'merchant1@example.com' },
     update: {},
@@ -179,9 +179,9 @@ async function main() {
       isActive: true,
     },
   });
-  console.log(`  ✓ Merchant 1: ${merchant1.email} (password: merchant123)`);
+  console.log(`  ✓ Merchant 1: ${merchant1.email} (password: Merchant123)`);
 
-  const m2Pass = await bcrypt.hash('merchant123', 12);
+  const m2Pass = await bcrypt.hash('Merchant123', 12);
   const merchant2 = await prisma.merchant.upsert({
     where: { email: 'merchant2@example.com' },
     update: {},
@@ -195,7 +195,7 @@ async function main() {
       isActive: true,
     },
   });
-  console.log(`  ✓ Merchant 2: ${merchant2.email} (password: merchant123)\n`);
+  console.log(`  ✓ Merchant 2: ${merchant2.email} (password: Merchant123)\n`);
 
   // 3. Create stores
   console.log('3. Creating stores...');
@@ -266,9 +266,9 @@ async function main() {
 
   console.log('\n✅ Seed completed successfully!');
   console.log('\n📋 Test accounts:');
-  console.log('  Admin:    admin@shopbuilder.kz / admin123456');
-  console.log('  Merchant: merchant1@example.com / merchant123');
-  console.log('  Merchant: merchant2@example.com / merchant123');
+  console.log('  Admin:    admin@shopbuilder.kz / Admin123456');
+  console.log('  Merchant: merchant1@example.com / Merchant123');
+  console.log('  Merchant: merchant2@example.com / Merchant123');
 }
 
 main()
@@ -279,3 +279,4 @@ main()
   .finally(async () => {
     await prisma.$disconnect();
   });
+

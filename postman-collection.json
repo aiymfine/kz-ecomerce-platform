@@ -11,7 +11,7 @@
     },
     {
       "key": "merchant_email",
-      "value": "merchant@shopbuilder.kz"
+      "value": "merchant1@example.com"
     },
     {
       "key": "merchant_token",
@@ -61,7 +61,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"merchant@shopbuilder.kz\",\n  \"password\": \"merchant123\",\n  \"name\": \"Aibek\",\n  \"businessName\": \"Demo Shop\"\n}"
+              "raw": "{\n  \"email\": \"merchant1@example.com\",\n  \"password\": \"Merchant123\",\n  \"name\": \"Aibek\",\n  \"businessName\": \"Demo Shop\"\n}"
             }
           }
         },
@@ -104,7 +104,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"{{merchant_email}}\",\n  \"password\": \"merchant123\"\n}"
+              "raw": "{\n  \"email\": \"{{merchant_email}}\",\n  \"password\": \"Merchant123\"\n}"
             }
           }
         },
@@ -145,7 +145,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"admin@shopbuilder.kz\",\n  \"password\": \"admin123456\"\n}"
+              "raw": "{\n  \"email\": \"admin@shopbuilder.kz\",\n  \"password\": \"Admin123456\"\n}"
             }
           }
         },
@@ -230,7 +230,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"newmerchant@example.com\",\n  \"password\": \"merchant123\",\n  \"name\": \"New Merchant\",\n  \"businessName\": \"New Store\"\n}"
+              "raw": "{\n  \"email\": \"newmerchant@example.com\",\n  \"password\": \"Merchant123\",\n  \"name\": \"New Merchant\",\n  \"businessName\": \"New Store\"\n}"
             }
           }
         },
@@ -256,7 +256,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"{{merchant_email}}\",\n  \"password\": \"merchant123\"\n}"
+              "raw": "{\n  \"email\": \"{{merchant_email}}\",\n  \"password\": \"Merchant123\"\n}"
             }
           }
         },
@@ -1379,7 +1379,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"customer@test.com\",\n  \"password\": \"merchant123\",\n  \"firstName\": \"Test\",\n  \"lastName\": \"User\"\n}"
+              "raw": "{\n  \"email\": \"customer@test.com\",\n  \"password\": \"Merchant123\",\n  \"firstName\": \"Test\",\n  \"lastName\": \"User\"\n}"
             }
           }
         },
@@ -1420,7 +1420,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"customer@test.com\",\n  \"password\": \"merchant123\"\n}"
+              "raw": "{\n  \"email\": \"customer@test.com\",\n  \"password\": \"Merchant123\"\n}"
             }
           }
         }
