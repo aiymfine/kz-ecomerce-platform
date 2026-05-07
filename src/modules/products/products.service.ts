@@ -218,7 +218,8 @@ export class ProductsService {
     const updateData: any = {};
     if (data.sku !== undefined) updateData.sku = data.sku;
     if (data.priceTiyin !== undefined) updateData.priceTiyin = data.priceTiyin;
-    if (data.compareAtPriceTiyin !== undefined) updateData.compareAtPriceTiyin = data.compareAtPriceTiyin;
+    if (data.compareAtPriceTiyin !== undefined)
+      updateData.compareAtPriceTiyin = data.compareAtPriceTiyin;
     if (data.barcode !== undefined) updateData.barcode = data.barcode;
     if (data.weightGrams !== undefined) updateData.weightGrams = data.weightGrams;
     if (data.isActive !== undefined) updateData.isActive = data.isActive;

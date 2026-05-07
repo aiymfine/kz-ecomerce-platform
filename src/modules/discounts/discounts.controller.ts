@@ -39,10 +39,7 @@ export class DiscountsController {
   @UsePipes(new ZodValidationPipe(createPromoCodeSchema))
   @ApiOperation({ summary: 'Create a promo code' })
   @ApiResponse({ status: 201, description: 'Promo code created' })
-  async createPromoCode(
-    @Param('storeId', ParseIntPipe) storeId: number,
-    @Body() body: unknown,
-  ) {
+  async createPromoCode(@Param('storeId', ParseIntPipe) storeId: number, @Body() body: unknown) {
     const dto = body as any;
     return this.discountsService.createPromoCode(storeId, {
       code: dto.code,

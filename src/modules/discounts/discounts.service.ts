@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 
 @Injectable()
@@ -12,18 +7,21 @@ export class DiscountsService {
 
   constructor(private prisma: PrismaService) {}
 
-  async createPromoCode(storeId: number, data: {
-    code: string;
-    type: 'percentage' | 'fixed_amount' | 'free_shipping';
-    value: number;
-    minOrderTiyin?: number;
-    maxUses?: number;
-    maxPerCustomer?: number;
-    isStackable?: boolean;
-    firstBuyerOnly?: boolean;
-    startsAt?: string;
-    expiresAt?: string;
-  }) {
+  async createPromoCode(
+    storeId: number,
+    data: {
+      code: string;
+      type: 'percentage' | 'fixed_amount' | 'free_shipping';
+      value: number;
+      minOrderTiyin?: number;
+      maxUses?: number;
+      maxPerCustomer?: number;
+      isStackable?: boolean;
+      firstBuyerOnly?: boolean;
+      startsAt?: string;
+      expiresAt?: string;
+    },
+  ) {
     if (data.type === 'percentage' && (data.value < 1 || data.value > 90)) {
       throw new BadRequestException('Percentage value must be between 1 and 90');
     }
@@ -54,10 +52,13 @@ export class DiscountsService {
     );
   }
 
-  async listPromoCodes(storeId: number, params: {
-    cursor?: string;
-    limit: number;
-  }) {
+  async listPromoCodes(
+    storeId: number,
+    params: {
+      cursor?: string;
+      limit: number;
+    },
+  ) {
     const items = await this.prisma.withTenant(storeId, (client) =>
       client.promoCode.findMany({
         take: params.limit + 1,
@@ -71,10 +72,7 @@ export class DiscountsService {
       meta: {
         limit: params.limit,
         hasMore: items.length > params.limit,
-        cursor:
-          items.length > params.limit
-            ? String(items[items.length - 1].id)
-            : undefined,
+        cursor: items.length > params.limit ? String(items[items.length - 1].id) : undefined,
       },
     };
   }
@@ -140,11 +138,14 @@ export class DiscountsService {
     );
   }
 
-  async validatePromoCode(storeId: number, data: {
-    code: string;
-    cartSubtotalTiyin: number;
-    customerId?: number;
-  }) {
+  async validatePromoCode(
+    storeId: number,
+    data: {
+      code: string;
+      cartSubtotalTiyin: number;
+      customerId?: number;
+    },
+  ) {
     const promo = await this.prisma.withTenant(storeId, (client) =>
       client.promoCode.findUnique({
         where: { code: data.code.toUpperCase() },
@@ -173,9 +174,7 @@ export class DiscountsService {
 
     // Check min order
     if (data.cartSubtotalTiyin < promo.minOrderTiyin) {
-      throw new BadRequestException(
-        `Minimum order amount is ${promo.minOrderTiyin} tiyin`,
-      );
+      throw new BadRequestException(`Minimum order amount is ${promo.minOrderTiyin} tiyin`);
     }
 
     // Check first buyer

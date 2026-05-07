@@ -31,10 +31,7 @@ export class PaymentsController {
   @UsePipes(new ZodValidationPipe(initiatePaymentSchema))
   @ApiOperation({ summary: 'Initiate payment for an order' })
   @ApiResponse({ status: 201, description: 'Payment initiated' })
-  async initiatePayment(
-    @Param('storeId', ParseIntPipe) storeId: number,
-    @Body() body: unknown,
-  ) {
+  async initiatePayment(@Param('storeId', ParseIntPipe) storeId: number, @Body() body: unknown) {
     const dto = body as any;
     return this.paymentsService.initiatePayment(storeId, {
       orderId: dto.order_id,

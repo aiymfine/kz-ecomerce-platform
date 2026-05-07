@@ -35,16 +35,18 @@ export const updateFulfillmentSchema = z.object({
 export type UpdateFulfillmentDto = z.infer<typeof updateFulfillmentSchema>;
 
 export const orderFilterSchema = z.object({
-  status: z.enum([
-    'payment_pending',
-    'payment_failed',
-    'confirmed',
-    'processing',
-    'shipped',
-    'delivered',
-    'cancelled',
-    'refunded',
-  ]).optional(),
+  status: z
+    .enum([
+      'payment_pending',
+      'payment_failed',
+      'confirmed',
+      'processing',
+      'shipped',
+      'delivered',
+      'cancelled',
+      'refunded',
+    ])
+    .optional(),
   cursor: z.string().optional(),
   limit: z.coerce.number().int().min(1).max(100).default(20),
   sort: z.enum(['asc', 'desc']).default('desc'),

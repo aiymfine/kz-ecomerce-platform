@@ -31,10 +31,7 @@ export class CartController {
 
   @Get()
   @ApiOperation({ summary: 'Get current customer active cart' })
-  async getCart(
-    @Param('storeId', ParseIntPipe) storeId: number,
-    @CurrentUser() user: JwtPayload,
-  ) {
+  async getCart(@Param('storeId', ParseIntPipe) storeId: number, @CurrentUser() user: JwtPayload) {
     return this.cartService.getCart(storeId, user.sub);
   }
 

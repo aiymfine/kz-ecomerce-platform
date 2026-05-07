@@ -12,6 +12,8 @@ import {
   ParseIntPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 import { AdminService } from './admin.service';
 import {
   rejectMerchantSchema,
@@ -27,7 +29,11 @@ import { AdminGuard } from '../../common/guards/admin.guard';
 @Controller('admin')
 @UseGuards(JwtAuthGuard, AdminGuard)
 export class AdminController {
-  constructor(private readonly adminService: AdminService) {}
+  constructor(
+    private readonly adminService: AdminService,
+    @InjectQueue('emails') private readonly emailQueue: Queue,
+    @InjectQueue('abandoned-carts') private readonly abandonedCartQueue: Queue,
+  ) {}
 
   // ==================== Merchants ====================
 
@@ -135,6 +141,68 @@ export class AdminController {
   @ApiResponse({ status: 200, description: 'Platform analytics' })
   async getAnalytics() {
     return this.adminService.getAnalytics();
+  }
+
+  // ==================== Queue Status ====================
+
+  @Get('queue/status')
+  @ApiOperation({ summary: 'Get BullMQ queue status and recent jobs' })
+  @ApiResponse({ status: 200, description: 'Queue status with job counts and recent activity' })
+  async getQueueStatus() {
+    const [emailCounts, abandonedCounts, emailRecent, abandonedRecent, repeatableJobs] =
+      await Promise.all([
+        this.emailQueue.getJobCounts('waiting', 'active', 'completed', 'failed', 'delayed'),
+        this.abandonedCartQueue.getJobCounts('waiting', 'active', 'completed', 'failed', 'delayed'),
+        this.emailQueue.getJobs(['completed', 'failed'], 0, 5) as Promise<any[]>,
+        this.abandonedCartQueue.getJobs(['completed', 'failed'], 0, 5) as Promise<any[]>,
+        this.abandonedCartQueue.getRepeatableJobs() as Promise<any[]>,
+      ]);
+
+    return {
+      queues: {
+        emails: {
+          waiting: emailCounts.waiting,
+          active: emailCounts.active,
+          completed: emailCounts.completed,
+          failed: emailCounts.failed,
+          delayed: emailCounts.delayed,
+          recentJobs: emailRecent.map((job) => ({
+            id: job.id,
+            name: job.name,
+            type: job.data?.type,
+            status: job.attemptsMade > 0 && job.failedReason ? 'failed' : 'completed',
+            timestamp: job.timestamp
+              ? new Date(job.timestamp).toISOString()
+              : null,
+            attemptsMade: job.attemptsMade,
+            failedReason: job.failedReason || null,
+          })),
+        },
+        'abandoned-carts': {
+          waiting: abandonedCounts.waiting,
+          active: abandonedCounts.active,
+          completed: abandonedCounts.completed,
+          failed: abandonedCounts.failed,
+          delayed: abandonedCounts.delayed,
+          recentJobs: abandonedRecent.map((job) => ({
+            id: job.id,
+            name: job.name,
+            status: job.attemptsMade > 0 && job.failedReason ? 'failed' : 'completed',
+            timestamp: job.timestamp
+              ? new Date(job.timestamp).toISOString()
+              : null,
+            attemptsMade: job.attemptsMade,
+            failedReason: job.failedReason || null,
+          })),
+        },
+      },
+      scheduledJobs: repeatableJobs.map((job: any) => ({
+        key: job.key,
+        name: job.name,
+        nextRun: new Date(job.next).toISOString(),
+        interval: `${Math.round((job.interval / 1000) / 60)} minutes`,
+      })),
+    };
   }
 
   // ==================== Audit Log ====================

@@ -1,4 +1,4 @@
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
+import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { JsonWebTokenError, JwtService } from '@nestjs/jwt';
 import { RedisService } from '../redis/redis.service';
 import { ConfigService } from '@nestjs/config';
@@ -44,6 +44,16 @@ export class JwtAuthGuard implements CanActivate {
         const isBlacklisted = await this.redisService.isTokenBlacklisted(payload.jti);
         if (isBlacklisted) {
           return false;
+        }
+      }
+
+      // Block unverified merchants from protected routes
+      // Skip for AuthController (login, logout, verify, refresh still need to work)
+      // Skip for admin tokens (emailVerified is always true for admins)
+      if (payload.emailVerified === false) {
+        const controllerClass = context.getClass().name;
+        if (controllerClass !== 'AuthController') {
+          throw new ForbiddenException('Please verify your email before accessing this resource');
         }
       }
 

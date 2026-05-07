@@ -16,7 +16,10 @@ export class RegisterDto {
   @ApiProperty({ example: 'merchant@example.com', description: 'Email address' })
   email!: string;
 
-  @ApiProperty({ example: 'TestPassword123!', description: 'Min 8 chars, uppercase + digit required' })
+  @ApiProperty({
+    example: 'TestPassword123!',
+    description: 'Min 8 chars, uppercase + digit required',
+  })
   password!: string;
 
   @ApiProperty({ example: 'Aibek', description: 'Full name' })

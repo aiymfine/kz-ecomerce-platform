@@ -95,10 +95,7 @@ async function bootstrap() {
 
   // Export OpenAPI specs
   const specDir = path.resolve(process.cwd());
-  fs.writeFileSync(
-    path.join(specDir, 'openapi.json'),
-    JSON.stringify(document, null, 2),
-  );
+  fs.writeFileSync(path.join(specDir, 'openapi.json'), JSON.stringify(document, null, 2));
 
   // Export YAML (simple conversion)
   const yaml = jsonToYaml(document);

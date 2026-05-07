@@ -57,7 +57,10 @@ export class AuthController {
         WEAK_PASSWORD: 400,
       };
       const statusCode = statusMap[result.error] || 400;
-      throw new HttpException({ statusCode, error: result.error, message: result.message }, statusCode);
+      throw new HttpException(
+        { statusCode, error: result.error, message: result.message },
+        statusCode,
+      );
     }
     return result;
   }
@@ -80,7 +83,10 @@ export class AuthController {
         FORBIDDEN: 403,
       };
       const statusCode = statusMap[result.error] || 400;
-      throw new HttpException({ statusCode, error: result.error, message: result.message }, statusCode);
+      throw new HttpException(
+        { statusCode, error: result.error, message: result.message },
+        statusCode,
+      );
     }
     return result;
   }
@@ -100,7 +106,10 @@ export class AuthController {
         FORBIDDEN: 403,
       };
       const statusCode = statusMap[result.error] || 401;
-      throw new HttpException({ statusCode, error: result.error, message: result.message }, statusCode);
+      throw new HttpException(
+        { statusCode, error: result.error, message: result.message },
+        statusCode,
+      );
     }
     return result;
   }
@@ -123,7 +132,10 @@ export class AuthController {
         BAD_REQUEST: 400,
       };
       const statusCode = statusMap[result.error] || 400;
-      throw new HttpException({ statusCode, error: result.error, message: result.message }, statusCode);
+      throw new HttpException(
+        { statusCode, error: result.error, message: result.message },
+        statusCode,
+      );
     }
     return result;
   }
@@ -146,7 +158,10 @@ export class AuthController {
         BAD_REQUEST: 400,
       };
       const statusCode = statusMap[result.error] || 400;
-      throw new HttpException({ statusCode, error: result.error, message: result.message }, statusCode);
+      throw new HttpException(
+        { statusCode, error: result.error, message: result.message },
+        statusCode,
+      );
     }
     return result;
   }
@@ -181,7 +196,10 @@ export class AuthController {
         WEAK_PASSWORD: 400,
       };
       const statusCode = statusMap[result.error] || 400;
-      throw new HttpException({ statusCode, error: result.error, message: result.message }, statusCode);
+      throw new HttpException(
+        { statusCode, error: result.error, message: result.message },
+        statusCode,
+      );
     }
     return result;
   }
@@ -201,7 +219,10 @@ export class AuthController {
         FORBIDDEN: 403,
       };
       const statusCode = statusMap[result.error] || 400;
-      throw new HttpException({ statusCode, error: result.error, message: result.message }, statusCode);
+      throw new HttpException(
+        { statusCode, error: result.error, message: result.message },
+        statusCode,
+      );
     }
     return result;
   }

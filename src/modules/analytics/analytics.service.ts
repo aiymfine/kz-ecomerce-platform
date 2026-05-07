@@ -65,10 +65,14 @@ export class AnalyticsService {
       include: { order: { select: { status: true } } },
     });
 
-    const productMap: Record<string, { revenue: number; sold: number; title: string; sku: string }> = {};
+    const productMap: Record<
+      string,
+      { revenue: number; sold: number; title: string; sku: string }
+    > = {};
 
     for (const item of items) {
-      if (!['confirmed', 'processing', 'shipped', 'delivered'].includes(item.order.status)) continue;
+      if (!['confirmed', 'processing', 'shipped', 'delivered'].includes(item.order.status))
+        continue;
       const key = `${item.variantSku}`;
       if (!productMap[key]) {
         productMap[key] = { revenue: 0, sold: 0, title: item.productTitle, sku: item.variantSku };
@@ -126,16 +130,19 @@ export class AnalyticsService {
 
   async getInventory() {
     const allInventory = await this.prisma.inventory.findMany();
-    const lowStock = allInventory.filter((inv) => inv.quantityAvailable <= inv.lowStockThreshold).slice(0, 50);
+    const lowStock = allInventory
+      .filter((inv) => inv.quantityAvailable <= inv.lowStockThreshold)
+      .slice(0, 50);
 
     // Fetch variant details for low stock items
     const variantIds = lowStock.map((inv) => inv.variantId);
-    const variants = variantIds.length > 0
-      ? await this.prisma.productVariant.findMany({
-          where: { id: { in: variantIds } },
-          include: { product: { select: { title: true } } },
-        })
-      : [];
+    const variants =
+      variantIds.length > 0
+        ? await this.prisma.productVariant.findMany({
+            where: { id: { in: variantIds } },
+            include: { product: { select: { title: true } } },
+          })
+        : [];
     const variantMap = new Map(variants.map((v) => [v.id, v]));
 
     const total = await this.prisma.inventory.count();

@@ -8,12 +8,7 @@
 // For now, this is a stub that logs what it would do.
 
 export class EmailsWorker {
-  async process(job: {
-    to: string;
-    subject: string;
-    template: string;
-    data: any;
-  }) {
+  async process(job: { to: string; subject: string; template: string; data: any }) {
     console.log(
       `[EmailsWorker] Would send email to ${job.to}: "${job.subject}" (template: ${job.template})`,
     );

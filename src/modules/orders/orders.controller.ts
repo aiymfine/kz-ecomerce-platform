@@ -74,7 +74,10 @@ export class OrdersController {
     @Param('id', ParseIntPipe) id: number,
     @Body() body: unknown,
   ) {
-    const dto = body as { warehouse_id: number; items: { order_item_id: number; quantity: number }[] };
+    const dto = body as {
+      warehouse_id: number;
+      items: { order_item_id: number; quantity: number }[];
+    };
     return this.ordersService.createFulfillment(storeId, id, {
       warehouseId: dto.warehouse_id,
       items: dto.items,

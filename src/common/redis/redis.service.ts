@@ -15,7 +15,9 @@ export class RedisService implements OnModuleDestroy {
     this.available = !!redisUrl;
 
     if (!redisUrl) {
-      this.logger.warn('REDIS_URL not set — Redis features (rate limiting, token blacklist) are disabled');
+      this.logger.warn(
+        'REDIS_URL not set — Redis features (rate limiting, token blacklist) are disabled',
+      );
       return;
     }
 

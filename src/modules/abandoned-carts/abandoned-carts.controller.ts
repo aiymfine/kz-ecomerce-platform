@@ -10,10 +10,7 @@ import {
   ParseIntPipe,
 } from '@nestjs/common';
 import { AbandonedCartsService } from './abandoned-carts.service';
-import {
-  abandonedCartConfigSchema,
-  abandonedCartFilterSchema,
-} from './dto/abandoned-cart.dto';
+import { abandonedCartConfigSchema, abandonedCartFilterSchema } from './dto/abandoned-cart.dto';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
 
 @Controller('abandoned-carts')

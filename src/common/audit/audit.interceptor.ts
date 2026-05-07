@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  NestInterceptor,
-  ExecutionContext,
-  CallHandler,
-} from '@nestjs/common';
+import { Injectable, NestInterceptor, ExecutionContext, CallHandler } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { Request } from 'express';
@@ -115,11 +110,7 @@ export class AuditInterceptor implements NestInterceptor {
     return null;
   }
 
-  private determineLevel(
-    method: string,
-    path: string,
-    statusCode: number,
-  ): string {
+  private determineLevel(method: string, path: string, statusCode: number): string {
     if (method === 'DELETE' || path.toLowerCase().includes('refund')) {
       return 'CRITICAL';
     }

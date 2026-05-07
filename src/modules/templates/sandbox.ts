@@ -55,7 +55,8 @@ function isTruthy(value: unknown): boolean {
 
 function processIfBlocks(template: string, context: Record<string, any>): string {
   // Handle {% if condition %}...{% else %}...{% endif %}
-  const ifRegex = /\{%\s*if\s+([\w.]+)\s*%\}([\s\S]*?)(?:\{%\s*else\s*%\}([\s\S]*?))?\{%\s*endif\s*%\}/g;
+  const ifRegex =
+    /\{%\s*if\s+([\w.]+)\s*%\}([\s\S]*?)(?:\{%\s*else\s*%\}([\s\S]*?))?\{%\s*endif\s*%\}/g;
 
   return template.replace(ifRegex, (_, condition, ifBlock, elseBlock = '') => {
     const value = resolveValue(context, condition);
@@ -100,10 +101,7 @@ function processVariables(template: string, context: Record<string, any>): strin
   });
 }
 
-export function renderTemplate(
-  template: string,
-  context: Record<string, any>,
-): string {
+export function renderTemplate(template: string, context: Record<string, any>): string {
   // Create a safe context proxy that blocks prototype access
   const safeContext: Record<string, any> = {};
   for (const key of Object.keys(context)) {

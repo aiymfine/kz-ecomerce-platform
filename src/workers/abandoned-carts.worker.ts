@@ -20,7 +20,5 @@ export class AbandonedCartsWorker {
 }
 
 export function startAbandonedCartsWorker() {
-  console.log(
-    '[AbandonedCartsWorker] Stub started — awaiting BullMQ integration',
-  );
+  console.log('[AbandonedCartsWorker] Stub started — awaiting BullMQ integration');
 }

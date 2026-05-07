@@ -39,10 +39,7 @@ export class StorefrontController {
   @ApiOperation({ summary: 'Customer registration' })
   @ApiResponse({ status: 201, description: 'Customer registered' })
   @ApiResponse({ status: 409, description: 'Email already registered' })
-  async register(
-    @Query('storeId', ParseIntPipe) storeId: number,
-    @Body() body: unknown,
-  ) {
+  async register(@Query('storeId', ParseIntPipe) storeId: number, @Body() body: unknown) {
     const result = await this.storefrontService.register(storeId, body as any);
     if (result.error) {
       const statusMap: Record<string, number> = { CONFLICT: 409 };
@@ -57,10 +54,7 @@ export class StorefrontController {
   @ApiOperation({ summary: 'Customer login' })
   @ApiResponse({ status: 200, description: 'Login successful' })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
-  async login(
-    @Query('storeId', ParseIntPipe) storeId: number,
-    @Body() body: unknown,
-  ) {
+  async login(@Query('storeId', ParseIntPipe) storeId: number, @Body() body: unknown) {
     const result = await this.storefrontService.login(storeId, body as any);
     if (result.error) {
       const statusMap: Record<string, number> = { UNAUTHORIZED: 401 };
@@ -118,11 +112,8 @@ export class StorefrontController {
   @ApiQuery({ name: 'storeId', required: true, type: Number })
   @ApiResponse({ status: 200, description: 'Product details' })
   @ApiResponse({ status: 404, description: 'Product not found' })
-  async getProduct(
-    @Query('storeId', ParseIntPipe) storeId: number,
-    @Param('slug') slug: string,
-  ) {
-    const result = await this.storefrontService.getProductBySlug(storeId, slug) as any;
+  async getProduct(@Query('storeId', ParseIntPipe) storeId: number, @Param('slug') slug: string) {
+    const result = (await this.storefrontService.getProductBySlug(storeId, slug)) as any;
     if (result.error) {
       return { statusCode: 404, ...result };
     }

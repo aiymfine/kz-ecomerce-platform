@@ -34,10 +34,7 @@ export class TemplatesService {
     });
   }
 
-  async updateTemplate(
-    id: number,
-    data: { name?: string; templateContent?: string },
-  ) {
+  async updateTemplate(id: number, data: { name?: string; templateContent?: string }) {
     const existing = await this.prisma.themeTemplate.findUnique({
       where: { id },
     });
@@ -48,8 +45,7 @@ export class TemplatesService {
 
     const updateData: any = {};
     if (data.name !== undefined) updateData.name = data.name;
-    if (data.templateContent !== undefined)
-      updateData.templateContent = data.templateContent;
+    if (data.templateContent !== undefined) updateData.templateContent = data.templateContent;
 
     return this.prisma.themeTemplate.update({
       where: { id },

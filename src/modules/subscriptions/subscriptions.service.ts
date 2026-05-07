@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { randomUUID } from 'crypto';
 
@@ -83,7 +79,10 @@ export class SubscriptionsService {
     });
   }
 
-  async addBoxItem(boxId: number, data: { variant_id: number; quantity: number; sort_order: number }) {
+  async addBoxItem(
+    boxId: number,
+    data: { variant_id: number; quantity: number; sort_order: number },
+  ) {
     await this.getBox(boxId);
 
     const variant = await this.prisma.productVariant.findUnique({
@@ -126,7 +125,8 @@ export class SubscriptionsService {
       where: { id: data.box_id },
       include: { items: true },
     });
-    if (!box || !box.isActive) throw new NotFoundException('Subscription box not found or inactive');
+    if (!box || !box.isActive)
+      throw new NotFoundException('Subscription box not found or inactive');
 
     const customer = await this.prisma.customer.findUnique({
       where: { id: data.customer_id },
@@ -140,7 +140,8 @@ export class SubscriptionsService {
         status: { in: ['active', 'paused'] },
       },
     });
-    if (existing) throw new BadRequestException('Customer already has an active subscription to this box');
+    if (existing)
+      throw new BadRequestException('Customer already has an active subscription to this box');
 
     const now = new Date();
     let nextBilling: Date;
@@ -192,7 +193,8 @@ export class SubscriptionsService {
       include: { box: true },
     });
     if (!sub) throw new NotFoundException('Subscription not found');
-    if (sub.status === 'cancelled') throw new BadRequestException('Cannot pause a cancelled subscription');
+    if (sub.status === 'cancelled')
+      throw new BadRequestException('Cannot pause a cancelled subscription');
 
     const newSkips = sub.consecutiveSkips + 1;
 
@@ -223,7 +225,8 @@ export class SubscriptionsService {
   async resumeSubscription(id: number) {
     const sub = await this.prisma.subscriptionOrder.findUnique({ where: { id } });
     if (!sub) throw new NotFoundException('Subscription not found');
-    if (sub.status !== 'paused') throw new BadRequestException('Only paused subscriptions can be resumed');
+    if (sub.status !== 'paused')
+      throw new BadRequestException('Only paused subscriptions can be resumed');
 
     return this.prisma.subscriptionOrder.update({
       where: { id },

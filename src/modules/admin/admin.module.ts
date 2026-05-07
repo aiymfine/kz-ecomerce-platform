@@ -1,11 +1,13 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
+import { BullModule } from '@nestjs/bullmq';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
 
 @Module({
   imports: [
+    BullModule.registerQueue({ name: 'emails' }, { name: 'abandoned-carts' }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

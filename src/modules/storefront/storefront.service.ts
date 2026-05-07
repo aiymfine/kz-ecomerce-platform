@@ -18,7 +18,16 @@ export class StorefrontService {
     private redisService: RedisService,
   ) {}
 
-  async register(storeId: number, dto: { email: string; password: string; first_name: string; last_name?: string; phone?: string }) {
+  async register(
+    storeId: number,
+    dto: {
+      email: string;
+      password: string;
+      first_name: string;
+      last_name?: string;
+      phone?: string;
+    },
+  ) {
     const existing = await this.prisma.withTenant(storeId, (client) =>
       client.customer.findUnique({
         where: { email: dto.email },
@@ -141,10 +150,7 @@ export class StorefrontService {
       );
 
       if (payload.jti) {
-        await this.redisService.blacklistToken(
-          payload.jti,
-          refreshTokenExpireDays * 24 * 60 * 60,
-        );
+        await this.redisService.blacklistToken(payload.jti, refreshTokenExpireDays * 24 * 60 * 60);
       }
 
       return { message: 'Logged out successfully' };
@@ -153,13 +159,16 @@ export class StorefrontService {
     }
   }
 
-  async listProducts(storeId: number, params: {
-    cursor?: string;
-    limit: number;
-    sort: 'asc' | 'desc';
-    search?: string;
-    categoryId?: number;
-  }) {
+  async listProducts(
+    storeId: number,
+    params: {
+      cursor?: string;
+      limit: number;
+      sort: 'asc' | 'desc';
+      search?: string;
+      categoryId?: number;
+    },
+  ) {
     const where: any = { status: 'active' };
 
     if (params.search) {
@@ -251,7 +260,11 @@ export class StorefrontService {
     return tree;
   }
 
-  async getCategoryProducts(storeId: number, slug: string, params: { cursor?: string; limit: number; sort: 'asc' | 'desc' }) {
+  async getCategoryProducts(
+    storeId: number,
+    slug: string,
+    params: { cursor?: string; limit: number; sort: 'asc' | 'desc' },
+  ) {
     const category = await this.prisma.withTenant(storeId, (client) =>
       client.category.findFirst({
         where: { slug, isActive: true },

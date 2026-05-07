@@ -71,7 +71,18 @@ export class InventoryController {
     @Param('storeId', ParseIntPipe) storeId: number,
     @Query() query: Record<string, any>,
   ) {
-    const parsed = nearestWarehouseSchema.safeParse(query);
+    // Accept both camelCase (Postman) and snake_case query params
+    const rawVariantIds = query.variant_ids ?? query.variantIds;
+    const normalized = {
+      variant_ids: Array.isArray(rawVariantIds)
+        ? rawVariantIds
+        : typeof rawVariantIds === 'string'
+          ? rawVariantIds.split(',').map(Number)
+          : [],
+      customer_latitude: query.customer_latitude ?? query.customerLatitude,
+      customer_longitude: query.customer_longitude ?? query.customerLongitude,
+    };
+    const parsed = nearestWarehouseSchema.safeParse(normalized);
     if (!parsed.success) {
       return { statusCode: 400, message: 'Invalid query parameters' };
     }
@@ -87,10 +98,7 @@ export class InventoryController {
   @HttpCode(HttpStatus.CREATED)
   @UsePipes(new ZodValidationPipe(setInventorySchema))
   @ApiOperation({ summary: 'Set initial inventory' })
-  async setInventory(
-    @Param('storeId', ParseIntPipe) storeId: number,
-    @Body() body: unknown,
-  ) {
+  async setInventory(@Param('storeId', ParseIntPipe) storeId: number, @Body() body: unknown) {
     const dto = body as any;
     return this.inventoryService.setInventory(storeId, {
       variantId: dto.variant_id,
@@ -116,10 +124,7 @@ export class InventoryController {
   @HttpCode(HttpStatus.OK)
   @UsePipes(new ZodValidationPipe(transferInventorySchema))
   @ApiOperation({ summary: 'Transfer stock between warehouses' })
-  async transferInventory(
-    @Param('storeId', ParseIntPipe) storeId: number,
-    @Body() body: unknown,
-  ) {
+  async transferInventory(@Param('storeId', ParseIntPipe) storeId: number, @Body() body: unknown) {
     const dto = body as any;
     return this.inventoryService.transferInventory(storeId, {
       variantId: dto.variant_id,

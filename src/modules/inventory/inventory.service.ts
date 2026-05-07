@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { buildPaginationMeta, sliceForPagination } from '../../common/dto/pagination.dto';
 
@@ -62,6 +57,23 @@ export class InventoryService {
       lowStockThreshold: number;
     },
   ) {
+    // Validate foreign keys before upsert to give clear errors
+    const [variant, warehouse] = await Promise.all([
+      this.prisma.withTenant(storeId, (client) =>
+        client.productVariant.findUnique({ where: { id: data.variantId } }),
+      ),
+      this.prisma.withTenant(storeId, (client) =>
+        client.warehouse.findUnique({ where: { id: data.warehouseId } }),
+      ),
+    ]);
+
+    if (!variant) {
+      throw new NotFoundException(`Variant with id ${data.variantId} not found. Create product variants first via POST /stores/${storeId}/products/:id/variants`);
+    }
+    if (!warehouse) {
+      throw new NotFoundException(`Warehouse with id ${data.warehouseId} not found. Create a warehouse first via POST /stores/${storeId}/warehouses`);
+    }
+
     const result = await this.prisma.withTenant(storeId, (client) =>
       client.inventory.upsert({
         where: {
@@ -89,27 +101,28 @@ export class InventoryService {
 
   async adjustInventory(storeId: number, id: number, quantityChange: number) {
     return this.prisma.withTenant(storeId, (client) =>
-      client.$transaction(async (tx) => {
-        const record = await tx.inventory.findUnique({
-          where: { id },
-        });
-        if (!record) {
-          throw new NotFoundException('Inventory record not found');
-        }
+      client.$transaction(
+        async (tx) => {
+          const record = await tx.inventory.findUnique({
+            where: { id },
+          });
+          if (!record) {
+            throw new NotFoundException('Inventory record not found');
+          }
 
-        const newQuantity = record.quantityAvailable + quantityChange;
-        if (newQuantity < 0) {
-          throw new BadRequestException(
-            'Insufficient stock: quantity would go below zero',
-          );
-        }
+          const newQuantity = record.quantityAvailable + quantityChange;
+          if (newQuantity < 0) {
+            throw new BadRequestException('Insufficient stock: quantity would go below zero');
+          }
 
-        const updated = await tx.inventory.update({
-          where: { id },
-          data: { quantityAvailable: newQuantity },
-        });
-        return updated;
-      }, { isolationLevel: 'Serializable' }),
+          const updated = await tx.inventory.update({
+            where: { id },
+            data: { quantityAvailable: newQuantity },
+          });
+          return updated;
+        },
+        { isolationLevel: 'Serializable' },
+      ),
     );
   }
 
@@ -123,47 +136,50 @@ export class InventoryService {
     },
   ) {
     return this.prisma.withTenant(storeId, (client) =>
-      client.$transaction(async (tx) => {
-        const fromRecord = await tx.inventory.findFirst({
-          where: {
-            variantId: data.variantId,
-            warehouseId: data.fromWarehouseId,
-          },
-        });
+      client.$transaction(
+        async (tx) => {
+          const fromRecord = await tx.inventory.findFirst({
+            where: {
+              variantId: data.variantId,
+              warehouseId: data.fromWarehouseId,
+            },
+          });
 
-        if (!fromRecord) {
-          throw new NotFoundException('Source inventory not found');
-        }
+          if (!fromRecord) {
+            throw new NotFoundException('Source inventory not found');
+          }
 
-        if (fromRecord.quantityAvailable < data.quantity) {
-          throw new BadRequestException('Insufficient stock at source warehouse');
-        }
+          if (fromRecord.quantityAvailable < data.quantity) {
+            throw new BadRequestException('Insufficient stock at source warehouse');
+          }
 
-        await tx.inventory.update({
-          where: { id: fromRecord.id },
-          data: { quantityAvailable: { decrement: data.quantity } },
-        });
+          await tx.inventory.update({
+            where: { id: fromRecord.id },
+            data: { quantityAvailable: { decrement: data.quantity } },
+          });
 
-        // Upsert destination
-        await tx.inventory.upsert({
-          where: {
-            variantId_warehouseId: {
+          // Upsert destination
+          await tx.inventory.upsert({
+            where: {
+              variantId_warehouseId: {
+                variantId: data.variantId,
+                warehouseId: data.toWarehouseId,
+              },
+            },
+            create: {
               variantId: data.variantId,
               warehouseId: data.toWarehouseId,
+              quantityAvailable: data.quantity,
             },
-          },
-          create: {
-            variantId: data.variantId,
-            warehouseId: data.toWarehouseId,
-            quantityAvailable: data.quantity,
-          },
-          update: {
-            quantityAvailable: { increment: data.quantity },
-          },
-        });
+            update: {
+              quantityAvailable: { increment: data.quantity },
+            },
+          });
 
-        return { message: 'Transfer completed' };
-      }, { isolationLevel: 'Serializable' }),
+          return { message: 'Transfer completed' };
+        },
+        { isolationLevel: 'Serializable' },
+      ),
     );
   }
 
@@ -178,8 +194,8 @@ export class InventoryService {
       const warehouses = await client.warehouse.findMany({
         where: { isActive: true },
       });
-      const warehouseIds = new Set(warehouses.map(w => w.id));
-      const warehouseMap = new Map(warehouses.map(w => [w.id, w]));
+      const warehouseIds = new Set(warehouses.map((w) => w.id));
+      const warehouseMap = new Map(warehouses.map((w) => [w.id, w]));
 
       // Get all inventory for requested variants at active warehouses
       const inventories = await client.inventory.findMany({
@@ -207,7 +223,12 @@ export class InventoryService {
           city: w.city,
           latitude: w.latitude,
           longitude: w.longitude,
-          distance_km: haversineDistance(customerLatitude, customerLongitude, w.latitude!, w.longitude!),
+          distance_km: haversineDistance(
+            customerLatitude,
+            customerLongitude,
+            w.latitude!,
+            w.longitude!,
+          ),
           quantity_available: qtyMap.get(id) || 0,
         }))
         .sort((a, b) => a.distance_km - b.distance_km);

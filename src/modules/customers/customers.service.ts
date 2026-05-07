@@ -74,9 +74,7 @@ export class CustomersService {
       data.isDefault = true;
     }
 
-    return this.prisma.withTenant(storeId, (client) =>
-      client.address.create({ data }),
-    );
+    return this.prisma.withTenant(storeId, (client) => client.address.create({ data }));
   }
 
   async updateAddress(

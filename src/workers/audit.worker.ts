@@ -9,9 +9,7 @@
 
 export class AuditWorker {
   async process(job: Record<string, any>) {
-    console.log(
-      `[AuditWorker] Would write audit log: ${job.action} ${job.resourceType}`,
-    );
+    console.log(`[AuditWorker] Would write audit log: ${job.action} ${job.resourceType}`);
     // TODO: Insert StoreAuditLog record via Prisma
     // TODO: Retry on DB connection failure
   }

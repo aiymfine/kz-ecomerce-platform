@@ -1,23 +1,25 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { QueueService } from '../../common/queue/queue.service';
 import { randomBytes } from 'crypto';
 
 @Injectable()
 export class PaymentsService {
   private readonly logger = new Logger(PaymentsService.name);
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private queueService: QueueService,
+  ) {}
 
-  async initiatePayment(storeId: number, data: {
-    orderId: number;
-    provider: 'kaspi_pay' | 'halyk_bank' | 'manual';
-    idempotencyKey: string;
-  }) {
+  async initiatePayment(
+    storeId: number,
+    data: {
+      orderId: number;
+      provider: 'kaspi_pay' | 'halyk_bank' | 'manual';
+      idempotencyKey: string;
+    },
+  ) {
     // Validate order
     const order = await this.prisma.withTenant(storeId, (client) =>
       client.order.findUnique({
@@ -88,11 +90,7 @@ export class PaymentsService {
     return this.processCallback(storeId, body, 'halyk_bank');
   }
 
-  private async processCallback(
-    storeId: number,
-    body: Record<string, unknown>,
-    provider: string,
-  ) {
+  private async processCallback(storeId: number, body: Record<string, unknown>, provider: string) {
     // Mock signature verification - in production, verify HMAC signature
     const paymentId = body.payment_id as number | undefined;
     const status = body.status as string | undefined;
@@ -117,7 +115,7 @@ export class PaymentsService {
         data: {
           status: newStatus,
           providerTxId: (body.provider_tx_id as string) || null,
-          metadata: { ...(payment.metadata as Record<string, any> || {}), callback: body } as any,
+          metadata: { ...((payment.metadata as Record<string, any>) || {}), callback: body } as any,
         },
       }),
     );
@@ -130,6 +128,28 @@ export class PaymentsService {
           data: { status: 'confirmed' },
         }),
       );
+
+      // Enqueue payment receipt email
+      try {
+        const order = await this.prisma.withTenant(storeId, (client) =>
+          client.order.findUnique({ where: { id: payment.orderId } }),
+        );
+        if (order) {
+          await this.queueService.enqueueEmail({
+            type: 'payment-receipt',
+            to: '', // Customer email is not available in this context — checkout sends order-confirmation
+            data: {
+              orderNumber: order.orderNumber,
+              amount: payment.amountTiyin,
+              provider: payment.provider,
+              transactionId: updated.providerTxId || undefined,
+              currency: 'KZT',
+            },
+          });
+        }
+      } catch {
+        // Non-blocking — email queue may not be available
+      }
     } else {
       await this.prisma.withTenant(storeId, (client) =>
         client.order.update({
@@ -142,10 +162,14 @@ export class PaymentsService {
     return { status: 'ok', payment: updated };
   }
 
-  async refund(storeId: number, paymentId: number, data: {
-    amountTiyin: number;
-    reason?: string;
-  }) {
+  async refund(
+    storeId: number,
+    paymentId: number,
+    data: {
+      amountTiyin: number;
+      reason?: string;
+    },
+  ) {
     const payment = await this.prisma.withTenant(storeId, (client) =>
       client.payment.findUnique({
         where: { id: paymentId },
@@ -157,9 +181,7 @@ export class PaymentsService {
     }
 
     if (payment.status !== 'succeeded') {
-      throw new BadRequestException(
-        `Cannot refund payment with status: ${payment.status}`,
-      );
+      throw new BadRequestException(`Cannot refund payment with status: ${payment.status}`);
     }
 
     if (data.amountTiyin > payment.amountTiyin) {

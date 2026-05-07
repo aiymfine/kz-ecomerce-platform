@@ -160,9 +160,7 @@ export class StoresService {
     await this.prisma.$executeRaw(Prisma.sql`BEGIN`);
 
     try {
-      await this.prisma.$executeRaw(
-        Prisma.sql`CREATE SCHEMA IF NOT EXISTS ${Prisma.raw(schema)}`,
-      );
+      await this.prisma.$executeRaw(Prisma.sql`CREATE SCHEMA IF NOT EXISTS ${Prisma.raw(schema)}`);
 
       for (const table of this.tenantTables) {
         await this.prisma.$executeRaw(

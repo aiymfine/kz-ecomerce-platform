@@ -25,22 +25,31 @@ async function sendEmail(to: string, subject: string, html: string) {
   console.log(`[EmailWorker] Sent email to ${to}: ${subject}`);
 }
 
-const worker = new Worker('emails', async (job: Job) => {
-  console.log(`[EmailWorker] Processing job ${job.id}: ${job.name}`);
+const worker = new Worker(
+  'emails',
+  async (job: Job) => {
+    console.log(`[EmailWorker] Processing job ${job.id}: ${job.name}`);
 
-  switch (job.data.type) {
-    case 'verification':
-      await sendEmail(job.data.to, 'ShopBuilder — Verify Your Email', `
+    switch (job.data.type) {
+      case 'verification':
+        await sendEmail(
+          job.data.to,
+          'ShopBuilder — Verify Your Email',
+          `
         <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
           <h2>Email Verification</h2>
           <p>Your verification code is:</p>
           <div style="background:#f5f5f5;padding:20px;text-align:center;font-size:32px;font-weight:bold;letter-spacing:8px;border-radius:8px;">${job.data.data.code}</div>
           <p style="color:#666;font-size:14px;">This code expires in 10 minutes.</p>
         </div>
-      `);
-      break;
-    case 'password-reset':
-      await sendEmail(job.data.to, 'ShopBuilder — Reset Your Password', `
+      `,
+        );
+        break;
+      case 'password-reset':
+        await sendEmail(
+          job.data.to,
+          'ShopBuilder — Reset Your Password',
+          `
         <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
           <h2>Password Reset</h2>
           <p>Click below to reset your password:</p>
@@ -49,26 +58,37 @@ const worker = new Worker('emails', async (job: Job) => {
           </div>
           <p style="color:#666;font-size:14px;">This link expires in 1 hour.</p>
         </div>
-      `);
-      break;
-    case 'order-confirmation': {
-      const order = job.data.data;
-      const itemsHtml = (order.items || []).map((item: any) =>
-        `<tr><td style="padding:8px;border-bottom:1px solid #eee;">${item.title}</td><td style="padding:8px;text-align:center;">${item.quantity}</td><td style="padding:8px;text-align:right;">${item.price}</td></tr>`
-      ).join('');
-      await sendEmail(job.data.to, `ShopBuilder — Order ${order.orderNumber} Confirmed`, `
+      `,
+        );
+        break;
+      case 'order-confirmation': {
+        const order = job.data.data;
+        const itemsHtml = (order.items || [])
+          .map(
+            (item: any) =>
+              `<tr><td style="padding:8px;border-bottom:1px solid #eee;">${item.title}</td><td style="padding:8px;text-align:center;">${item.quantity}</td><td style="padding:8px;text-align:right;">${item.price}</td></tr>`,
+          )
+          .join('');
+        await sendEmail(
+          job.data.to,
+          `ShopBuilder — Order ${order.orderNumber} Confirmed`,
+          `
         <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
           <h2>Order Confirmation</h2>
           <p>Order <strong>${order.orderNumber}</strong> placed successfully.</p>
           <table style="width:100%;border-collapse:collapse;margin:20px 0;"><thead><tr style="background:#f5f5f5;"><th style="padding:8px;text-align:left;">Product</th><th style="padding:8px;text-align:center;">Qty</th><th style="padding:8px;text-align:right;">Price</th></tr></thead><tbody>${itemsHtml}</tbody></table>
           <div style="text-align:right;font-size:18px;font-weight:bold;">Total: ${order.total}</div>
         </div>
-      `);
-      break;
-    }
-    case 'payment-receipt': {
-      const pay = job.data.data;
-      await sendEmail(job.data.to, `ShopBuilder — Payment Receipt for ${pay.orderNumber}`, `
+      `,
+        );
+        break;
+      }
+      case 'payment-receipt': {
+        const pay = job.data.data;
+        await sendEmail(
+          job.data.to,
+          `ShopBuilder — Payment Receipt for ${pay.orderNumber}`,
+          `
         <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
           <h2>Payment Receipt</h2>
           <table style="width:100%;margin:20px 0;">
@@ -77,18 +97,21 @@ const worker = new Worker('emails', async (job: Job) => {
             <tr><td style="padding:8px;color:#666;">Provider</td><td style="padding:8px;">${pay.provider}</td></tr>
           </table>
         </div>
-      `);
-      break;
+      `,
+        );
+        break;
+      }
+      default:
+        throw new Error(`Unknown email job type: ${job.data.type}`);
     }
-    default:
-      throw new Error(`Unknown email job type: ${job.data.type}`);
-  }
-}, {
-  connection: {
-    url: process.env.REDIS_URL || 'redis://localhost:6379/0',
   },
-  concurrency: 5,
-});
+  {
+    connection: {
+      url: process.env.REDIS_URL || 'redis://localhost:6379/0',
+    },
+    concurrency: 5,
+  },
+);
 
 worker.on('completed', (job) => {
   console.log(`[EmailWorker] Job ${job.id} completed`);

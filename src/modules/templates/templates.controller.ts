@@ -12,12 +12,7 @@ import {
   HttpStatus,
   ParseIntPipe,
 } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { TemplatesService } from './templates.service';
 import {
   createTemplateSchema,
@@ -66,10 +61,7 @@ export class TemplatesController {
   @ApiOperation({ summary: 'Update template' })
   @ApiResponse({ status: 200, description: 'Template updated' })
   @ApiResponse({ status: 404, description: 'Template not found' })
-  async updateTemplate(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() body: unknown,
-  ) {
+  async updateTemplate(@Param('id', ParseIntPipe) id: number, @Body() body: unknown) {
     return this.templatesService.updateTemplate(id, body as any);
   }
 
@@ -87,10 +79,7 @@ export class TemplatesController {
   @ApiOperation({ summary: 'Render template with data (preview)' })
   @ApiResponse({ status: 200, description: 'Rendered template output' })
   @ApiResponse({ status: 404, description: 'Template not found' })
-  async renderTemplate(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() body: unknown,
-  ) {
+  async renderTemplate(@Param('id', ParseIntPipe) id: number, @Body() body: unknown) {
     const { data } = body as { data: Record<string, any> };
     return this.templatesService.renderTemplate(id, data);
   }

@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { buildPaginationMeta, sliceForPagination } from '../../common/dto/pagination.dto';
 
@@ -47,7 +42,9 @@ export class OrdersService {
         take: params.limit + 1,
         cursor: params.cursor ? { id: parseInt(params.cursor) } : undefined,
         orderBy: { createdAt: params.sort === 'asc' ? 'asc' : 'desc' },
-        include: { customer: { select: { id: true, firstName: true, lastName: true, email: true } } },
+        include: {
+          customer: { select: { id: true, firstName: true, lastName: true, email: true } },
+        },
       }),
     );
 

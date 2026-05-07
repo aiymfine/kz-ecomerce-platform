@@ -1,7 +1,8 @@
-import { Global, Module } from '@nestjs/common';
+import { Global, Module, OnModuleInit } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { QueueService } from './queue.service';
+import { SchedulerService } from './scheduler.service';
 
 @Global()
 @Module({
@@ -17,8 +18,7 @@ import { QueueService } from './queue.service';
               host: '127.0.0.1',
               port: 6379,
               connectTimeout: 3000,
-              maxRetriesPerRequest: 1,
-              retryStrategy: () => null, // Don't retry — fail fast when Redis is unavailable
+              maxRetriesPerRequest: null as any,
             };
         return {
           connection,
@@ -31,12 +31,14 @@ import { QueueService } from './queue.service';
         };
       },
     }),
+    // Register queues only (no path-based processors).
+    // Standalone BullMQ workers run separately via: pnpm run worker:start
     BullModule.registerQueue(
       { name: 'emails' },
       { name: 'abandoned-carts' },
     ),
   ],
-  providers: [QueueService],
+  providers: [QueueService, SchedulerService],
   exports: [QueueService],
 })
 export class QueueModule {}

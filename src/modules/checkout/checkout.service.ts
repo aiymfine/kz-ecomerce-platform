@@ -156,15 +156,17 @@ export class CheckoutService {
             vatTiyin,
             totalTiyin,
             shippingMethod: input.shippingMethod,
-            shippingAddress: address ? {
-              fullName: address.fullName,
-              phone: address.phone,
-              addressLine1: address.addressLine1,
-              addressLine2: address.addressLine2 ?? '',
-              city: address.city,
-              region: address.region ?? '',
-              postalCode: address.postalCode ?? '',
-            } : undefined,
+            shippingAddress: address
+              ? {
+                  fullName: address.fullName,
+                  phone: address.phone,
+                  addressLine1: address.addressLine1,
+                  addressLine2: address.addressLine2 ?? '',
+                  city: address.city,
+                  region: address.region ?? '',
+                  postalCode: address.postalCode ?? '',
+                }
+              : undefined,
             idempotencyKey: input.idempotencyKey,
           },
         });
@@ -246,9 +248,7 @@ export class CheckoutService {
           }
 
           if (remaining > 0) {
-            throw new Error(
-              `Insufficient inventory for variant ${item.variantId}`,
-            );
+            throw new Error(`Insufficient inventory for variant ${item.variantId}`);
           }
         }
 

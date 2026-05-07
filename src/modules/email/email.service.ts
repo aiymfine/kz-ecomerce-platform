@@ -157,6 +157,10 @@ export class EmailService {
         </table>
       </div>
     `;
-    await this.sendMail(email, `ShopBuilder — Payment Receipt for ${paymentDetails.orderNumber}`, html);
+    await this.sendMail(
+      email,
+      `ShopBuilder — Payment Receipt for ${paymentDetails.orderNumber}`,
+      html,
+    );
   }
 }

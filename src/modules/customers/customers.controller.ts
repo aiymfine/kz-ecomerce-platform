@@ -14,11 +14,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { CustomersService } from './customers.service';
-import {
-  updateCustomerSchema,
-  createAddressSchema,
-  updateAddressSchema,
-} from './dto/customer.dto';
+import { updateCustomerSchema, createAddressSchema, updateAddressSchema } from './dto/customer.dto';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -38,10 +34,7 @@ export class CustomersController {
   @ApiOperation({ summary: 'Get current customer profile' })
   @ApiResponse({ status: 200, description: 'Customer profile' })
   @ApiResponse({ status: 404, description: 'Customer not found' })
-  async getMe(
-    @Param('storeId', ParseIntPipe) storeId: number,
-    @CurrentUser() user: JwtPayload,
-  ) {
+  async getMe(@Param('storeId', ParseIntPipe) storeId: number, @CurrentUser() user: JwtPayload) {
     return this.customersService.getMe(storeId, user.sub);
   }
 
