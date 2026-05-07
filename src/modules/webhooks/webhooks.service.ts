@@ -1,10 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { QueueService, WebhookDeliveryJobData } from '../../common/queue/queue.service';
 import { randomBytes } from 'crypto';
 
 @Injectable()
 export class WebhooksService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private queueService: QueueService,
+  ) {}
 
   async listWebhooks(storeId: number) {
     return this.prisma.withTenant(storeId, (client) =>
@@ -124,5 +128,64 @@ export class WebhooksService {
         cursor: items.length > params.limit ? String(items[items.length - 1].id) : undefined,
       },
     };
+  }
+
+  /**
+   * Fire a webhook event to all active webhooks that listen for this event type.
+   * Creates a WebhookEvent record and enqueues delivery via BullMQ.
+   *
+   * Usage from other modules:
+   *   this.webhooksService.fireEvent(storeId, 'order.created', { orderId: 123 });
+   */
+  async fireEvent(storeId: number, eventType: string, payload: any) {
+    // Find all active webhooks for this store that listen for this event
+    const webhooks = await this.prisma.withTenant(storeId, (client) =>
+      client.webhook.findMany({
+        where: { isActive: true },
+      }),
+    );
+
+    const results = [];
+
+    for (const webhook of webhooks) {
+      const events = Array.isArray(webhook.events) ? webhook.events : [];
+      if (!events.includes(eventType) && !events.includes('*')) {
+        continue; // This webhook doesn't listen for this event
+      }
+
+      // Create the webhook event record
+      const event = await this.prisma.withTenant(storeId, (client) =>
+        client.webhookEvent.create({
+          data: {
+            webhookId: webhook.id,
+            eventType,
+            payload: payload as any,
+            status: 'pending',
+            maxAttempts: 5,
+          },
+        }),
+      );
+
+      // Enqueue delivery via BullMQ
+      const jobData: WebhookDeliveryJobData = {
+        webhookEventId: event.id,
+        storeId,
+        webhookId: webhook.id,
+        eventType,
+        payload,
+        url: webhook.url,
+        secret: webhook.secret,
+      };
+
+      try {
+        await this.queueService.enqueueWebhookDelivery(jobData);
+        results.push({ webhookId: webhook.id, eventId: event.id, status: 'queued' });
+      } catch (err) {
+        console.error(`[WebhooksService] Failed to enqueue delivery for webhook ${webhook.id}:`, err);
+        results.push({ webhookId: webhook.id, eventId: event.id, status: 'enqueue_failed' });
+      }
+    }
+
+    return results;
   }
 }

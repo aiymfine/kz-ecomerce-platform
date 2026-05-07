@@ -36,6 +36,7 @@ import { SchedulerService } from './scheduler.service';
     BullModule.registerQueue(
       { name: 'emails' },
       { name: 'abandoned-carts' },
+      { name: 'webhook-deliveries' },
     ),
   ],
   providers: [QueueService, SchedulerService],
