@@ -1,4 +1,4 @@
-import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
+import { Injectable, CanActivate, ExecutionContext, ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import { JsonWebTokenError, JwtService } from '@nestjs/jwt';
 import { RedisService } from '../redis/redis.service';
 import { ConfigService } from '@nestjs/config';
@@ -28,12 +28,12 @@ export class JwtAuthGuard implements CanActivate {
     const authHeader = request.headers.authorization;
 
     if (!authHeader) {
-      return false;
+      throw new UnauthorizedException('Authorization header is required');
     }
 
     const [type, token] = authHeader.split(' ');
     if (type !== 'Bearer' || !token) {
-      return false;
+      throw new UnauthorizedException('Invalid authorization format');
     }
 
     try {
