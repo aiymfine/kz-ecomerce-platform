@@ -99,7 +99,7 @@ Workers are BullMQ-ready stubs — structured for real queue integration:
 
 - Node.js 20+
 - pnpm (latest)
-- PostgreSQL 15+
+- PostgreSQL 15+ (connection pool: 9 default, configurable via `DATABASE_POOL_SIZE` in `.env`)
 - Redis 7+
 
 ### Installation
@@ -140,7 +140,7 @@ docker-compose exec app npx prisma db seed
 
 ## 📡 API Endpoints
 
-Once running: **Swagger UI** at http://localhost:3000/docs | **API base** at http://localhost:3000/api
+Once running: **Swagger UI** at http://localhost:3001/docs | **API base** at http://localhost:3001/api
 
 ### Authentication
 | Method | Endpoint | Description |
