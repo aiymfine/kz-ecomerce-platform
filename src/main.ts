@@ -6,6 +6,8 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { ConfigService } from '@nestjs/config';
+import helmet from 'helmet';
+import * as compression from 'compression';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -38,6 +40,15 @@ async function bootstrap() {
 
   // Global prefix
   app.setGlobalPrefix('api');
+
+  // Security headers (Helmet)
+  app.use(helmet({ contentSecurityPolicy: nodeEnv === 'production' ? undefined : false }));
+
+  // Response compression (gzip)
+  app.use(compression());
+
+  // Enable graceful shutdown on SIGTERM and SIGINT
+  app.enableShutdownHooks();
 
   // CORS
   const origins = corsOrigins.split(',').map((o) => o.trim());

@@ -177,11 +177,31 @@ describe('Auth (e2e)', () => {
     expect(res.body).toHaveProperty('message');
   });
 
-  it('POST /api/auth/logout — should work', async () => {
+  it('POST /api/auth/logout — should work with valid access token', async () => {
+    const email = `t-logout-${Date.now()}@example.com`;
+    createdEmails.push(email);
+
+    // Register and get tokens
+    const reg = await request(app.getHttpServer())
+      .post('/api/auth/register')
+      .send({ email, password: 'TestPassword123!', name: 'LO', businessName: 'LO' });
+
+    if (reg.status === 201) {
+      const { accessToken, refreshToken } = reg.body.data;
+      const res = await request(app.getHttpServer())
+        .post('/api/auth/logout')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ refreshToken });
+      expect(res.status).toBe(200);
+      expect(res.body.data).toHaveProperty('message');
+    }
+  });
+
+  it('POST /api/auth/logout — should reject without access token', async () => {
     const res = await request(app.getHttpServer())
       .post('/api/auth/logout')
       .send({ refreshToken: 'some-token' });
-    expect([200, 201, 204, 403]).toContain(res.status);
+    expect(res.status).toBe(401);
   });
 
   it('POST /api/auth/verify-email — should verify email with correct code', async () => {

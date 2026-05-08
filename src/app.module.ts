@@ -24,6 +24,7 @@ import { AbandonedCartsModule } from './modules/abandoned-carts/abandoned-carts.
 import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { TemplatesModule } from './modules/templates/templates.module';
 import { AuditModule } from './common/audit/audit.module';
+import { HealthModule } from './common/health/health.module';
 import { TenantMiddleware } from './common/middleware/tenant.middleware';
 
 @Module({
@@ -34,6 +35,7 @@ import { TenantMiddleware } from './common/middleware/tenant.middleware';
     QueueModule,
     EmailModule,
     AuditModule,
+    HealthModule,
     AuthModule,
     AdminModule,
     StoresModule,
