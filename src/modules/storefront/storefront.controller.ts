@@ -5,6 +5,7 @@ import {
   Body,
   Param,
   Query,
+  Res,
   UseGuards,
   UsePipes,
   HttpCode,
@@ -25,6 +26,7 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { JwtPayload } from '../../common/guards/jwt-auth.guard';
+import type { Response } from 'express';
 
 @ApiTags('Storefront')
 @Controller('storefront')
@@ -101,10 +103,13 @@ export class StorefrontController {
   async listProducts(
     @Query('storeId', ParseIntPipe) storeId: number,
     @Query() query: Record<string, any>,
+    @Res({ passthrough: true }) res: Response,
   ) {
     const parsed = storefrontProductFilterSchema.safeParse(query);
     const params = parsed.success ? parsed.data : { limit: 20, sort: 'desc' as const };
-    return this.storefrontService.listProducts(storeId, params);
+    const { data, cached } = await this.storefrontService.listProducts(storeId, params);
+    res.setHeader('X-Cache-Status', cached ? 'HIT' : 'MISS');
+    return data;
   }
 
   @Get('products/:slug')
@@ -112,20 +117,30 @@ export class StorefrontController {
   @ApiQuery({ name: 'storeId', required: true, type: Number })
   @ApiResponse({ status: 200, description: 'Product details' })
   @ApiResponse({ status: 404, description: 'Product not found' })
-  async getProduct(@Query('storeId', ParseIntPipe) storeId: number, @Param('slug') slug: string) {
-    const result = (await this.storefrontService.getProductBySlug(storeId, slug)) as any;
-    if (result.error) {
-      return { statusCode: 404, ...result };
+  async getProduct(
+    @Query('storeId', ParseIntPipe) storeId: number,
+    @Param('slug') slug: string,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const { data, cached } = await this.storefrontService.getProductBySlug(storeId, slug);
+    res.setHeader('X-Cache-Status', cached ? 'HIT' : 'MISS');
+    if (data.error) {
+      return { statusCode: 404, ...data };
     }
-    return result;
+    return data;
   }
 
   @Get('categories')
   @ApiOperation({ summary: 'Public category tree' })
   @ApiQuery({ name: 'storeId', required: true, type: Number })
   @ApiResponse({ status: 200, description: 'Category tree' })
-  async listCategories(@Query('storeId', ParseIntPipe) storeId: number) {
-    return this.storefrontService.listCategories(storeId);
+  async listCategories(
+    @Query('storeId', ParseIntPipe) storeId: number,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const { data, cached } = await this.storefrontService.listCategories(storeId);
+    res.setHeader('X-Cache-Status', cached ? 'HIT' : 'MISS');
+    return data;
   }
 
   @Get('categories/:slug/products')

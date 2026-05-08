@@ -7,6 +7,10 @@ import * as bcrypt from 'bcryptjs';
 import { randomUUID } from 'crypto';
 import type { JwtPayload } from '../../common/guards/jwt-auth.guard';
 
+/** Cache TTL in seconds for storefront data */
+const CACHE_TTL_PRODUCTS = 60;
+const CACHE_TTL_CATEGORIES = 120;
+
 @Injectable()
 export class StorefrontService {
   private readonly logger = new Logger(StorefrontService.name);
@@ -169,6 +173,13 @@ export class StorefrontService {
       categoryId?: number;
     },
   ) {
+    // Build cache key from request params
+    const cacheKey = `storefront:${storeId}:products:${JSON.stringify(params)}`;
+    const cached = await this.redisService.get(cacheKey);
+    if (cached) {
+      return { data: JSON.parse(cached), cached: true };
+    }
+
     const where: any = { status: 'active' };
 
     if (params.search) {
@@ -197,7 +208,7 @@ export class StorefrontService {
     const hasMore = items.length > params.limit;
     const sliced = hasMore ? items.slice(0, params.limit) : items;
 
-    return {
+    const result = {
       data: sliced,
       pagination: {
         hasMore,
@@ -205,9 +216,18 @@ export class StorefrontService {
         limit: params.limit,
       },
     };
+
+    await this.redisService.set(cacheKey, JSON.stringify(result), CACHE_TTL_PRODUCTS);
+    return { data: result, cached: false };
   }
 
   async getProductBySlug(storeId: number, slug: string) {
+    const cacheKey = `storefront:${storeId}:product:${slug}`;
+    const cached = await this.redisService.get(cacheKey);
+    if (cached) {
+      return { data: JSON.parse(cached), cached: true };
+    }
+
     const product = await this.prisma.withTenant(storeId, (client) =>
       client.product.findFirst({
         where: { slug, status: 'active' },
@@ -228,13 +248,20 @@ export class StorefrontService {
     );
 
     if (!product) {
-      return { error: 'NOT_FOUND', message: 'Product not found' };
+      return { data: { error: 'NOT_FOUND', message: 'Product not found' }, cached: false };
     }
 
-    return product;
+    await this.redisService.set(cacheKey, JSON.stringify(product), CACHE_TTL_PRODUCTS);
+    return { data: product, cached: true };
   }
 
   async listCategories(storeId: number) {
+    const cacheKey = `storefront:${storeId}:categories`;
+    const cached = await this.redisService.get(cacheKey);
+    if (cached) {
+      return { data: JSON.parse(cached), cached: true };
+    }
+
     const categories = await this.prisma.withTenant(storeId, (client) =>
       client.category.findMany({
         where: { isActive: true },
@@ -257,7 +284,8 @@ export class StorefrontService {
       }
     }
 
-    return tree;
+    await this.redisService.set(cacheKey, JSON.stringify(tree), CACHE_TTL_CATEGORIES);
+    return { data: tree, cached: true };
   }
 
   async getCategoryProducts(

@@ -18,6 +18,9 @@ COPY tsconfig.json tsconfig.build.json nest-cli.json ./
 RUN npx prisma generate
 RUN pnpm build
 
+# Compile seed script for production use
+RUN npx tsc prisma/seed.ts --esModuleInterop --skipLibCheck --outDir dist/prisma --target es2022 --module commonjs
+
 # Stage 3: Production
 FROM node:22-alpine
 

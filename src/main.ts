@@ -13,24 +13,7 @@ import * as path from 'path';
 
 const logger = new Logger('Bootstrap');
 
-function validateEnv() {
-  // Skip validation in test environment
-  if (process.env.NODE_ENV === 'test') return;
-
-  const required = ['DATABASE_URL', 'JWT_SECRET_KEY', 'SMTP_HOST'];
-  const missing = required.filter((key) => !process.env[key]);
-
-  if (missing.length > 0) {
-    logger.error(`Missing required environment variables: ${missing.join(', ')}`);
-    logger.error('Application cannot start without these variables.');
-    process.exit(1);
-  }
-}
-
 async function bootstrap() {
-  // Validate required environment variables before starting the app
-  validateEnv();
-
   const app = await NestFactory.create(AppModule);
 
   const configService = app.get(ConfigService);
@@ -80,7 +63,10 @@ async function bootstrap() {
       'ShopBuilder — Shopify Clone for Local Kazakh Merchants. E-commerce platform API.',
     )
     .setVersion('1.0')
-    .addBearerAuth()
+    .addBearerAuth(
+      { type: 'http', scheme: 'bearer', bearerFormat: 'JWT', description: 'Paste JWT access token (without "Bearer " prefix)' },
+      'access-token',
+    )
     .addTag('Authentication', 'Merchant registration, login, token management')
     .addTag('Admin', 'Platform administration endpoints')
     .addTag('Stores', 'Store management and tenant provisioning')

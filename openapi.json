@@ -1,6 +1,21 @@
 {
   "openapi": "3.0.0",
   "paths": {
+    "/api/health": {
+      "get": {
+        "operationId": "HealthController_check",
+        "summary": "Health check — verify service dependencies",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Health"
+        ]
+      }
+    },
     "/api/auth/register": {
       "post": {
         "operationId": "AuthController_register",
@@ -3842,10 +3857,11 @@
   "servers": [],
   "components": {
     "securitySchemes": {
-      "bearer": {
+      "access-token": {
         "scheme": "bearer",
         "bearerFormat": "JWT",
-        "type": "http"
+        "type": "http",
+        "description": "Paste JWT access token (without \"Bearer \" prefix)"
       }
     },
     "schemas": {
