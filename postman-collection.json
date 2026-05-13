@@ -1247,7 +1247,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/storefront/products?storeId={{store_id}}",
+              "raw": "{{base_url}}/storefront/products?storeId=1",
               "host": [
                 "{{base_url}}"
               ],
@@ -1264,7 +1264,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/storefront/products/samsung-galaxy-a54?storeId={{store_id}}",
+              "raw": "{{base_url}}/storefront/products/samsung-galaxy-a54?storeId=1",
               "host": [
                 "{{base_url}}"
               ],
@@ -1283,7 +1283,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/storefront/categories?storeId={{store_id}}",
+              "raw": "{{base_url}}/storefront/categories?storeId=1",
               "host": [
                 "{{base_url}}"
               ],
@@ -1305,7 +1305,7 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/storefront/auth/register",
+              "raw": "{{base_url}}/storefront/auth/register?storeId=1",
               "host": [
                 "{{base_url}}"
               ],
@@ -1317,7 +1317,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"customer@test.com\",\n  \"password\": \"Merchant123\",\n  \"firstName\": \"Test\",\n  \"lastName\": \"User\"\n}"
+              "raw": "{\n  \"email\": \"customer@test.com\",\n  \"password\": \"Customer123\",\n  \"first_name\": \"Test\",\n  \"last_name\": \"User\",\n  \"phone\": \"+7 777 000 0000\"\n}"
             }
           }
         },
@@ -1346,7 +1346,7 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/storefront/auth/login",
+              "raw": "{{base_url}}/storefront/auth/login?storeId=1",
               "host": [
                 "{{base_url}}"
               ],
@@ -1358,7 +1358,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"customer@test.com\",\n  \"password\": \"Merchant123\"\n}"
+              "raw": "{\n  \"email\": \"customer@test.com\",\n  \"password\": \"Customer123\"\n}"
             }
           }
         }
