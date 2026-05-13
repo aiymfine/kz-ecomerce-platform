@@ -1,6 +1,8 @@
 import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { buildPaginationMeta, sliceForPagination } from '../../common/dto/pagination.dto';
+import { WebhooksService } from '../webhooks/webhooks.service';
+import { QueueService } from '../../common/queue/queue.service';
 
 type OrderStatus =
   | 'payment_pending'
@@ -27,7 +29,11 @@ const VALID_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
 export class OrdersService {
   private readonly logger = new Logger(OrdersService.name);
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private webhooksService: WebhooksService,
+    private queueService: QueueService,
+  ) {}
 
   async listOrders(
     storeId: number,
@@ -161,5 +167,116 @@ export class OrdersService {
     const timestamp = Date.now();
     const random = Math.floor(1000 + Math.random() * 9000);
     return `SB-${timestamp}-${random}`;
+  }
+
+  async checkout(
+    storeId: number,
+    customerId: number,
+    data: { shippingMethod: string; shippingAddress?: string; notes?: string },
+  ) {
+    // 1. Get active cart with items
+    const cart = await this.prisma.withTenant(storeId, (client) =>
+      client.cart.findFirst({
+        where: { customerId, status: 'active' },
+        include: { items: true },
+      }),
+    );
+
+    if (!cart || cart.items.length === 0) {
+      throw new BadRequestException('No active cart or cart is empty');
+    }
+
+    // 2. Get variant prices + product info
+    const variantIds = cart.items.map((i) => i.variantId);
+    const variants = await this.prisma.withTenant(storeId, (client) =>
+      client.productVariant.findMany({
+        where: { id: { in: variantIds } },
+        select: { id: true, priceTiyin: true, sku: true, product: { select: { title: true } } },
+      }),
+    );
+    const variantMap = new Map(variants.map((v) => [v.id, v]));
+
+    // 3. Calculate total + build order items
+    let totalTiyin = 0;
+    const orderItems = cart.items.map((item) => {
+      const variant = variantMap.get(item.variantId);
+      const price = variant?.priceTiyin || 0;
+      const lineTotal = price * item.quantity;
+      totalTiyin += lineTotal;
+      return {
+        variantId: item.variantId,
+        productTitle: variant?.product?.title || 'Unknown Product',
+        variantSku: variant?.sku || `variant-${item.variantId}`,
+        quantity: item.quantity,
+        unitPriceTiyin: price,
+        totalPriceTiyin: lineTotal,
+      };
+    });
+
+    const orderNumber = this.generateOrderNumber();
+
+    // 4. Create order with items
+    const order = await this.prisma.withTenant(storeId, (client) =>
+      client.order.create({
+        data: {
+          customerId,
+          orderNumber,
+          status: 'payment_pending',
+          subtotalTiyin: totalTiyin,
+          totalTiyin,
+          shippingMethod: data.shippingMethod as any,
+          shippingAddress: data.shippingAddress || '',
+          notes: data.notes || '',
+          items: {
+            create: orderItems,
+          },
+        },
+        include: { items: true },
+      }),
+    );
+
+    // 5. Mark cart as converted
+    await this.prisma.withTenant(storeId, (client) =>
+      client.cart.update({
+        where: { id: cart.id },
+        data: { status: 'converted' },
+      }),
+    );
+
+    // 6. Fire webhook event (non-blocking)
+    try {
+      await this.webhooksService.fireEvent(storeId, 'order.created', {
+        orderId: order.id,
+        orderNumber: order.orderNumber,
+        totalTiyin: order.totalTiyin,
+        customerId,
+        itemCount: order.items.length,
+      });
+    } catch (err) {
+      this.logger.warn(`Failed to fire order.created webhook: ${err}`);
+    }
+
+    // 7. Enqueue order confirmation email (non-blocking)
+    try {
+      await this.queueService.enqueueEmail({
+        type: 'order-confirmation',
+        to: '',
+        data: {
+          orderNumber: order.orderNumber,
+          items: order.items.map((i: any) => ({
+            title: i.productTitle,
+            sku: i.variantSku,
+            quantity: i.quantity,
+            price: i.unitPriceTiyin,
+          })),
+          totalTiyin: order.totalTiyin,
+        },
+      });
+    } catch (err) {
+      this.logger.warn(`Failed to enqueue order confirmation email: ${err}`);
+    }
+
+    this.logger.log(`Order ${orderNumber} created for customer ${customerId}, total: ${totalTiyin} tiyin`);
+    return order;
   }
 }

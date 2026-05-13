@@ -77,6 +77,23 @@ export class PaymentsController {
     });
   }
 
+  @Post('simulate/:orderId')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Simulate successful payment (demo only)' })
+  @ApiResponse({ status: 200, description: 'Payment simulated and confirmed' })
+  async simulatePayment(
+    @Param('storeId', ParseIntPipe) storeId: number,
+    @Param('orderId', ParseIntPipe) orderId: number,
+  ) {
+    // Initiate payment with manual provider (auto-confirms)
+    const payment = await this.paymentsService.initiatePayment(storeId, {
+      orderId,
+      provider: 'manual',
+      idempotencyKey: `sim-${orderId}-${Date.now()}`,
+    });
+    return { message: 'Payment simulated successfully', payment };
+  }
+
   @Get('order/:orderId')
   @ApiOperation({ summary: 'Get all payments for an order' })
   @ApiResponse({ status: 200, description: 'List of payments' })

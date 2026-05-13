@@ -92,7 +92,17 @@ docker-compose up -d
 
 This automatically runs migrations → seeds the database → starts the app. Includes PostgreSQL 15 + Redis 7 with health checks.
 
-App: http://localhost:3000 | Swagger: http://localhost:3000/api/docs
+App: http://localhost:3001 | Swagger: http://localhost:3001/api/docs | Frontend: http://localhost:5173
+
+### Frontend (Storefront)
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+The Vite dev server runs on http://localhost:5173 and proxies `/api` requests to the backend at localhost:3001.
 
 ## 📡 Key API Endpoints
 

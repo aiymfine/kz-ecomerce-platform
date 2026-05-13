@@ -34,6 +34,14 @@ export const updateFulfillmentSchema = z.object({
 
 export type UpdateFulfillmentDto = z.infer<typeof updateFulfillmentSchema>;
 
+export const checkoutSchema = z.object({
+  shipping_method: z.enum(['choco', 'kazpost', 'self_pickup']).default('self_pickup'),
+  shipping_address: z.string().min(5).optional(),
+  notes: z.string().max(500).optional(),
+});
+
+export type CheckoutDto = z.infer<typeof checkoutSchema>;
+
 export const orderFilterSchema = z.object({
   status: z
     .enum([

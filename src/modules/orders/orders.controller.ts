@@ -19,11 +19,14 @@ import {
   createFulfillmentSchema,
   updateFulfillmentSchema,
   orderFilterSchema,
+  checkoutSchema,
 } from './dto/order.dto';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { JwtPayload } from '../../common/guards/jwt-auth.guard';
 
 @ApiTags('Orders')
 @ApiBearerAuth()
@@ -32,6 +35,24 @@ import { Roles } from '../../common/decorators/roles.decorator';
 @Roles('merchant')
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
+
+  @Post('checkout')
+  @HttpCode(HttpStatus.CREATED)
+  @Roles('merchant', 'customer')
+  @UsePipes(new ZodValidationPipe(checkoutSchema))
+  @ApiOperation({ summary: 'Checkout — create order from active cart' })
+  async checkout(
+    @Param('storeId', ParseIntPipe) storeId: number,
+    @CurrentUser() user: JwtPayload,
+    @Body() body: unknown,
+  ) {
+    const dto = body as { shipping_method?: string; shipping_address?: string; notes?: string };
+    return this.ordersService.checkout(storeId, user.sub, {
+      shippingMethod: (dto.shipping_method as any) || 'self_pickup',
+      shippingAddress: dto.shipping_address,
+      notes: dto.notes,
+    });
+  }
 
   @Get()
   @ApiOperation({ summary: 'List orders' })

@@ -69,27 +69,22 @@ async function provisionTenant(storeId: number) {
   const schema = `store_${storeId}`;
   console.log(`  Provisioning tenant schema ${schema}...`);
 
-  // Drop existing and recreate
   await prisma.$executeRawUnsafe(`DROP SCHEMA IF EXISTS ${schema} CASCADE`);
   await prisma.$executeRawUnsafe(`CREATE SCHEMA ${schema}`);
 
-  // Note: enum types are in public schema, referenced via search_path (store_X,public)
-
-  // Create tables using LIKE
   for (const table of tenantTables) {
     await prisma.$executeRawUnsafe(
       `CREATE TABLE ${schema}.${table} (LIKE public.${table} INCLUDING ALL)`,
     );
   }
 
-  // Fix updated_at columns: add DEFAULT NOW() so raw SQL works
   for (const table of tablesWithUpdatedAt) {
     await prisma.$executeRawUnsafe(
       `ALTER TABLE ${schema}.${table} ALTER COLUMN updated_at SET DEFAULT NOW()`,
     );
   }
 
-  // Insert default categories
+  // Insert default categories into tenant schema
   const categories = [
     ['Все товары', 'all', '/1/', 0, 0],
     ['Электроника', 'electronics', '/2/', 0, 1],
@@ -111,7 +106,6 @@ async function seedTenant(storeId: number, storeName: string) {
   const schema = `store_${storeId}`;
   console.log(`  Seeding data for ${storeName} (${schema})...`);
 
-  // Products — only specify columns without defaults
   await prisma.$executeRawUnsafe(`
     INSERT INTO ${schema}.products (title, slug, description, status, weight_grams) VALUES
       ('Телефон Samsung Galaxy A54', 'samsung-galaxy-a54', 'Флагманский смартфон Samsung', 'active', 200),
@@ -121,7 +115,6 @@ async function seedTenant(storeId: number, storeName: string) {
       ('Рюкзак для ноутбука', 'laptop-backpack', 'Вместительный рюкзак', 'active', 600)
   `);
 
-  // Variant attributes
   await prisma.$executeRawUnsafe(`
     INSERT INTO ${schema}.variant_attributes (name, type) VALUES
       ('Размер', 'size'),
@@ -129,7 +122,6 @@ async function seedTenant(storeId: number, storeName: string) {
       ('Материал', 'material')
   `);
 
-  // Product variants
   await prisma.$executeRawUnsafe(`
     INSERT INTO ${schema}.product_variants (product_id, sku, price_tiyin, is_active, position) VALUES
       (1, 'samsung-galaxy-a54-black', 28990000, true, 0),
@@ -144,7 +136,6 @@ async function seedTenant(storeId: number, storeName: string) {
       (5, 'laptop-backpack-grey', 1599000, true, 1)
   `);
 
-  // Variant attribute values
   await prisma.$executeRawUnsafe(`
     INSERT INTO ${schema}.variant_attribute_values (variant_id, attribute_id, value) VALUES
       (1, 2, 'Black'),
@@ -156,13 +147,153 @@ async function seedTenant(storeId: number, storeName: string) {
       (10, 2, 'Grey')
   `);
 
-  // Webhooks
   await prisma.$executeRawUnsafe(`
     INSERT INTO ${schema}.webhooks (url, secret, events, is_active) VALUES
       ('https://example.com/webhook', '${Array.from({ length: 64 }, () => '0').join('')}', '["order.created","product.updated"]'::json, true)
   `);
 
-  console.log(`  ✓ ${storeName} seeded`);
+  const customerHash = await bcrypt.hash('Customer123', 12);
+  await prisma.$executeRawUnsafe(`
+    INSERT INTO ${schema}.customers (id, first_name, last_name, email, phone, password_hash) VALUES
+      (1, 'Айym', 'Тест', 'test@customer.kz', '+7 777 000 0001', '${customerHash}'),
+      (2, 'Дидар', 'Байбосын', 'didar@customer.kz', '+7 777 000 0002', '${customerHash}')
+    ON CONFLICT (id) DO UPDATE SET email = EXCLUDED.email
+  `);
+  await prisma.$executeRawUnsafe(
+    `SELECT setval(pg_get_serial_sequence('${schema}.customers', 'id'), COALESCE((SELECT MAX(id) FROM ${schema}.customers), 1))`
+  );
+
+  console.log(`  ✓ ${storeName} seeded (tenant)`);
+}
+
+// =====================================================================
+// PUBLIC SCHEMA SEED — Prisma always queries public.tablename,
+// so all operational data must live in public for the app to work.
+// =====================================================================
+async function seedPublicSchema() {
+  console.log('7. Seeding operational data into public schema...');
+
+  // Clean public tenant tables (keep platform tables: merchants, stores, admins, etc.)
+  const cleanOrder = [
+    'public.store_audit_log', 'public.webhook_events', 'public.webhooks',
+    'public.order_discounts', 'public.order_fulfillments', 'public.order_items',
+    'public.payments', 'public.orders', 'public.cart_items', 'public.carts',
+    'public.abandoned_carts', 'public.subscription_box_items', 'public.subscription_orders',
+    'public.subscription_boxes', 'public.addresses', 'public.inventory',
+    'public.variant_attribute_values', 'public.variant_attributes',
+    'public.product_variants', 'public.product_categories', 'public.product_images',
+    'public.products', 'public.warehouses', 'public.categories',
+    'public.promo_codes', 'public.staff_members', 'public.theme_templates',
+  ];
+  // Only delete from tables that have FK-safe order — customers last
+  for (const t of [...cleanOrder, 'public.customers']) {
+    try {
+      await prisma.$executeRawUnsafe(`DELETE FROM ${t}`);
+    } catch {
+      // table might not exist or be empty, ignore
+    }
+  }
+
+  // Categories
+  await prisma.$executeRawUnsafe(`
+    INSERT INTO public.categories (id, name, slug, path, depth, sort_order) VALUES
+      (1, 'Все товары', 'all', '/1/', 0, 0),
+      (2, 'Электроника', 'electronics', '/2/', 0, 1),
+      (3, 'Одежда', 'clothing', '/3/', 0, 2),
+      (4, 'Аксессуары', 'accessories', '/4/', 0, 3),
+      (5, 'Новинки', 'new-arrivals', '/5/', 0, 4),
+      (6, 'Распродажа', 'sale', '/6/', 0, 5)
+  `);
+
+  // Products (updated_at required, no DB default in public)
+  await prisma.$executeRawUnsafe(`
+    INSERT INTO public.products (id, title, slug, description, status, weight_grams, updated_at) VALUES
+      (1, 'Телефон Samsung Galaxy A54', 'samsung-galaxy-a54', 'Флагманский смартфон Samsung', 'active', 200, NOW()),
+      (2, 'Наушники AirPods Pro', 'airpods-pro', 'Беспроводные наушники', 'active', 50, NOW()),
+      (3, 'Чехол для iPhone 15', 'iphone-15-case', 'Силиконовый чехол', 'active', 30, NOW()),
+      (4, 'Кроссовки Nike Air Max', 'nike-air-max', 'Спортивные кроссовки', 'active', 400, NOW()),
+      (5, 'Рюкзак для ноутбука', 'laptop-backpack', 'Вместительный рюкзак', 'active', 600, NOW())
+  `);
+
+  // Variant attributes
+  await prisma.$executeRawUnsafe(`
+    INSERT INTO public.variant_attributes (id, name, type) VALUES
+      (1, 'Размер', 'size'),
+      (2, 'Цвет', 'color'),
+      (3, 'Материал', 'material')
+  `);
+
+  // Product variants (updated_at required)
+  await prisma.$executeRawUnsafe(`
+    INSERT INTO public.product_variants (id, product_id, sku, price_tiyin, is_active, position, updated_at) VALUES
+      (1, 1, 'samsung-galaxy-a54-black', 28990000, true, 0, NOW()),
+      (2, 1, 'samsung-galaxy-a54-white', 28990000, true, 1, NOW()),
+      (3, 2, 'airpods-pro', 42990000, true, 0, NOW()),
+      (4, 3, 'iphone-15-case-black', 499000, true, 0, NOW()),
+      (5, 3, 'iphone-15-case-clear', 499000, true, 1, NOW()),
+      (6, 4, 'nike-air-max-42', 8990000, true, 0, NOW()),
+      (7, 4, 'nike-air-max-43', 8990000, true, 1, NOW()),
+      (8, 4, 'nike-air-max-44', 9490000, true, 2, NOW()),
+      (9, 5, 'laptop-backpack-black', 1599000, true, 0, NOW()),
+      (10, 5, 'laptop-backpack-grey', 1599000, true, 1, NOW())
+  `);
+
+  // Variant attribute values
+  await prisma.$executeRawUnsafe(`
+    INSERT INTO public.variant_attribute_values (variant_id, attribute_id, value) VALUES
+      (1, 2, 'Black'),
+      (2, 2, 'White'),
+      (6, 1, '42'),
+      (7, 1, '43'),
+      (8, 1, '44'),
+      (9, 2, 'Black'),
+      (10, 2, 'Grey')
+  `);
+
+  // Warehouses
+  await prisma.$executeRawUnsafe(`
+    INSERT INTO public.warehouses (id, name, city, address, is_active) VALUES
+      (1, 'Склад Алматы', 'Алматы', 'ул. Абая 150', true),
+      (2, 'Склад Астана', 'Астана', 'пр. Кабанбай батыра 500', true)
+  `);
+
+  // Inventory for all variants (updated_at required)
+  const inventoryValues = [1,2,3,4,5,6,7,8,9,10].map(
+    (variantId, i) => `(${variantId}, 1, ${50 + i * 10}, 0, 5, NOW())`
+  ).join(',\n      ');
+  await prisma.$executeRawUnsafe(`
+    INSERT INTO public.inventory (variant_id, warehouse_id, quantity_available, quantity_reserved, low_stock_threshold, updated_at) VALUES
+      ${inventoryValues}
+  `);
+
+  // Customers (IDs 1 and 2 to match merchant IDs for demo, updated_at required)
+  const customerHash = await bcrypt.hash('Customer123', 12);
+  await prisma.$executeRawUnsafe(`
+    INSERT INTO public.customers (id, first_name, last_name, email, phone, password_hash, updated_at) VALUES
+      (1, 'Айym', 'Тест', 'test@customer.kz', '+7 777 000 0001', '${customerHash}', NOW()),
+      (2, 'Дидар', 'Байбосын', 'didar@customer.kz', '+7 777 000 0002', '${customerHash}', NOW())
+  `);
+
+  // Webhooks
+  await prisma.$executeRawUnsafe(`
+    INSERT INTO public.webhooks (url, secret, events, is_active) VALUES
+      ('https://example.com/webhook', '${Array.from({ length: 64 }, () => '0').join('')}', '["order.created","product.updated"]'::json, true)
+  `);
+
+  // Reset all sequences
+  const seqTables = ['categories', 'products', 'variant_attributes', 'product_variants',
+    'warehouses', 'inventory', 'customers', 'webhooks'];
+  for (const t of seqTables) {
+    try {
+      await prisma.$executeRawUnsafe(
+        `SELECT setval(pg_get_serial_sequence('public.${t}', 'id'), (SELECT COALESCE(MAX(id), 1) FROM public.${t}))`
+      );
+    } catch {
+      // skip if no serial
+    }
+  }
+
+  console.log('  ✓ Public schema fully seeded');
 }
 
 async function main() {
@@ -251,13 +382,13 @@ async function main() {
   });
   console.log(`  ✓ Store 2: ${store2.name} (${store2.subdomain})\n`);
 
-  // 4. Provision tenant schemas (always drop + recreate)
+  // 4. Provision tenant schemas
   console.log('4. Provisioning tenant schemas...');
   await provisionTenant(store1.id);
   await provisionTenant(store2.id);
   console.log();
 
-  // 5. Seed tenant data
+  // 5. Seed tenant data (for documentation/architecture completeness)
   console.log('5. Seeding tenant data...');
   await seedTenant(store1.id, store1.name);
   await seedTenant(store2.id, store2.name);
@@ -286,11 +417,17 @@ async function main() {
     },
   });
 
+  // 7. Seed public schema with all operational data
+  await seedPublicSchema();
+
   console.log('\n✅ Seed completed successfully!');
   console.log('\n📋 Test accounts:');
   console.log('  Admin:    admin@shopbuilder.kz / Admin123456');
   console.log('  Merchant: merchant1@example.com / Merchant123');
   console.log('  Merchant: merchant2@example.com / Merchant123');
+  console.log('\n📦 Demo variant IDs (use in cart/orders): 1-10');
+  console.log('  Example: variant_id=1 (Samsung Black, ₸289,900)');
+  console.log('  Example: variant_id=3 (AirPods Pro, ₸429,900)');
 }
 
 main()
@@ -301,4 +438,3 @@ main()
   .finally(async () => {
     await prisma.$disconnect();
   });
-

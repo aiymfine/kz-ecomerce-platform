@@ -4,7 +4,6 @@ import { PrismaClient } from '@prisma/client';
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(PrismaService.name);
-  private tenantClients: Map<number, PrismaClient> = new Map();
 
   constructor() {
     super({
@@ -32,46 +31,29 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
   }
 
   async onModuleDestroy() {
-    for (const [, client] of this.tenantClients) {
-      await client.$disconnect();
-    }
-    this.tenantClients.clear();
     await this.$disconnect();
     this.logger.log('Disconnected from database');
   }
 
   /**
-   * Get or create a cached PrismaClient for a specific tenant schema.
-   * Uses Prisma's official multi-tenancy approach: connection URL with schema parameter.
-   * No raw SQL needed.
-   */
-  getTenantClient(storeId: number): PrismaClient {
-    if (!this.tenantClients.has(storeId)) {
-      const baseUrl = process.env.DATABASE_URL!;
-      const url = new URL(baseUrl);
-      // Don't use Prisma's schema param — it prefixes BOTH tables AND enums with the schema name.
-      // Instead, set PostgreSQL search_path so unqualified names resolve correctly:
-      //   - Tables → found in store_X first (tenant data)
-      //   - Enums → not in store_X, falls back to public (shared enum types)
-      url.searchParams.set(
-        'options',
-        `-csearch_path=store_${storeId},public`,
-      );
-      const client = new PrismaClient({
-        datasourceUrl: url.toString(),
-      });
-      this.tenantClients.set(storeId, client);
-    }
-    return this.tenantClients.get(storeId)!;
-  }
-
-  /**
    * Execute a function within a tenant context.
-   * The callback receives a PrismaClient connected to the tenant's schema.
-   * All Prisma operations inside the callback use the tenant's schema automatically.
+   *
+   * IMPORTANT — Prisma multi-tenancy limitation:
+   * Prisma 5.x hardcodes the schema from schema.prisma (typically "public") in generated
+   * SQL queries (e.g. "public"."products"). Setting search_path or the ?schema= connection
+   * parameter does NOT change the qualified table name Prisma emits.
+   *
+   * Current approach: all operational data lives in the "public" schema. Tenant isolation
+   * is achieved architecturally by scoping queries to data that belongs to a given store.
+   * Per-tenant schemas (store_1, store_2, …) exist for DDL isolation demos and future
+   * migration to Prisma's upcoming multiSchema preview feature.
+   *
+   * The callback receives the main PrismaClient (public schema). The storeId parameter is
+   * kept for future use when Prisma adds proper runtime schema switching.
    */
   async withTenant<T>(storeId: number, fn: (client: PrismaClient) => Promise<T>): Promise<T> {
-    const client = this.getTenantClient(storeId);
-    return fn(client);
+    // TODO: Switch to per-tenant client once Prisma supports runtime schema override.
+    // For now, all data is in public schema; storeId is accepted for API compatibility.
+    return fn(this);
   }
 }

@@ -1,8 +1,10 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { OrdersController } from './orders.controller';
 import { OrdersService } from './orders.service';
+import { WebhooksModule } from '../webhooks/webhooks.module';
+import { QueueModule } from '../../common/queue/queue.module';
 
 @Module({
   imports: [
@@ -13,6 +15,8 @@ import { OrdersService } from './orders.service';
         signOptions: { expiresIn: `${config.get<number>('JWT_ACCESS_TOKEN_EXPIRE_MINUTES', 30)}m` },
       }),
     }),
+    forwardRef(() => WebhooksModule),
+    QueueModule,
   ],
   controllers: [OrdersController],
   providers: [OrdersService],

@@ -1032,22 +1032,23 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/stores/{{store_id}}/checkout",
+              "raw": "{{base_url}}/stores/{{store_id}}/orders/checkout",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
                 "stores",
                 "{{store_id}}",
+                "orders",
                 "checkout"
               ]
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"customerEmail\": \"customer@test.com\",\n  \"shippingAddress\": {\n    \"city\": \"Almaty\",\n    \"address\": \"Test 1\"\n  }\n}"
+              "raw": "{\n  \"shipping_method\": \"self_pickup\",\n  \"shipping_address\": \"ул. Абая 150, Алматы\"\n}"
             }
           },
-          "description": "⚠️ Checkout is a service, not a standalone route. May need to create an order via the orders module first."
+          "description": "Converts active cart into an order. Requires items in cart first (use Cart → Add Item). Returns order with items, total, and order number."
         }
       ]
     },

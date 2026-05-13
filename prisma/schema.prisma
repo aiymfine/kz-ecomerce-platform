@@ -145,7 +145,7 @@ enum ActorType {
 
 model PlatformAdmin {
   id           Int               @id @default(autoincrement()) @map("id")
-  email        String            @unique @db.VarChar(255) @map("email")
+  email        String            @unique @map("email") @db.VarChar(255)
   passwordHash String            @map("password_hash") @db.VarChar(255)
   name         String            @map("name") @db.VarChar(255)
   role         PlatformAdminRole @default(support) @map("role")
@@ -159,21 +159,21 @@ model PlatformAdmin {
 }
 
 model Merchant {
-  id                      Int            @id @default(autoincrement()) @map("id")
-  email                   String         @unique @db.VarChar(255) @map("email")
-  passwordHash            String         @map("password_hash") @db.VarChar(255)
-  name                    String         @map("name") @db.VarChar(255)
-  phone                   String?        @map("phone") @db.VarChar(20)
-  businessName            String?        @map("business_name") @db.VarChar(255)
-  status                  MerchantStatus @default(pending) @map("status")
-  isActive                Boolean        @default(true) @map("is_active")
-  emailVerified           Boolean        @default(false) @map("email_verified")
-  verificationCode        String?        @map("verification_code") @db.VarChar(6)
-  verificationCodeExpiresAt DateTime?    @map("verification_code_expires_at")
-  resetPasswordToken      String?        @unique @map("reset_password_token")
-  resetPasswordExpiresAt   DateTime?     @map("reset_password_expires_at")
-  createdAt               DateTime       @default(now()) @map("created_at")
-  updatedAt               DateTime       @updatedAt @map("updated_at")
+  id                        Int            @id @default(autoincrement()) @map("id")
+  email                     String         @unique @map("email") @db.VarChar(255)
+  passwordHash              String         @map("password_hash") @db.VarChar(255)
+  name                      String         @map("name") @db.VarChar(255)
+  phone                     String?        @map("phone") @db.VarChar(20)
+  businessName              String?        @map("business_name") @db.VarChar(255)
+  status                    MerchantStatus @default(pending) @map("status")
+  isActive                  Boolean        @default(true) @map("is_active")
+  emailVerified             Boolean        @default(false) @map("email_verified")
+  verificationCode          String?        @map("verification_code") @db.VarChar(6)
+  verificationCodeExpiresAt DateTime?      @map("verification_code_expires_at")
+  resetPasswordToken        String?        @unique @map("reset_password_token")
+  resetPasswordExpiresAt    DateTime?      @map("reset_password_expires_at")
+  createdAt                 DateTime       @default(now()) @map("created_at")
+  updatedAt                 DateTime       @updatedAt @map("updated_at")
 
   stores Store[]
 
@@ -181,21 +181,21 @@ model Merchant {
 }
 
 model Store {
-  id           Int        @id @default(autoincrement()) @map("id")
-  merchantId   Int        @map("merchant_id")
-  name         String     @map("name") @db.VarChar(255)
-  subdomain    String     @unique @map("subdomain") @db.VarChar(63)
-  customDomain String?    @unique @map("custom_domain") @db.VarChar(255)
-  schemaName   String     @unique @map("schema_name") @db.VarChar(63)
+  id           Int         @id @default(autoincrement()) @map("id")
+  merchantId   Int         @map("merchant_id")
+  name         String      @map("name") @db.VarChar(255)
+  subdomain    String      @unique @map("subdomain") @db.VarChar(63)
+  customDomain String?     @unique @map("custom_domain") @db.VarChar(255)
+  schemaName   String      @unique @map("schema_name") @db.VarChar(63)
   status       StoreStatus @default(setup) @map("status")
   plan         StorePlan   @default(free) @map("plan")
-  themeId      Int?       @map("theme_id")
-  currency     String     @default("KZT") @map("currency") @db.VarChar(3)
-  timezone     String     @default("Asia/Almaty") @map("timezone") @db.VarChar(50)
-  vatRate      Int        @default(12) @map("vat_rate")
-  isLive       Boolean    @default(false) @map("is_live")
-  createdAt    DateTime   @default(now()) @map("created_at")
-  updatedAt    DateTime   @updatedAt @map("updated_at")
+  themeId      Int?        @map("theme_id")
+  currency     String      @default("KZT") @map("currency") @db.VarChar(3)
+  timezone     String      @default("Asia/Almaty") @map("timezone") @db.VarChar(50)
+  vatRate      Int         @default(12) @map("vat_rate")
+  isLive       Boolean     @default(false) @map("is_live")
+  createdAt    DateTime    @default(now()) @map("created_at")
+  updatedAt    DateTime    @updatedAt @map("updated_at")
 
   merchant       Merchant        @relation(fields: [merchantId], references: [id])
   billingRecords BillingRecord[]
@@ -309,8 +309,8 @@ model Category {
   isActive  Boolean  @default(true) @map("is_active")
   createdAt DateTime @default(now()) @map("created_at")
 
-  parent   Category?  @relation("CategoryTree", fields: [parentId], references: [id])
-  children Category[] @relation("CategoryTree")
+  parent   Category?         @relation("CategoryTree", fields: [parentId], references: [id])
+  children Category[]        @relation("CategoryTree")
   products ProductCategory[]
 
   @@index([parentId])
@@ -322,7 +322,7 @@ model ProductCategory {
   productId  Int @map("product_id")
   categoryId Int @map("category_id")
 
-  product  Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product  Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
   @@unique([productId, categoryId], map: "uq_product_category")
@@ -330,10 +330,10 @@ model ProductCategory {
 }
 
 model VariantAttribute {
-  id        Int          @id @default(autoincrement())
-  name      String       @db.VarChar(100)
+  id        Int           @id @default(autoincrement())
+  name      String        @db.VarChar(100)
   type      AttributeType
-  createdAt DateTime     @default(now()) @map("created_at")
+  createdAt DateTime      @default(now()) @map("created_at")
 
   values VariantAttributeValue[]
 
@@ -342,13 +342,13 @@ model VariantAttribute {
 }
 
 model VariantAttributeValue {
-  id          Int              @id @default(autoincrement())
-  variantId   Int              @map("variant_id")
-  attributeId Int              @map("attribute_id")
-  value       String           @db.VarChar(100)
-  sortOrder   Int              @default(0) @map("sort_order")
+  id          Int    @id @default(autoincrement())
+  variantId   Int    @map("variant_id")
+  attributeId Int    @map("attribute_id")
+  value       String @db.VarChar(100)
+  sortOrder   Int    @default(0) @map("sort_order")
 
-  variant   ProductVariant    @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  variant   ProductVariant   @relation(fields: [variantId], references: [id], onDelete: Cascade)
   attribute VariantAttribute @relation(fields: [attributeId], references: [id], onDelete: Cascade)
 
   @@unique([variantId, attributeId], map: "uq_variant_attribute")
@@ -370,11 +370,11 @@ model ProductVariant {
   createdAt           DateTime @default(now()) @map("created_at")
   updatedAt           DateTime @updatedAt @map("updated_at")
 
-  product          Product                  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  attributeValues  VariantAttributeValue[]
-  inventory        Inventory[]
-  orderItems       OrderItem[]
-  cartItems        CartItem[]
+  product           Product                 @relation(fields: [productId], references: [id], onDelete: Cascade)
+  attributeValues   VariantAttributeValue[]
+  inventory         Inventory[]
+  orderItems        OrderItem[]
+  cartItems         CartItem[]
   subscriptionItems SubscriptionBoxItem[]
 
   @@index([productId])
@@ -490,22 +490,22 @@ model CartItem {
 }
 
 model Order {
-  id             Int             @id @default(autoincrement())
-  orderNumber    String          @unique @map("order_number") @db.VarChar(30)
-  customerId     Int             @map("customer_id")
-  status         OrderStatus     @default(payment_pending)
-  subtotalTiyin  Int             @map("subtotal_tiyin")
-  discountTiyin  Int             @default(0) @map("discount_tiyin")
-  shippingTiyin  Int             @default(0) @map("shipping_tiyin")
-  vatTiyin       Int             @default(0) @map("vat_tiyin")
-  totalTiyin     Int             @map("total_tiyin")
-  shippingMethod ShippingMethod? @map("shipping_method")
-  shippingAddress Json?          @map("shipping_address")
-  customerNote   String?         @map("customer_note") @db.VarChar(500)
-  notes          String?         @map("notes") @db.Text
-  idempotencyKey String?         @unique @map("idempotency_key") @db.VarChar(100)
-  createdAt      DateTime        @default(now()) @map("created_at")
-  updatedAt      DateTime        @updatedAt @map("updated_at")
+  id              Int             @id @default(autoincrement())
+  orderNumber     String          @unique @map("order_number") @db.VarChar(30)
+  customerId      Int             @map("customer_id")
+  status          OrderStatus     @default(payment_pending)
+  subtotalTiyin   Int             @map("subtotal_tiyin")
+  discountTiyin   Int             @default(0) @map("discount_tiyin")
+  shippingTiyin   Int             @default(0) @map("shipping_tiyin")
+  vatTiyin        Int             @default(0) @map("vat_tiyin")
+  totalTiyin      Int             @map("total_tiyin")
+  shippingMethod  ShippingMethod? @map("shipping_method")
+  shippingAddress Json?           @map("shipping_address")
+  customerNote    String?         @map("customer_note") @db.VarChar(500)
+  notes           String?         @map("notes") @db.Text
+  idempotencyKey  String?         @unique @map("idempotency_key") @db.VarChar(100)
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
 
   customer     Customer           @relation(fields: [customerId], references: [id])
   items        OrderItem[]
@@ -520,14 +520,14 @@ model Order {
 }
 
 model OrderItem {
-  id              Int     @id @default(autoincrement())
-  orderId         Int     @map("order_id")
-  variantId       Int     @map("variant_id")
-  productTitle    String  @map("product_title") @db.VarChar(200)
-  variantSku      String  @map("variant_sku") @db.VarChar(50)
+  id              Int    @id @default(autoincrement())
+  orderId         Int    @map("order_id")
+  variantId       Int    @map("variant_id")
+  productTitle    String @map("product_title") @db.VarChar(200)
+  variantSku      String @map("variant_sku") @db.VarChar(50)
   quantity        Int
-  unitPriceTiyin  Int     @map("unit_price_tiyin")
-  totalPriceTiyin Int     @map("total_price_tiyin")
+  unitPriceTiyin  Int    @map("unit_price_tiyin")
+  totalPriceTiyin Int    @map("total_price_tiyin")
 
   order   Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
   variant ProductVariant @relation(fields: [variantId], references: [id])
@@ -537,15 +537,15 @@ model OrderItem {
 }
 
 model Payment {
-  id             Int            @id @default(autoincrement())
-  orderId        Int            @map("order_id")
+  id             Int             @id @default(autoincrement())
+  orderId        Int             @map("order_id")
   provider       PaymentProvider
-  providerTxId   String?        @map("provider_tx_id") @db.VarChar(255)
-  amountTiyin    Int            @map("amount_tiyin")
-  status         PaymentStatus  @default(pending)
-  idempotencyKey String         @unique @map("idempotency_key") @db.VarChar(100)
-  metadata       Json?          @map("metadata")
-  createdAt      DateTime       @default(now()) @map("created_at")
+  providerTxId   String?         @map("provider_tx_id") @db.VarChar(255)
+  amountTiyin    Int             @map("amount_tiyin")
+  status         PaymentStatus   @default(pending)
+  idempotencyKey String          @unique @map("idempotency_key") @db.VarChar(100)
+  metadata       Json?           @map("metadata")
+  createdAt      DateTime        @default(now()) @map("created_at")
 
   order Order @relation(fields: [orderId], references: [id])
 
@@ -556,36 +556,36 @@ model Payment {
 }
 
 model OrderFulfillment {
-  id             Int      @id @default(autoincrement())
-  orderId        Int      @map("order_id")
-  warehouseId    Int      @map("warehouse_id")
-  status         String   @default("pending") @db.VarChar(50)
-  trackingNumber String?  @map("tracking_number") @db.VarChar(100)
+  id             Int       @id @default(autoincrement())
+  orderId        Int       @map("order_id")
+  warehouseId    Int       @map("warehouse_id")
+  status         String    @default("pending") @db.VarChar(50)
+  trackingNumber String?   @map("tracking_number") @db.VarChar(100)
   shippedAt      DateTime? @map("shipped_at")
-  createdAt      DateTime @default(now()) @map("created_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
 
-  order      Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  warehouse  Warehouse @relation(fields: [warehouseId], references: [id])
+  order     Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  warehouse Warehouse @relation(fields: [warehouseId], references: [id])
 
   @@index([orderId])
   @@map("order_fulfillments")
 }
 
 model PromoCode {
-  id             Int           @id @default(autoincrement())
-  code           String        @unique @db.VarChar(30)
+  id             Int          @id @default(autoincrement())
+  code           String       @unique @db.VarChar(30)
   type           DiscountType
   value          Int
-  minOrderTiyin  Int           @default(0) @map("min_order_tiyin")
-  maxUses        Int?          @map("max_uses")
-  usedCount      Int           @default(0) @map("used_count")
-  maxPerCustomer Int           @default(1) @map("max_per_customer")
-  isStackable    Boolean       @default(false) @map("is_stackable")
-  firstBuyerOnly Boolean       @default(false) @map("first_buyer_only")
-  startsAt       DateTime?     @map("starts_at")
-  expiresAt      DateTime?     @map("expires_at")
-  isActive       Boolean       @default(true) @map("is_active")
-  createdAt      DateTime      @default(now()) @map("created_at")
+  minOrderTiyin  Int          @default(0) @map("min_order_tiyin")
+  maxUses        Int?         @map("max_uses")
+  usedCount      Int          @default(0) @map("used_count")
+  maxPerCustomer Int          @default(1) @map("max_per_customer")
+  isStackable    Boolean      @default(false) @map("is_stackable")
+  firstBuyerOnly Boolean      @default(false) @map("first_buyer_only")
+  startsAt       DateTime?    @map("starts_at")
+  expiresAt      DateTime?    @map("expires_at")
+  isActive       Boolean      @default(true) @map("is_active")
+  createdAt      DateTime     @default(now()) @map("created_at")
 
   orderDiscounts OrderDiscount[]
 
@@ -594,13 +594,13 @@ model PromoCode {
 }
 
 model OrderDiscount {
-  id            Int      @id @default(autoincrement())
-  orderId       Int      @map("order_id")
-  promoCodeId   Int?     @map("promo_code_id")
-  discountTiyin Int      @map("discount_tiyin")
-  description   String   @map("description") @db.VarChar(255)
+  id            Int    @id @default(autoincrement())
+  orderId       Int    @map("order_id")
+  promoCodeId   Int?   @map("promo_code_id")
+  discountTiyin Int    @map("discount_tiyin")
+  description   String @map("description") @db.VarChar(255)
 
-  order     Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  order     Order      @relation(fields: [orderId], references: [id], onDelete: Cascade)
   promoCode PromoCode? @relation(fields: [promoCodeId], references: [id])
 
   @@index([orderId])
@@ -621,17 +621,17 @@ model Webhook {
 }
 
 model WebhookEvent {
-  id               Int               @id @default(autoincrement())
-  webhookId        Int               @map("webhook_id")
-  eventType        String            @map("event_type") @db.VarChar(100)
+  id               Int                @id @default(autoincrement())
+  webhookId        Int                @map("webhook_id")
+  eventType        String             @map("event_type") @db.VarChar(100)
   payload          Json
   status           WebhookEventStatus @default(pending)
-  attemptCount     Int               @default(0) @map("attempt_count")
-  maxAttempts      Int               @default(5) @map("max_attempts")
-  nextRetryAt      DateTime?         @map("next_retry_at")
-  lastResponseCode Int?              @map("last_response_code")
-  createdAt        DateTime          @default(now()) @map("created_at")
-  deliveredAt      DateTime?         @map("delivered_at")
+  attemptCount     Int                @default(0) @map("attempt_count")
+  maxAttempts      Int                @default(5) @map("max_attempts")
+  nextRetryAt      DateTime?          @map("next_retry_at")
+  lastResponseCode Int?               @map("last_response_code")
+  createdAt        DateTime           @default(now()) @map("created_at")
+  deliveredAt      DateTime?          @map("delivered_at")
 
   webhook Webhook @relation(fields: [webhookId], references: [id], onDelete: Cascade)
 
@@ -651,7 +651,7 @@ model SubscriptionBox {
   isActive           Boolean      @default(true) @map("is_active")
   createdAt          DateTime     @default(now()) @map("created_at")
 
-  items SubscriptionBoxItem[]
+  items  SubscriptionBoxItem[]
   orders SubscriptionOrder[]
 
   @@index([billingCycle])
@@ -659,31 +659,31 @@ model SubscriptionBox {
 }
 
 model SubscriptionBoxItem {
-  id        Int      @id @default(autoincrement())
-  boxId     Int      @map("box_id")
-  variantId Int      @map("variant_id")
+  id        Int @id @default(autoincrement())
+  boxId     Int @map("box_id")
+  variantId Int @map("variant_id")
   quantity  Int
-  sortOrder Int      @default(0) @map("sort_order")
+  sortOrder Int @default(0) @map("sort_order")
 
   box     SubscriptionBox @relation(fields: [boxId], references: [id], onDelete: Cascade)
-  variant ProductVariant   @relation(fields: [variantId], references: [id])
+  variant ProductVariant  @relation(fields: [variantId], references: [id])
 
   @@index([boxId])
   @@map("subscription_box_items")
 }
 
 model SubscriptionOrder {
-  id               Int               @id @default(autoincrement())
-  boxId            Int               @map("box_id")
-  customerId       Int               @map("customer_id")
+  id               Int                @id @default(autoincrement())
+  boxId            Int                @map("box_id")
+  customerId       Int                @map("customer_id")
   status           SubscriptionStatus @default(active)
-  cycleNumber      Int               @default(0) @map("cycle_number")
-  amountTiyin      Int               @map("amount_tiyin")
-  paymentStatus    PaymentStatus     @default(pending) @map("payment_status")
-  paymentAttempts  Int               @default(0) @map("payment_attempts")
-  consecutiveSkips Int               @default(0) @map("consecutive_skips")
-  nextBillingAt    DateTime          @map("next_billing_at")
-  createdAt        DateTime          @default(now()) @map("created_at")
+  cycleNumber      Int                @default(0) @map("cycle_number")
+  amountTiyin      Int                @map("amount_tiyin")
+  paymentStatus    PaymentStatus      @default(pending) @map("payment_status")
+  paymentAttempts  Int                @default(0) @map("payment_attempts")
+  consecutiveSkips Int                @default(0) @map("consecutive_skips")
+  nextBillingAt    DateTime           @map("next_billing_at")
+  createdAt        DateTime           @default(now()) @map("created_at")
 
   box      SubscriptionBox @relation(fields: [boxId], references: [id])
   customer Customer        @relation(fields: [customerId], references: [id])
@@ -694,16 +694,16 @@ model SubscriptionOrder {
 }
 
 model StaffMember {
-  id           Int      @id @default(autoincrement())
-  email        String   @unique @db.VarChar(255)
-  passwordHash String   @map("password_hash") @db.VarChar(255)
-  name         String   @db.VarChar(200)
+  id           Int       @id @default(autoincrement())
+  email        String    @unique @db.VarChar(255)
+  passwordHash String    @map("password_hash") @db.VarChar(255)
+  name         String    @db.VarChar(200)
   role         StaffRole
-  permissions  Json     @default("{}")
-  isActive     Boolean  @default(true) @map("is_active")
-  invitedAt    DateTime @default(now()) @map("invited_at")
+  permissions  Json      @default("{}")
+  isActive     Boolean   @default(true) @map("is_active")
+  invitedAt    DateTime  @default(now()) @map("invited_at")
   lastLoginAt  DateTime? @map("last_login_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
 
   @@index([role])
   @@map("staff_members")

@@ -2624,6 +2624,35 @@
         ]
       }
     },
+    "/api/stores/{storeId}/orders/checkout": {
+      "post": {
+        "operationId": "OrdersController_checkout",
+        "summary": "Checkout — create order from active cart",
+        "parameters": [
+          {
+            "name": "storeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Orders"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
     "/api/stores/{storeId}/orders": {
       "get": {
         "operationId": "OrdersController_listOrders",
@@ -3158,6 +3187,43 @@
         "responses": {
           "200": {
             "description": "Refund processed"
+          }
+        },
+        "tags": [
+          "Payments"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/stores/{storeId}/payments/simulate/{orderId}": {
+      "post": {
+        "operationId": "PaymentsController_simulatePayment",
+        "summary": "Simulate successful payment (demo only)",
+        "parameters": [
+          {
+            "name": "storeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "orderId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Payment simulated and confirmed"
           }
         },
         "tags": [
