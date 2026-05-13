@@ -6,10 +6,18 @@ export const customerRegisterSchema = z.object({
     .string()
     .min(8, 'Password must be at least 8 characters')
     .max(128, 'Password must be at most 128 characters'),
-  first_name: z.string().min(1, 'First name is required').max(100),
+  first_name: z.string().min(1, 'First name is required').max(100).optional(),
+  firstName: z.string().min(1, 'First name is required').max(100).optional(),
   last_name: z.string().max(100).optional(),
+  lastName: z.string().max(100).optional(),
   phone: z.string().max(20).optional(),
-});
+}).transform(data => ({
+  email: data.email,
+  password: data.password,
+  first_name: data.first_name || data.firstName || '',
+  last_name: data.last_name || data.lastName || undefined,
+  phone: data.phone,
+})).refine(data => data.first_name.length > 0, { message: 'First name is required', path: ['first_name'] });
 
 export type CustomerRegisterDto = z.infer<typeof customerRegisterSchema>;
 
