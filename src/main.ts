@@ -88,7 +88,7 @@ async function bootstrap() {
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('docs', app, document);
+  SwaggerModule.setup('api/docs', app, document);
 
   // Export OpenAPI specs
   const specDir = path.resolve(process.cwd());
