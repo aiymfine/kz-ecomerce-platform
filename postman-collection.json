@@ -155,9 +155,10 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"newmerchant@test.com\",\n  \"password\": \"Merchant123\",\n  \"name\": \"New Merchant\",\n  \"businessName\": \"New Store\"\n}"
+              "raw": "{\n  \"email\": \"your-email@gmail.com\",\n  \"password\": \"Merchant123\",\n  \"name\": \"New Merchant\",\n  \"businessName\": \"New Store\",\n  \"phone\": \"+7 777 000 0000\"\n}"
             }
-          }
+          },
+          "description": "Register a new merchant account. A 6-digit verification code will be sent to the email via Gmail SMTP. Use your real email to receive the code."
         },
         {
           "name": "Login",
@@ -207,10 +208,10 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"newmerchant@test.com\",\n  \"code\": \"PASTE_CODE_FROM_CONSOLE\"\n}"
+              "raw": "{\n  \"email\": \"your-email@gmail.com\",\n  \"code\": \"PASTE_6_DIGIT_CODE_FROM_EMAIL\"\n}"
             }
           },
-          "description": "⚠️ Register a NEW account first (Auth > Register), then paste the 6-digit code from server console. Does NOT work with seed accounts."
+          "description": "Verification code is sent to your email via Gmail SMTP. Register a new account first, then check your inbox for the 6-digit code. Does NOT work with pre-verified seed accounts."
         },
         {
           "name": "Resend Verification",
@@ -287,10 +288,10 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"token\": \"PASTE_TOKEN_FROM_CONSOLE\",\n  \"newPassword\": \"NewPassword123!\"\n}"
+              "raw": "{\n  \"token\": \"PASTE_TOKEN_FROM_RESET_EMAIL\",\n  \"newPassword\": \"NewPassword123!\"\n}"
             }
           },
-          "description": "⚠️ Call Forgot Password first, then paste the token from server console/email."
+          "description": "Call Forgot Password first — a reset token is sent to your email via Gmail SMTP. Paste the token from the email here."
         },
         {
           "name": "Refresh Token",
