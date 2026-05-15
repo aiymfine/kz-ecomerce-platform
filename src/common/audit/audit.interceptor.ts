@@ -34,7 +34,9 @@ export class AuditInterceptor implements NestInterceptor {
 
           const user = (request as any).user;
           const actorId = user?.sub ?? user?.id ?? null;
-          const actorType = (user?.role as any) ?? 'merchant';
+          // Map super_admin/support/admin to 'staff' since ActorType enum only has merchant/staff/customer
+          const rawRole = (user?.role as string) ?? 'merchant';
+          const actorType = (['super_admin', 'support', 'admin'].includes(rawRole) ? 'staff' : rawRole) as 'merchant' | 'staff' | 'customer';
 
           const action = this.computeAction(method, path);
           const resourceType = this.extractResourceType(path);
@@ -64,7 +66,7 @@ export class AuditInterceptor implements NestInterceptor {
 
           this.auditService.log({
             actorId: user?.sub ?? user?.id ?? null,
-            actorType: (user?.role as any) ?? 'merchant',
+            actorType: ['super_admin', 'support', 'admin'].includes(user?.role) ? 'staff' : (user?.role ?? 'merchant'),
             action: this.computeAction(method, path),
             resourceType: this.extractResourceType(path),
             resourceId: this.extractResourceId(path),

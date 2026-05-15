@@ -8,15 +8,40 @@ const worker = new Worker(
   async (job: Job) => {
     console.log(`[AbandonedCartWorker] Processing job ${job.id}: ${job.name}`);
 
-    const { storeId, cartId, customerId } = job.data;
-
-    // Mark cart as abandoned
-    await prisma.cart.update({
-      where: { id: cartId },
-      data: { status: 'abandoned' },
-    });
-
-    console.log(`[AbandonedCartWorker] Cart ${cartId} marked as abandoned`);
+    if (job.name === 'check-all-stores') {
+      // Scan all stores for abandoned carts
+      const stores = await prisma.store.findMany({ where: { status: 'active' } });
+      let count = 0;
+      for (const store of stores) {
+        const cutoff = new Date(Date.now() - 30 * 60 * 1000); // 30 min ago
+        const carts = await prisma.cart.findMany({
+          where: {
+            status: 'active',
+            updatedAt: { lt: cutoff },
+          },
+        });
+        for (const cart of carts) {
+          await prisma.cart.update({
+            where: { id: cart.id },
+            data: { status: 'abandoned' },
+          });
+          count++;
+        }
+      }
+      console.log(`[AbandonedCartWorker] Scanned ${stores.length} stores, abandoned ${count} carts`);
+    } else {
+      // Process individual cart
+      const { cartId } = job.data;
+      if (!cartId) {
+        console.log(`[AbandonedCartWorker] No cartId in job data, skipping`);
+        return;
+      }
+      await prisma.cart.update({
+        where: { id: cartId },
+        data: { status: 'abandoned' },
+      });
+      console.log(`[AbandonedCartWorker] Cart ${cartId} marked as abandoned`);
+    }
   },
   {
     connection: {

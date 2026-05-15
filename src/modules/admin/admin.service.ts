@@ -414,9 +414,15 @@ export class AdminService {
         );
       }
 
-      // Insert default categories
+      // Insert default categories (split into separate statements)
       await this.prisma.$executeRaw(
-        Prisma.sql`SET search_path = ${Prisma.raw(`store_${storeId}`)}, public; INSERT INTO categories (name, slug, path, depth, sort_order) VALUES ('Все товары', 'all', '/', 0, 0), ('Новинки', 'new', '/', 0, 1), ('Распродажа', 'sale', '/', 0, 2); SET search_path = public;`,
+        Prisma.sql`SET search_path = ${Prisma.raw(`store_${storeId}`)}, public`,
+      );
+      await this.prisma.$executeRaw(
+        Prisma.sql`INSERT INTO categories (name, slug, path, depth, sort_order) VALUES ('Все товары', 'all', '/', 0, 0), ('Новинки', 'new', '/', 0, 1), ('Распродажа', 'sale', '/', 0, 2)`,
+      );
+      await this.prisma.$executeRaw(
+        Prisma.sql`SET search_path = public`,
       );
 
       await this.prisma.$executeRaw(Prisma.sql`COMMIT`);
