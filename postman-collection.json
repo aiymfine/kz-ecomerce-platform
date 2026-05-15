@@ -18,6 +18,7 @@
     { "key": "category_id", "value": "" },
     { "key": "webhook_id", "value": "" },
     { "key": "order_number", "value": "" },
+    { "key": "order_id", "value": "" },
     { "key": "promo_code", "value": "" }
   ],
   "item": [
@@ -668,6 +669,9 @@
                   "const res = pm.response.json();",
                   "if (res.orderNumber) {",
                   "  pm.collectionVariables.set('order_number', res.orderNumber);",
+                  "}",
+                  "if (res.id) {",
+                  "  pm.collectionVariables.set('order_id', String(res.id));",
                   "}"
                 ]
               }
@@ -950,16 +954,16 @@
           "request": {
             "method": "POST",
             "header": [{ "key": "Authorization", "value": "Bearer {{merchant_token}}" }],
-            "url": { "raw": "{{base_url}}/stores/{{store_id}}/payments/simulate/1", "host": ["{{base_url}}"], "path": ["stores", "{{store_id}}", "payments", "simulate", "1"] }
+            "url": { "raw": "{{base_url}}/stores/{{store_id}}/payments/simulate/{{order_id}}", "host": ["{{base_url}}"], "path": ["stores", "{{store_id}}", "payments", "simulate", "{{order_id}}"] }
           },
-          "description": "Simulates a successful payment for order ID 1. Replace with actual order ID after checkout."
+          "description": "Simulates a successful payment. Requires order_id from Checkout."
         },
         {
           "name": "Get Payments by Order",
           "request": {
             "method": "GET",
             "header": [{ "key": "Authorization", "value": "Bearer {{merchant_token}}" }],
-            "url": { "raw": "{{base_url}}/stores/{{store_id}}/payments/order/1", "host": ["{{base_url}}"], "path": ["stores", "{{store_id}}", "payments", "order", "1"] }
+            "url": { "raw": "{{base_url}}/stores/{{store_id}}/payments/order/{{order_id}}", "host": ["{{base_url}}"], "path": ["stores", "{{store_id}}", "payments", "order", "{{order_id}}"] }
           }
         }
       ]
