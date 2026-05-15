@@ -1,40 +1,29 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import * as nodemailer from 'nodemailer';
 
 @Injectable()
 export class EmailService {
   private readonly logger = new Logger(EmailService.name);
-  private transporter: nodemailer.Transporter | null = null;
-  private fromAddress: string;
+  private apiKey: string | null = null;
+  private inboxId: string | null = null;
   private appUrl: string;
 
   constructor(private readonly configService: ConfigService) {
-    const smtpHost = this.configService.get<string>('SMTP_HOST');
-    const smtpPort = this.configService.get<number>('SMTP_PORT', 587);
-    const smtpUser = this.configService.get<string>('SMTP_USER');
-    const smtpPass = this.configService.get<string>('SMTP_PASSWORD');
-    this.fromAddress =
-      this.configService.get<string>('SMTP_FROM') || smtpUser || 'noreply@shopbuilder.kz';
+    this.apiKey = this.configService.get<string>('AGENTMAIL_API_KEY') || this.configService.get<string>('SMTP_PASSWORD') || null;
+    this.inboxId = this.configService.get<string>('AGENTMAIL_INBOX_ID') || this.configService.get<string>('SMTP_USER') || null;
     this.appUrl = this.configService.get<string>('APP_URL', 'http://localhost:3001');
 
-    if (smtpHost && smtpUser && smtpPass) {
-      this.transporter = nodemailer.createTransport({
-        host: smtpHost,
-        port: smtpPort,
-        secure: smtpPort === 465,
-        auth: { user: smtpUser, pass: smtpPass },
-      });
-      this.logger.log(`EmailService configured with SMTP ${smtpHost}:${smtpPort}`);
+    if (this.apiKey && this.inboxId) {
+      this.logger.log('EmailService configured with AgentMail API');
     } else {
       this.logger.warn(
-        'SMTP not fully configured — emails will be logged but not sent. Set SMTP_HOST, SMTP_USER, SMTP_PASSWORD.',
+        'AgentMail not configured — emails will be logged but not sent. Set AGENTMAIL_API_KEY and AGENTMAIL_INBOX_ID (or SMTP_PASSWORD/SMTP_USER).',
       );
     }
   }
 
-  private async sendMail(to: string, subject: string, html: string): Promise<void> {
-    if (!this.transporter) {
+  private async sendMail(to: string, subject: string, html: string, text?: string): Promise<void> {
+    if (!this.apiKey || !this.inboxId) {
       this.logger.warn(
         `[EMAIL DRY-RUN] To: ${to} | Subject: ${subject}\n${html.substring(0, 200)}...`,
       );
@@ -42,13 +31,28 @@ export class EmailService {
     }
 
     try {
-      await this.transporter.sendMail({
-        from: `"ShopBuilder" <${this.fromAddress}>`,
-        to,
-        subject,
-        html,
+      const url = `https://api.agentmail.to/inboxes/${encodeURIComponent(this.inboxId)}/messages/send`;
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          to,
+          subject,
+          html,
+          text: text || subject,
+        }),
       });
-      this.logger.log(`Email sent to ${to}: ${subject}`);
+
+      if (!res.ok) {
+        const body = await res.text();
+        throw new Error(`AgentMail API error ${res.status}: ${body}`);
+      }
+
+      const data = await res.json();
+      this.logger.log(`Email sent to ${to}: ${subject} (message_id: ${data.message_id})`);
     } catch (error) {
       this.logger.error(`Failed to send email to ${to}: ${(error as Error).message}`);
       throw error;
@@ -68,7 +72,7 @@ export class EmailService {
         <p style="color: #999; font-size: 12px;">If you did not register, please ignore this email.</p>
       </div>
     `;
-    await this.sendMail(email, 'ShopBuilder — Verify Your Email', html);
+    await this.sendMail(email, 'ShopBuilder — Verify Your Email', html, `Your verification code is: ${code}`);
   }
 
   async sendPasswordResetEmail(email: string, resetLink: string): Promise<void> {
@@ -86,7 +90,7 @@ export class EmailService {
         <p style="color: #999; font-size: 12px;">If you did not request this, please ignore this email.</p>
       </div>
     `;
-    await this.sendMail(email, 'ShopBuilder — Reset Your Password', html);
+    await this.sendMail(email, 'ShopBuilder — Reset Your Password', html, `Reset your password: ${resetLink}`);
   }
 
   async sendOrderConfirmation(

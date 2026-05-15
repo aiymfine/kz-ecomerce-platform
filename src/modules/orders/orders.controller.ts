@@ -24,6 +24,7 @@ import {
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
+import { StoreOwnershipGuard } from '../../common/guards/store-ownership.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { JwtPayload } from '../../common/guards/jwt-auth.guard';
@@ -31,7 +32,7 @@ import { JwtPayload } from '../../common/guards/jwt-auth.guard';
 @ApiTags('Orders')
 @ApiBearerAuth()
 @Controller('stores/:storeId/orders')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, StoreOwnershipGuard)
 @Roles('merchant')
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}

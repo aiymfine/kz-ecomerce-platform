@@ -18,12 +18,13 @@ import { inviteStaffSchema, updateStaffSchema } from './dto/staff.dto';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
+import { StoreOwnershipGuard } from '../../common/guards/store-ownership.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 
 @ApiTags('Staff')
 @ApiBearerAuth()
 @Controller('stores/:storeId/staff')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, StoreOwnershipGuard)
 @Roles('merchant')
 export class StaffController {
   constructor(private readonly staffService: StaffService) {}

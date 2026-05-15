@@ -1,28 +1,40 @@
 import { Worker, Job } from 'bullmq';
 import { PrismaClient } from '@prisma/client';
-import * as nodemailer from 'nodemailer';
 
 const prisma = new PrismaClient();
 
-// Simple email transport (standalone, not using NestJS DI)
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || 'smtp.gmail.com',
-  port: parseInt(process.env.SMTP_PORT || '587'),
-  secure: parseInt(process.env.SMTP_PORT || '587') === 465,
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASSWORD,
-  },
-});
+const AGENTMAIL_API_KEY = process.env.AGENTMAIL_API_KEY || process.env.SMTP_PASSWORD || '';
+const AGENTMAIL_INBOX_ID = process.env.AGENTMAIL_INBOX_ID || process.env.SMTP_USER || '';
+const AGENTMAIL_API_BASE = 'https://api.agentmail.to';
 
-async function sendEmail(to: string, subject: string, html: string) {
-  await transporter.sendMail({
-    from: `"ShopBuilder" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
-    to,
-    subject,
-    html,
+async function sendEmail(to: string, subject: string, html: string, text?: string) {
+  if (!AGENTMAIL_API_KEY || !AGENTMAIL_INBOX_ID) {
+    console.log(`[EmailWorker DRY-RUN] To: ${to} | Subject: ${subject}`);
+    return;
+  }
+
+  const url = `${AGENTMAIL_API_BASE}/inboxes/${encodeURIComponent(AGENTMAIL_INBOX_ID)}/messages/send`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${AGENTMAIL_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      to,
+      subject,
+      html,
+      text: text || subject,
+    }),
   });
-  console.log(`[EmailWorker] Sent email to ${to}: ${subject}`);
+
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`AgentMail API error ${res.status}: ${body}`);
+  }
+
+  const data = await res.json();
+  console.log(`[EmailWorker] Sent email to ${to}: ${subject} (message_id: ${data.message_id})`);
 }
 
 const worker = new Worker(
@@ -43,6 +55,7 @@ const worker = new Worker(
           <p style="color:#666;font-size:14px;">This code expires in 10 minutes.</p>
         </div>
       `,
+          `Your verification code is: ${job.data.data.code}`,
         );
         break;
       case 'password-reset':
@@ -59,6 +72,7 @@ const worker = new Worker(
           <p style="color:#666;font-size:14px;">This link expires in 1 hour.</p>
         </div>
       `,
+          `Reset your password: ${job.data.data.resetLink}`,
         );
         break;
       case 'order-confirmation': {
@@ -80,6 +94,7 @@ const worker = new Worker(
           <div style="text-align:right;font-size:18px;font-weight:bold;">Total: ${order.total}</div>
         </div>
       `,
+          `Order ${order.orderNumber} confirmed. Total: ${order.total}`,
         );
         break;
       }
@@ -98,6 +113,7 @@ const worker = new Worker(
           </table>
         </div>
       `,
+          `Payment receipt for ${pay.orderNumber}. Amount: ${pay.amount}`,
         );
         break;
       }

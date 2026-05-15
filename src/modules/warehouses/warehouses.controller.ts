@@ -18,12 +18,13 @@ import { createWarehouseSchema, updateWarehouseSchema } from './dto/warehouse.dt
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
+import { StoreOwnershipGuard } from '../../common/guards/store-ownership.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 
 @ApiTags('Inventory')
 @ApiBearerAuth()
 @Controller('stores/:storeId/warehouses')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, StoreOwnershipGuard)
 @Roles('merchant')
 export class WarehousesController {
   constructor(private readonly warehousesService: WarehousesService) {}

@@ -2012,6 +2012,9 @@ paths:
       responses:
         200:
           description: ""
+      tags: - Analytics
+      security: - bearer:
+[]
   /api/analytics/products:
     get:
       operationId: AnalyticsController_products
@@ -2019,6 +2022,9 @@ paths:
       responses:
         200:
           description: ""
+      tags: - Analytics
+      security: - bearer:
+[]
   /api/analytics/customers:
     get:
       operationId: AnalyticsController_customers
@@ -2026,6 +2032,9 @@ paths:
       responses:
         200:
           description: ""
+      tags: - Analytics
+      security: - bearer:
+[]
   /api/analytics/inventory:
     get:
       operationId: AnalyticsController_inventory
@@ -2033,6 +2042,9 @@ paths:
       responses:
         200:
           description: ""
+      tags: - Analytics
+      security: - bearer:
+[]
   /api/templates:
     get:
       operationId: TemplatesController_listTemplates

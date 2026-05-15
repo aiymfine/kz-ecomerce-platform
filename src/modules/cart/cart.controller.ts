@@ -18,6 +18,7 @@ import { addCartItemSchema, updateCartItemSchema } from './dto/cart.dto';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
+import { StoreOwnershipGuard } from '../../common/guards/store-ownership.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { JwtPayload } from '../../common/guards/jwt-auth.guard';
@@ -25,7 +26,7 @@ import { JwtPayload } from '../../common/guards/jwt-auth.guard';
 @ApiTags('Cart')
 @ApiBearerAuth()
 @Controller('stores/:storeId/cart')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, StoreOwnershipGuard)
 export class CartController {
   constructor(private readonly cartService: CartService) {}
 
