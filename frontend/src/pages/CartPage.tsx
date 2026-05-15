@@ -5,10 +5,12 @@ import * as cartApi from '../api/cart';
 import * as orderApi from '../api/orders';
 import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../components/Toast';
+import { useLang } from '../hooks/useLang';
 import { formatPrice } from '../types';
 import { Minus, Plus, X, Tag, ShoppingBag, Lock, ArrowRight } from 'lucide-react';
 
 export function CartPage() {
+  const { t } = useLang();
   const [cart, setCart] = useState<Cart | null>(null);
   const [loading, setLoading] = useState(true);
   const [checkingOut, setCheckingOut] = useState(false);
@@ -37,7 +39,7 @@ export function CartPage() {
 
   const removeItem = async (id: number) => {
     await cartApi.removeCartItem(id);
-    addToast('Тауар жойылды', 'info');
+    addToast(t('cart_item_removed'), 'info');
     await fetchCart();
   };
 
@@ -45,9 +47,9 @@ export function CartPage() {
     e.preventDefault();
     if (promo.toLowerCase() === 'shop10') {
       setPromoApplied(true);
-      addToast('Промокод қолданылды! -10%', 'success');
+      addToast(t('promo_applied'), 'success');
     } else if (promo) {
-      addToast('Промокод жарамсыз', 'error');
+      addToast(t('promo_invalid'), 'error');
     }
   };
 
@@ -58,7 +60,7 @@ export function CartPage() {
       const order = await orderApi.checkout('self_pickup', 'Алматы, Қазақстан');
       navigate('/order-confirmation', { state: { order } });
     } catch (err: any) {
-      setError(err?.response?.data?.message || 'Сатып алу сәтсіз аяқталды');
+      setError(err?.response?.data?.message || t('cart_checkout_error'));
     } finally {
       setCheckingOut(false);
     }
@@ -68,8 +70,8 @@ export function CartPage() {
     return (
       <div className="max-w-3xl mx-auto px-4 py-20 text-center animate-fade-in">
         <Lock size={48} className="mx-auto mb-4 text-gray-300 dark:text-gray-600" />
-        <p className="text-xl font-semibold text-gray-500 dark:text-gray-400 mb-4">Себетті көру үшін кіріңіз</p>
-        <Link to="/products" className="text-kz-blue hover:underline font-medium">Өнімдерге оралу →</Link>
+        <p className="text-xl font-semibold text-gray-500 dark:text-gray-400 mb-4">{t('cart_login_required')}</p>
+        <Link to="/products" className="text-kz-blue hover:underline font-medium">{t('cart_back_to_products')}</Link>
       </div>
     );
   }
@@ -86,9 +88,9 @@ export function CartPage() {
     return (
       <div className="max-w-3xl mx-auto px-4 py-20 text-center animate-fade-in">
         <ShoppingBag size={48} className="mx-auto mb-4 text-gray-300 dark:text-gray-600" />
-        <p className="text-xl font-semibold text-gray-500 dark:text-gray-400 mb-4">Себет бос</p>
-        <Link to="/products" className="inline-flex items-center gap-2 bg-gradient-to-r from-kz-blue to-kz-blue-dark text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transition-all">
-          Өнімдерге <ArrowRight size={16} />
+        <p className="text-xl font-semibold text-gray-500 dark:text-gray-400 mb-4">{t('cart_empty')}</p>
+        <Link to="/products" className="inline-flex items-center gap-2 btn-primary text-white px-6 py-3 rounded-xl font-semibold">
+          {t('cart_go_to_products')} <ArrowRight size={16} />
         </Link>
       </div>
     );
@@ -100,8 +102,8 @@ export function CartPage() {
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 pb-24 md:pb-8 animate-fade-in-up">
       <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white mb-8 flex items-center gap-3">
         <ShoppingBag size={28} className="text-kz-blue" />
-        Себет
-        <span className="text-sm font-normal text-gray-400">({totalItems} тауар)</span>
+        {t('cart_title')}
+        <span className="text-sm font-normal text-gray-400">({totalItems} {t('cart_items_count')})</span>
       </h1>
 
       {error && <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-4 rounded-xl mb-6 animate-scale-in">{error}</div>}
@@ -109,7 +111,7 @@ export function CartPage() {
       {/* Items */}
       <div className="space-y-3">
         {items.map((item: CartItemData) => (
-          <div key={item.id} className="glass-card rounded-2xl p-4 flex items-center gap-4 group hover:-translate-y-0.5 transition-all duration-200">
+          <div key={item.id} className="bg-white dark:bg-[#14141F]/80 rounded-2xl p-4 flex items-center gap-4 border border-gray-100 dark:border-white/5 card-hover">
             <div className="w-16 h-16 bg-gradient-to-br from-kz-blue/20 to-kz-gold/10 rounded-xl flex items-center justify-center text-2xl flex-shrink-0">
               📦
             </div>
@@ -143,47 +145,47 @@ export function CartPage() {
       </div>
 
       {/* Summary */}
-      <div className="mt-8 glass-card rounded-2xl p-6">
+      <div className="mt-8 bg-white dark:bg-[#14141F]/80 rounded-2xl p-6 border border-gray-100 dark:border-white/5">
         {/* Promo code */}
         <form onSubmit={handlePromo} className="flex gap-2 mb-6">
           <div className="relative flex-1">
             <Tag size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               type="text"
-              placeholder="Промокод (мысалы: SHOP10)"
+              placeholder={t('promo_placeholder')}
               value={promo}
               onChange={e => setPromo(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-sm outline-none focus:ring-2 focus:ring-kz-blue/50 transition text-gray-900 dark:text-white placeholder-gray-400"
+              className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-sm outline-none input-premium text-gray-900 dark:text-white placeholder-gray-400"
             />
           </div>
           <button type="submit" className="px-5 py-2.5 bg-kz-blue/10 text-kz-blue font-semibold rounded-xl text-sm hover:bg-kz-blue/20 transition-all">
-            Қолдану
+            {t('promo_apply')}
           </button>
         </form>
         {promoApplied && (
           <div className="flex items-center gap-2 text-green-500 text-sm mb-4 animate-fade-in">
-            <Tag size={14} /> Промокод қолданылды: -10%
+            <Tag size={14} /> {t('promo_applied_label')}
           </div>
         )}
 
         <div className="space-y-3">
           <div className="flex justify-between text-gray-500 dark:text-gray-400">
-            <span>Тауарлар саны:</span>
+            <span>{t('cart_total_items')}</span>
             <span className="font-medium text-gray-900 dark:text-white">{totalItems}</span>
           </div>
           <div className="flex justify-between text-gray-500 dark:text-gray-400">
-            <span>Жеткізу:</span>
-            <span className="font-medium text-green-500">Тегін</span>
+            <span>{t('cart_shipping')}</span>
+            <span className="font-medium text-green-500">{t('cart_shipping_free')}</span>
           </div>
           {promoApplied && (
             <div className="flex justify-between text-green-500">
-              <span>Жеңілдік:</span>
+              <span>{t('cart_discount')}</span>
               <span className="font-medium">-10%</span>
             </div>
           )}
           <div className="border-t border-gray-100 dark:border-white/5 pt-4">
             <div className="flex justify-between items-center">
-              <span className="text-lg font-bold text-gray-900 dark:text-white">Жалпы:</span>
+              <span className="text-lg font-bold text-gray-900 dark:text-white">{t('cart_total')}</span>
               <span className="text-2xl font-extrabold text-kz-blue animate-fade-in">{formatPrice(0)}</span>
             </div>
           </div>
@@ -192,15 +194,15 @@ export function CartPage() {
         <button
           onClick={handleCheckout}
           disabled={checkingOut}
-          className="w-full mt-6 bg-gradient-to-r from-kz-blue to-kz-blue-dark text-white py-4 rounded-xl font-bold text-lg hover:shadow-lg hover:shadow-kz-blue/25 transition-all duration-300 disabled:opacity-50 flex items-center justify-center gap-2"
+          className="w-full mt-6 btn-primary text-white py-4 rounded-xl font-bold text-lg disabled:opacity-50 flex items-center justify-center gap-2"
         >
           {checkingOut ? (
             <>
               <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              Өңдеу...
+              {t('cart_processing')}
             </>
           ) : (
-            <>Сатып алу <ArrowRight size={18} /></>
+            <>{t('cart_checkout')} <ArrowRight size={18} /></>
           )}
         </button>
       </div>

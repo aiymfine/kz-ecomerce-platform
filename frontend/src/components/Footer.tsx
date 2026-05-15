@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom';
 import { Mail, Phone, MapPin, Heart, Globe, MessageCircle } from 'lucide-react';
 import { useState } from 'react';
+import { useLang } from '../hooks/useLang';
 
 export function Footer() {
+  const { t } = useLang();
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
 
@@ -32,7 +34,7 @@ export function Footer() {
                 <span className="text-kz-gold font-bold text-xs ml-1">KZ</span>
               </div>
             </Link>
-            <p className="text-sm leading-relaxed">Қазақстандағы жаңа ұрпақ интернет-дүкен платформасы. Сенімді, жылдам, ыңғайлы.</p>
+            <p className="text-sm leading-relaxed">{t('footer_brand_desc')}</p>
             {/* Social icons */}
             <div className="flex gap-3 mt-5">
               <a href="#" className="w-9 h-9 rounded-lg bg-white/5 hover:bg-kz-blue/20 flex items-center justify-center transition-all hover:text-kz-blue-light text-sm">
@@ -49,18 +51,18 @@ export function Footer() {
 
           {/* Links */}
           <div>
-            <h4 className="text-white font-semibold mb-4">Қызметтер</h4>
+            <h4 className="text-white font-semibold mb-4">{t('footer_services')}</h4>
             <ul className="space-y-2.5 text-sm">
-              <li className="hover:text-kz-blue-light transition cursor-pointer">Kaspi Pay төлемі</li>
-              <li className="hover:text-kz-blue-light transition cursor-pointer">Халық Банк төлемі</li>
-              <li className="hover:text-kz-blue-light transition cursor-pointer">Қамтамасыз ету</li>
-              <li className="hover:text-kz-blue-light transition cursor-pointer">Тегін жеткізу</li>
+              <li className="hover:text-kz-blue-light transition cursor-pointer">{t('footer_kaspi')}</li>
+              <li className="hover:text-kz-blue-light transition cursor-pointer">{t('footer_halyk')}</li>
+              <li className="hover:text-kz-blue-light transition cursor-pointer">{t('footer_insurance')}</li>
+              <li className="hover:text-kz-blue-light transition cursor-pointer">{t('footer_free_delivery')}</li>
             </ul>
           </div>
 
           {/* Contact */}
           <div>
-            <h4 className="text-white font-semibold mb-4">Байланыс</h4>
+            <h4 className="text-white font-semibold mb-4">{t('footer_contact')}</h4>
             <ul className="space-y-2.5 text-sm">
               <li className="flex items-center gap-2"><Mail size={14} /> support@techshop.kz</li>
               <li className="flex items-center gap-2"><Phone size={14} /> +7 (727) 000-00-00</li>
@@ -70,8 +72,8 @@ export function Footer() {
 
           {/* Newsletter */}
           <div>
-            <h4 className="text-white font-semibold mb-4">Жаңалықтар</h4>
-            <p className="text-sm mb-3">Акциялар мен жаңа өнімдер туралы хабарлама алыңыз</p>
+            <h4 className="text-white font-semibold mb-4">{t('footer_newsletter')}</h4>
+            <p className="text-sm mb-3">{t('footer_newsletter_desc')}</p>
             <form onSubmit={handleSubscribe} className="flex gap-2">
               <input
                 type="email"
@@ -84,7 +86,7 @@ export function Footer() {
                 {subscribed ? '✓' : '→'}
               </button>
             </form>
-            {subscribed && <p className="text-xs text-green-400 mt-2 animate-fade-in">Жазылды! ✓</p>}
+            {subscribed && <p className="text-xs text-green-400 mt-2 animate-fade-in">{t('footer_subscribed')}</p>}
           </div>
         </div>
       </div>
@@ -93,11 +95,11 @@ export function Footer() {
       <div className="border-t border-white/5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-5 flex flex-col sm:flex-row justify-between items-center gap-3">
           <p className="text-sm text-gray-500">
-            © 2026 ShopBuilder KZ — Made with <Heart size={12} className="inline text-red-500" /> in Қазақстан
+            {t('footer_copyright')} <Heart size={12} className="inline text-red-500" /> {t('footer_in_kazakhstan')}
           </p>
           <div className="flex gap-4 text-sm text-gray-500">
-            <span className="hover:text-gray-300 transition cursor-pointer">Қолдану шарттары</span>
-            <span className="hover:text-gray-300 transition cursor-pointer">Құпиялылық</span>
+            <span className="hover:text-gray-300 transition cursor-pointer">{t('footer_terms')}</span>
+            <span className="hover:text-gray-300 transition cursor-pointer">{t('footer_privacy')}</span>
           </div>
         </div>
       </div>

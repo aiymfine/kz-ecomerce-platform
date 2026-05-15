@@ -8,6 +8,8 @@
   --color-kz-blue-dark: #003D7A;
   --color-glass: rgba(255, 255, 255, 0.08);
   --color-glass-border: rgba(255, 255, 255, 0.12);
+  --color-light-bg: #F7F8FA;
+  --color-light-card: #FFFFFF;
 }
 
 /* ==================== BASE ==================== */
@@ -15,6 +17,12 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
   transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Light mode base */
+body {
+  background-color: #F7F8FA;
+  color: #111827;
 }
 
 /* Dark mode */
@@ -107,6 +115,14 @@ body {
   to { transform: rotate(360deg); }
 }
 
+@keyframes hero-gradient {
+  0% { background-position: 0% 50%; }
+  25% { background-position: 50% 100%; }
+  50% { background-position: 100% 50%; }
+  75% { background-position: 50% 0%; }
+  100% { background-position: 0% 50%; }
+}
+
 /* ==================== UTILITY CLASSES ==================== */
 .animate-shimmer {
   background: linear-gradient(90deg, transparent 25%, rgba(255,255,255,0.4) 50%, transparent 75%);
@@ -127,6 +143,10 @@ body {
 .animate-scale-in { animation: scale-in 0.4s ease-out both; }
 .animate-glow { animation: glow-pulse 2s ease-in-out infinite; }
 .animate-spin-slow { animation: spin-slow 20s linear infinite; }
+.animate-hero-gradient { 
+  background-size: 300% 300%;
+  animation: hero-gradient 12s ease infinite; 
+}
 
 .animate-delay-100 { animation-delay: 0.1s; }
 .animate-delay-200 { animation-delay: 0.2s; }
@@ -135,12 +155,12 @@ body {
 .animate-delay-500 { animation-delay: 0.5s; }
 .animate-delay-700 { animation-delay: 0.7s; }
 
-/* Glass morphism */
+/* Glass morphism — light mode: white glass, dark mode: dark glass */
 .glass {
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.72);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .dark .glass {
@@ -149,15 +169,29 @@ body {
 }
 
 .glass-card {
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06);
 }
 
 .dark .glass-card {
   background: rgba(20, 20, 35, 0.8);
   border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: none;
+}
+
+/* Premium card hover */
+.card-hover {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.card-hover:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 24px rgba(0,0,0,0.08), 0 4px 8px rgba(0,0,0,0.04);
+}
+.dark .card-hover:hover {
+  box-shadow: 0 12px 40px rgba(0,0,0,0.4);
 }
 
 /* Page transition */
@@ -167,8 +201,8 @@ body {
 .skeleton {
   position: relative;
   overflow: hidden;
-  background: #e5e7eb;
-  border-radius: 0.5rem;
+  background: #e8eaed;
+  border-radius: 0.75rem;
 }
 
 .dark .skeleton {
@@ -179,7 +213,7 @@ body {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
   background-size: 200% 100%;
   animation: shimmer 1.5s ease-in-out infinite;
 }
@@ -209,3 +243,37 @@ body {
 /* Star rating */
 .star-filled { color: #fbbf24; }
 .star-empty { color: #d1d5db; }
+
+/* Premium input focus ring */
+.input-premium {
+  transition: all 0.2s ease;
+}
+.input-premium:focus {
+  border-color: #0066CC;
+  box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.12);
+}
+
+/* Premium button */
+.btn-primary {
+  background: linear-gradient(135deg, #0066CC, #004C99);
+  transition: all 0.25s ease;
+}
+.btn-primary:hover {
+  background: linear-gradient(135deg, #0052A3, #003D7A);
+  box-shadow: 0 8px 24px rgba(0, 102, 204, 0.25);
+  transform: translateY(-1px);
+}
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+/* Hero gradient mesh */
+.hero-mesh {
+  background: 
+    radial-gradient(ellipse at 20% 50%, rgba(0, 102, 204, 0.6) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(139, 92, 246, 0.5) 0%, transparent 50%),
+    radial-gradient(ellipse at 60% 80%, rgba(255, 215, 0, 0.3) 0%, transparent 50%),
+    radial-gradient(ellipse at 40% 30%, rgba(0, 60, 120, 0.8) 0%, transparent 60%);
+  background-size: 300% 300%;
+  animation: hero-gradient 12s ease infinite;
+}

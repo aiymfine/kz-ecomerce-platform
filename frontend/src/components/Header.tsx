@@ -2,13 +2,15 @@ import { Link } from 'react-router-dom';
 import { useCartContext } from '../hooks/useCart';
 import { useAuth } from '../hooks/useAuth';
 import { useDarkMode } from '../hooks/useDarkMode';
+import { useLang } from '../hooks/useLang';
 import { useState } from 'react';
-import { ShoppingCart, Sun, Moon, Menu, X, Zap } from 'lucide-react';
+import { ShoppingCart, Sun, Moon, Menu, X, Zap, Globe } from 'lucide-react';
 
 export function Header() {
   const { itemCount } = useCartContext();
   const { user, isAuthenticated, login, register, logout } = useAuth();
   const { dark, toggle } = useDarkMode();
+  const { t, lang, setLang } = useLang();
   const [showAuth, setShowAuth] = useState(false);
   const [mobileMenu, setMobileMenu] = useState(false);
   const [mode, setMode] = useState<'login' | 'register'>('login');
@@ -28,7 +30,7 @@ export function Header() {
       await login(email, password);
       setShowAuth(false);
     } catch (err: any) {
-      setError(err?.response?.data?.message || 'Ошибка входа');
+      setError(err?.response?.data?.message || t('auth_login_error'));
     } finally {
       setSubmitting(false);
     }
@@ -42,7 +44,7 @@ export function Header() {
       await register({ email, password, firstName, lastName, phone });
       setShowAuth(false);
     } catch (err: any) {
-      setError(err?.response?.data?.message || 'Ошибка регистрации');
+      setError(err?.response?.data?.message || t('auth_register_error'));
     } finally {
       setSubmitting(false);
     }
@@ -50,7 +52,7 @@ export function Header() {
 
   return (
     <>
-      <header className="glass sticky top-0 z-50 border-b border-white/20 dark:border-white/5 transition-all duration-300">
+      <header className="glass sticky top-0 z-50 transition-all duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2.5 group">
@@ -67,16 +69,25 @@ export function Header() {
 
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-1">
-            <Link to="/" className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-kz-blue dark:hover:text-kz-blue rounded-lg hover:bg-kz-blue/5 transition-all font-medium text-sm">
-              Басты
+            <Link to="/" className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-kz-blue dark:hover:text-kz-blue rounded-xl hover:bg-kz-blue/5 transition-all font-medium text-sm">
+              {t('nav_home')}
             </Link>
-            <Link to="/products" className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-kz-blue dark:hover:text-kz-blue rounded-lg hover:bg-kz-blue/5 transition-all font-medium text-sm">
-              Өнімдер
+            <Link to="/products" className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-kz-blue dark:hover:text-kz-blue rounded-xl hover:bg-kz-blue/5 transition-all font-medium text-sm">
+              {t('nav_products')}
             </Link>
           </nav>
 
           {/* Actions */}
           <div className="flex items-center gap-2">
+            {/* Language toggle */}
+            <button
+              onClick={() => setLang(lang === 'kk' ? 'en' : 'kk')}
+              className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 transition-all"
+            >
+              <Globe size={15} />
+              <span>{lang === 'kk' ? 'ҚАЗ' : 'EN'}</span>
+            </button>
+
             {/* Dark mode toggle */}
             <button
               onClick={toggle}
@@ -100,14 +111,14 @@ export function Header() {
             {isAuthenticated ? (
               <div className="hidden sm:flex items-center gap-2">
                 <span className="text-sm text-gray-500 dark:text-gray-400">👋 {user?.firstName}</span>
-                <button onClick={logout} className="text-sm text-gray-400 hover:text-red-500 transition">Шығу</button>
+                <button onClick={logout} className="text-sm text-gray-400 hover:text-red-500 transition">{t('nav_logout')}</button>
               </div>
             ) : (
               <button
                 onClick={() => { setShowAuth(true); setMode('login'); setError(''); }}
-                className="hidden sm:block bg-gradient-to-r from-kz-blue to-kz-blue-dark text-white px-5 py-2 rounded-xl text-sm font-semibold hover:shadow-lg hover:shadow-kz-blue/25 transition-all duration-300 hover:-translate-y-0.5"
+                className="hidden sm:block btn-primary text-white px-5 py-2 rounded-xl text-sm font-semibold"
               >
-                Кіру
+                {t('nav_login')}
               </button>
             )}
 
@@ -123,21 +134,28 @@ export function Header() {
 
         {/* Mobile menu */}
         {mobileMenu && (
-          <div className="md:hidden glass-card border-t border-white/10 animate-fade-in">
+          <div className="md:hidden glass-card border-t border-gray-100 dark:border-white/5 animate-fade-in">
             <div className="px-4 py-4 space-y-2">
-              <Link to="/" onClick={() => setMobileMenu(false)} className="block px-4 py-2.5 rounded-xl text-gray-700 dark:text-gray-200 hover:bg-kz-blue/5 font-medium">Басты</Link>
-              <Link to="/products" onClick={() => setMobileMenu(false)} className="block px-4 py-2.5 rounded-xl text-gray-700 dark:text-gray-200 hover:bg-kz-blue/5 font-medium">Өнімдер</Link>
+              <Link to="/" onClick={() => setMobileMenu(false)} className="block px-4 py-2.5 rounded-xl text-gray-700 dark:text-gray-200 hover:bg-kz-blue/5 font-medium">{t('nav_home')}</Link>
+              <Link to="/products" onClick={() => setMobileMenu(false)} className="block px-4 py-2.5 rounded-xl text-gray-700 dark:text-gray-200 hover:bg-kz-blue/5 font-medium">{t('nav_products')}</Link>
+              {/* Mobile lang toggle */}
+              <button
+                onClick={() => { setLang(lang === 'kk' ? 'en' : 'kk'); }}
+                className="w-full text-left px-4 py-2.5 rounded-xl text-gray-700 dark:text-gray-200 hover:bg-kz-blue/5 font-medium flex items-center gap-2"
+              >
+                <Globe size={15} /> {lang === 'kk' ? 'Қазақша → English' : 'English → Қазақша'}
+              </button>
               {!isAuthenticated && (
                 <button
                   onClick={() => { setMobileMenu(false); setShowAuth(true); setMode('login'); setError(''); }}
-                  className="w-full bg-gradient-to-r from-kz-blue to-kz-blue-dark text-white py-2.5 rounded-xl font-semibold mt-2"
+                  className="w-full btn-primary text-white py-2.5 rounded-xl font-semibold mt-2"
                 >
-                  Кіру
+                  {t('nav_login')}
                 </button>
               )}
               {isAuthenticated && (
                 <button onClick={() => { logout(); setMobileMenu(false); }} className="w-full text-left px-4 py-2.5 text-red-500 font-medium">
-                  Шығу ({user?.firstName})
+                  {t('nav_logout')} ({user?.firstName})
                 </button>
               )}
             </div>
@@ -148,19 +166,19 @@ export function Header() {
       {/* Auth Modal */}
       {showAuth && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in" onClick={() => setShowAuth(false)}>
-          <div className="glass-card rounded-2xl p-8 w-full max-w-md shadow-2xl animate-scale-in" onClick={e => e.stopPropagation()}>
+          <div className="bg-white dark:bg-[#14141F] rounded-2xl p-8 w-full max-w-md shadow-2xl animate-scale-in border border-gray-100 dark:border-white/5" onClick={e => e.stopPropagation()}>
             <div className="flex gap-4 mb-6">
               <button
                 onClick={() => { setMode('login'); setError(''); }}
                 className={`pb-2 font-semibold transition-all ${mode === 'login' ? 'text-kz-blue border-b-2 border-kz-blue' : 'text-gray-400 dark:text-gray-500'}`}
               >
-                Кіру
+                {t('auth_login')}
               </button>
               <button
                 onClick={() => { setMode('register'); setError(''); }}
                 className={`pb-2 font-semibold transition-all ${mode === 'register' ? 'text-kz-blue border-b-2 border-kz-blue' : 'text-gray-400 dark:text-gray-500'}`}
               >
-                Тіркелу
+                {t('auth_register')}
               </button>
             </div>
 
@@ -168,38 +186,38 @@ export function Header() {
 
             {mode === 'login' ? (
               <form onSubmit={handleLogin} className="space-y-4">
-                <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-kz-blue/50 outline-none transition-all text-gray-900 dark:text-white placeholder-gray-400" />
-                <input type="password" placeholder="Құпия сөз" value={password} onChange={e => setPassword(e.target.value)} required
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-kz-blue/50 outline-none transition-all text-gray-900 dark:text-white placeholder-gray-400" />
+                <input type="email" placeholder={t('auth_email_placeholder')} value={email} onChange={e => setEmail(e.target.value)} required
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl input-premium outline-none text-gray-900 dark:text-white placeholder-gray-400" />
+                <input type="password" placeholder={t('auth_password_placeholder')} value={password} onChange={e => setPassword(e.target.value)} required
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl input-premium outline-none text-gray-900 dark:text-white placeholder-gray-400" />
                 <button type="submit" disabled={submitting}
-                  className="w-full bg-gradient-to-r from-kz-blue to-kz-blue-dark text-white py-3 rounded-xl font-semibold hover:shadow-lg hover:shadow-kz-blue/25 transition-all disabled:opacity-50">
-                  {submitting ? '...' : 'Кіру'}
+                  className="w-full btn-primary text-white py-3 rounded-xl font-semibold disabled:opacity-50">
+                  {submitting ? '...' : t('auth_login')}
                 </button>
               </form>
             ) : (
               <form onSubmit={handleRegister} className="space-y-3">
                 <div className="grid grid-cols-2 gap-3">
-                  <input type="text" placeholder="Аты" value={firstName} onChange={e => setFirstName(e.target.value)} required
-                    className="px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-kz-blue/50 outline-none transition-all text-gray-900 dark:text-white placeholder-gray-400" />
-                  <input type="text" placeholder="Тегі" value={lastName} onChange={e => setLastName(e.target.value)}
-                    className="px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-kz-blue/50 outline-none transition-all text-gray-900 dark:text-white placeholder-gray-400" />
+                  <input type="text" placeholder={t('auth_firstname_placeholder')} value={firstName} onChange={e => setFirstName(e.target.value)} required
+                    className="px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl input-premium outline-none text-gray-900 dark:text-white placeholder-gray-400" />
+                  <input type="text" placeholder={t('auth_lastname_placeholder')} value={lastName} onChange={e => setLastName(e.target.value)}
+                    className="px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl input-premium outline-none text-gray-900 dark:text-white placeholder-gray-400" />
                 </div>
-                <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-kz-blue/50 outline-none transition-all text-gray-900 dark:text-white placeholder-gray-400" />
-                <input type="tel" placeholder="Телефон: +7 777 000 0000" value={phone} onChange={e => setPhone(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-kz-blue/50 outline-none transition-all text-gray-900 dark:text-white placeholder-gray-400" />
-                <input type="password" placeholder="Құпия сөз" value={password} onChange={e => setPassword(e.target.value)} required minLength={8}
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-kz-blue/50 outline-none transition-all text-gray-900 dark:text-white placeholder-gray-400" />
+                <input type="email" placeholder={t('auth_email_placeholder')} value={email} onChange={e => setEmail(e.target.value)} required
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl input-premium outline-none text-gray-900 dark:text-white placeholder-gray-400" />
+                <input type="tel" placeholder={t('auth_phone_placeholder')} value={phone} onChange={e => setPhone(e.target.value)}
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl input-premium outline-none text-gray-900 dark:text-white placeholder-gray-400" />
+                <input type="password" placeholder={t('auth_password_placeholder')} value={password} onChange={e => setPassword(e.target.value)} required minLength={8}
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl input-premium outline-none text-gray-900 dark:text-white placeholder-gray-400" />
                 <button type="submit" disabled={submitting}
-                  className="w-full bg-gradient-to-r from-kz-blue to-kz-blue-dark text-white py-3 rounded-xl font-semibold hover:shadow-lg hover:shadow-kz-blue/25 transition-all disabled:opacity-50">
-                  {submitting ? '...' : 'Тіркелу'}
+                  className="w-full btn-primary text-white py-3 rounded-xl font-semibold disabled:opacity-50">
+                  {submitting ? '...' : t('auth_register')}
                 </button>
               </form>
             )}
 
             <p className="text-xs text-gray-400 dark:text-gray-500 mt-4 text-center">
-              Demo: test@customer.kz / Customer123
+              {t('auth_demo')}
             </p>
           </div>
         </div>

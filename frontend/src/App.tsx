@@ -8,6 +8,7 @@ import { OrderConfirmationPage } from './pages/OrderConfirmationPage';
 import { AuthProvider } from './hooks/useAuth';
 import { CartProvider } from './hooks/useCart';
 import { ToastProvider } from './components/Toast';
+import { LangProvider } from './hooks/useLang';
 import { useDarkMode } from './hooks/useDarkMode';
 import { useEffect } from 'react';
 
@@ -32,25 +33,27 @@ function PageTransition({ children }: { children: React.ReactNode }) {
 export default function App() {
   return (
     <DarkModeWrapper>
-      <AuthProvider>
-        <CartProvider>
-          <ToastProvider>
-            <BrowserRouter>
-              <Layout>
-                <PageTransition>
-                  <Routes>
-                    <Route path="/" element={<HomePage />} />
-                    <Route path="/products" element={<ProductsPage />} />
-                    <Route path="/products/:slug" element={<ProductDetailPage />} />
-                    <Route path="/cart" element={<CartPage />} />
-                    <Route path="/order-confirmation" element={<OrderConfirmationPage />} />
-                  </Routes>
-                </PageTransition>
-              </Layout>
-            </BrowserRouter>
-          </ToastProvider>
-        </CartProvider>
-      </AuthProvider>
+      <LangProvider>
+        <AuthProvider>
+          <CartProvider>
+            <ToastProvider>
+              <BrowserRouter>
+                <Layout>
+                  <PageTransition>
+                    <Routes>
+                      <Route path="/" element={<HomePage />} />
+                      <Route path="/products" element={<ProductsPage />} />
+                      <Route path="/products/:slug" element={<ProductDetailPage />} />
+                      <Route path="/cart" element={<CartPage />} />
+                      <Route path="/order-confirmation" element={<OrderConfirmationPage />} />
+                    </Routes>
+                  </PageTransition>
+                </Layout>
+              </BrowserRouter>
+            </ToastProvider>
+          </CartProvider>
+        </AuthProvider>
+      </LangProvider>
     </DarkModeWrapper>
   );
 }

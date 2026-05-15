@@ -6,6 +6,7 @@ import { formatPrice } from '../types';
 import { useCartContext } from '../hooks/useCart';
 import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../components/Toast';
+import { useLang } from '../hooks/useLang';
 import { Star, Heart, Shield, Truck, RotateCcw, Minus, Plus, ChevronLeft, ShoppingCart } from 'lucide-react';
 
 const fakeReviews = [
@@ -16,6 +17,7 @@ const fakeReviews = [
 
 export function ProductDetailPage() {
   const { slug } = useParams<{ slug: string }>();
+  const { t } = useLang();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedVariant, setSelectedVariant] = useState(0);
@@ -51,8 +53,8 @@ export function ProductDetailPage() {
   if (!product) return (
     <div className="max-w-7xl mx-auto px-4 py-20 text-center animate-fade-in">
       <p className="text-7xl mb-4">😕</p>
-      <p className="text-xl font-semibold text-gray-500 dark:text-gray-400">Өнім табылмады</p>
-      <Link to="/products" className="text-kz-blue hover:underline mt-4 inline-block font-medium">Каталогқа оралу</Link>
+      <p className="text-xl font-semibold text-gray-500 dark:text-gray-400">{t('product_not_found')}</p>
+      <Link to="/products" className="text-kz-blue hover:underline mt-4 inline-block font-medium">{t('back_to_catalog')}</Link>
     </div>
   );
 
@@ -67,7 +69,7 @@ export function ProductDetailPage() {
     if (!variant) return;
     await addItem(variant.id, quantity);
     setAdded(true);
-    addToast(`${product.title} себетке қосылды!`, 'success');
+    addToast(`${product.title} ${t('added_to_cart')}`, 'success');
     setTimeout(() => setAdded(false), 2000);
   };
 
@@ -82,7 +84,7 @@ export function ProductDetailPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 pb-24 md:pb-8 animate-fade-in-up">
       <Link to="/products" className="inline-flex items-center gap-1 text-kz-blue hover:underline mb-6 font-medium text-sm">
-        <ChevronLeft size={16} /> Каталогқа оралу
+        <ChevronLeft size={16} /> {t('back_to_catalog')}
       </Link>
 
       <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
@@ -118,7 +120,7 @@ export function ProductDetailPage() {
                 <Star key={s} size={16} className={s <= Math.round(avgRating) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300 dark:text-gray-600'} />
               ))}
             </div>
-            <span className="text-sm font-medium text-gray-600 dark:text-gray-400">{avgRating} ({reviewCount} пікір)</span>
+            <span className="text-sm font-medium text-gray-600 dark:text-gray-400">{avgRating} ({reviewCount} {t('reviews_count')})</span>
           </div>
 
           <p className="text-gray-500 dark:text-gray-400 mt-4 leading-relaxed">{product.description}</p>
@@ -128,13 +130,13 @@ export function ProductDetailPage() {
           {/* Trust badges */}
           <div className="flex flex-wrap gap-4 mt-6">
             <div className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400">
-              <Truck size={14} className="text-green-500" /> Тегін жеткізу
+              <Truck size={14} className="text-green-500" /> {t('detail_free_shipping')}
             </div>
             <div className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400">
-              <Shield size={14} className="text-blue-500" /> 1 жыл кепілдік
+              <Shield size={14} className="text-blue-500" /> {t('detail_1yr_warranty')}
             </div>
             <div className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400">
-              <RotateCcw size={14} className="text-purple-500" /> 14 күнде қайтару
+              <RotateCcw size={14} className="text-purple-500" /> {t('detail_14day_return')}
             </div>
           </div>
 
@@ -143,7 +145,7 @@ export function ProductDetailPage() {
             <div className="mt-6 space-y-4">
               {colors.length > 0 && (
                 <div>
-                  <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Түс</p>
+                  <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">{t('color_label')}</p>
                   <div className="flex gap-2">
                     {variants.map((v, i) => {
                       const color = v.attributeValues?.find(a => a.attribute.type === 'color')?.value;
@@ -163,7 +165,7 @@ export function ProductDetailPage() {
               )}
               {sizes.length > 0 && (
                 <div>
-                  <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Өлшем</p>
+                  <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">{t('size_label')}</p>
                   <div className="flex gap-2">
                     {variants.map((v, i) => {
                       const size = v.attributeValues?.find(a => a.attribute.type === 'size')?.value;
@@ -202,14 +204,14 @@ export function ProductDetailPage() {
                   className={`flex-1 py-3.5 rounded-xl font-bold text-lg transition-all duration-300 flex items-center justify-center gap-2 ${
                     added
                       ? 'bg-green-500 text-white shadow-lg shadow-green-500/25'
-                      : 'bg-gradient-to-r from-kz-blue to-kz-blue-dark text-white hover:shadow-lg hover:shadow-kz-blue/25 hover:-translate-y-0.5'
+                      : 'btn-primary text-white'
                   }`}
                 >
                   <ShoppingCart size={18} />
-                  {added ? '✓ Қосылды!' : 'Себетке қосу'}
+                  {added ? t('btn_added') : t('btn_add_to_cart')}
                 </button>
               ) : (
-                <p className="text-sm text-gray-400 dark:text-gray-500">Себетке қосу үшін кіріңіз</p>
+                <p className="text-sm text-gray-400 dark:text-gray-500">{t('login_to_add')}</p>
               )}
             </div>
           )}
@@ -225,43 +227,43 @@ export function ProductDetailPage() {
             onClick={() => setActiveTab('desc')}
             className={`pb-3 font-semibold transition-all ${activeTab === 'desc' ? 'text-kz-blue border-b-2 border-kz-blue' : 'text-gray-400 dark:text-gray-500'}`}
           >
-            Сипаттамасы
+            {t('tab_description')}
           </button>
           <button
             onClick={() => setActiveTab('reviews')}
             className={`pb-3 font-semibold transition-all ${activeTab === 'reviews' ? 'text-kz-blue border-b-2 border-kz-blue' : 'text-gray-400 dark:text-gray-500'}`}
           >
-            Пікірлер ({reviewCount})
+            {t('tab_reviews')} ({reviewCount})
           </button>
         </div>
 
         <div className="mt-6 animate-fade-in">
           {activeTab === 'desc' ? (
-            <div className="glass-card rounded-2xl p-6">
-              <p className="text-gray-600 dark:text-gray-300 leading-relaxed">{product.description || 'Сипаттама жоқ.'}</p>
+            <div className="bg-white dark:bg-[#14141F]/80 rounded-2xl p-6 border border-gray-100 dark:border-white/5">
+              <p className="text-gray-600 dark:text-gray-300 leading-relaxed">{product.description || t('no_description')}</p>
               <div className="grid sm:grid-cols-2 gap-4 mt-6">
                 <div className="flex justify-between py-2 border-b border-gray-100 dark:border-white/5">
-                  <span className="text-gray-500 dark:text-gray-400">Кепілдік</span>
-                  <span className="font-medium text-gray-900 dark:text-white">12 ай</span>
+                  <span className="text-gray-500 dark:text-gray-400">{t('detail_warranty')}</span>
+                  <span className="font-medium text-gray-900 dark:text-white">{t('detail_warranty_value')}</span>
                 </div>
                 <div className="flex justify-between py-2 border-b border-gray-100 dark:border-white/5">
-                  <span className="text-gray-500 dark:text-gray-400">Жеткізу</span>
-                  <span className="font-medium text-gray-900 dark:text-white">2-3 күн</span>
+                  <span className="text-gray-500 dark:text-gray-400">{t('detail_delivery')}</span>
+                  <span className="font-medium text-gray-900 dark:text-white">{t('detail_delivery_value')}</span>
                 </div>
                 <div className="flex justify-between py-2 border-b border-gray-100 dark:border-white/5">
                   <span className="text-gray-500 dark:text-gray-400">SKU</span>
                   <span className="font-medium text-gray-900 dark:text-white font-mono">{variant?.sku}</span>
                 </div>
                 <div className="flex justify-between py-2 border-b border-gray-100 dark:border-white/5">
-                  <span className="text-gray-500 dark:text-gray-400">Қайтару</span>
-                  <span className="font-medium text-gray-900 dark:text-white">14 күн</span>
+                  <span className="text-gray-500 dark:text-gray-400">{t('detail_return')}</span>
+                  <span className="font-medium text-gray-900 dark:text-white">{t('detail_return_value')}</span>
                 </div>
               </div>
             </div>
           ) : (
             <div className="space-y-4">
               {fakeReviews.map((review, i) => (
-                <div key={i} className="glass-card rounded-2xl p-5">
+                <div key={i} className="bg-white dark:bg-[#14141F]/80 rounded-2xl p-5 border border-gray-100 dark:border-white/5">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-gradient-to-br from-kz-blue to-kz-gold rounded-full flex items-center justify-center text-white font-bold text-sm">

@@ -1,10 +1,14 @@
 import { Header } from './Header';
 import { Footer } from './Footer';
 import { ToastContainer } from './Toast';
+import { Link, useLocation } from 'react-router-dom';
+import { Home, Search, ShoppingCart, User } from 'lucide-react';
+import { useCartContext } from '../hooks/useCart';
+import { useLang } from '../hooks/useLang';
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-[#0a0a0f] transition-colors duration-300">
+    <div className="min-h-screen flex flex-col bg-[#F7F8FA] dark:bg-[#0a0a0f] transition-colors duration-300">
       <Header />
       <main className="flex-1">{children}</main>
       <Footer />
@@ -15,19 +19,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
-import { Link, useLocation } from 'react-router-dom';
-import { Home, Search, ShoppingCart, User } from 'lucide-react';
-import { useCartContext } from '../hooks/useCart';
-
 function MobileBottomNav() {
   const location = useLocation();
   const { itemCount } = useCartContext();
+  const { t } = useLang();
 
   const links = [
-    { to: '/', icon: Home, label: 'Басты' },
-    { to: '/products', icon: Search, label: 'Іздеу' },
-    { to: '/cart', icon: ShoppingCart, label: 'Себет', badge: itemCount },
-    { to: '#profile', icon: User, label: 'Профиль' },
+    { to: '/', icon: Home, label: t('nav_home') },
+    { to: '/products', icon: Search, label: t('nav_search') },
+    { to: '/cart', icon: ShoppingCart, label: t('nav_cart'), badge: itemCount },
+    { to: '#profile', icon: User, label: t('nav_profile') },
   ];
 
   return (
