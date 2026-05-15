@@ -4,13 +4,19 @@ import type { Cart, CartItemData } from '../types';
 import * as cartApi from '../api/cart';
 import * as orderApi from '../api/orders';
 import { useAuth } from '../hooks/useAuth';
+import { useToast } from '../components/Toast';
+import { formatPrice } from '../types';
+import { Minus, Plus, X, Tag, ShoppingBag, Lock, ArrowRight } from 'lucide-react';
 
 export function CartPage() {
   const [cart, setCart] = useState<Cart | null>(null);
   const [loading, setLoading] = useState(true);
   const [checkingOut, setCheckingOut] = useState(false);
   const [error, setError] = useState('');
+  const [promo, setPromo] = useState('');
+  const [promoApplied, setPromoApplied] = useState(false);
   const { isAuthenticated } = useAuth();
+  const { addToast } = useToast();
   const navigate = useNavigate();
 
   const fetchCart = async () => {
@@ -31,7 +37,18 @@ export function CartPage() {
 
   const removeItem = async (id: number) => {
     await cartApi.removeCartItem(id);
+    addToast('Тауар жойылды', 'info');
     await fetchCart();
+  };
+
+  const handlePromo = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (promo.toLowerCase() === 'shop10') {
+      setPromoApplied(true);
+      addToast('Промокод қолданылды! -10%', 'success');
+    } else if (promo) {
+      addToast('Промокод жарамсыз', 'error');
+    }
   };
 
   const handleCheckout = async () => {
@@ -49,63 +66,142 @@ export function CartPage() {
 
   if (!isAuthenticated) {
     return (
-      <div className="max-w-3xl mx-auto px-4 py-16 text-center">
-        <p className="text-6xl mb-4">🔒</p>
-        <p className="text-xl text-gray-500 mb-4">Себетті көру үшін кіріңіз</p>
-        <Link to="/products" className="text-blue-600 hover:underline">Өнімдерге оралу →</Link>
+      <div className="max-w-3xl mx-auto px-4 py-20 text-center animate-fade-in">
+        <Lock size={48} className="mx-auto mb-4 text-gray-300 dark:text-gray-600" />
+        <p className="text-xl font-semibold text-gray-500 dark:text-gray-400 mb-4">Себетті көру үшін кіріңіз</p>
+        <Link to="/products" className="text-kz-blue hover:underline font-medium">Өнімдерге оралу →</Link>
       </div>
     );
   }
 
-  if (loading) return <div className="max-w-3xl mx-auto px-4 py-16 text-center text-gray-400">Жүктелуде...</div>;
+  if (loading) return (
+    <div className="max-w-3xl mx-auto px-4 py-8 space-y-4">
+      {[1,2,3].map(i => <div key={i} className="skeleton h-20 rounded-xl" />)}
+    </div>
+  );
 
   const items = cart?.items || [];
 
   if (items.length === 0) {
     return (
-      <div className="max-w-3xl mx-auto px-4 py-16 text-center">
-        <p className="text-6xl mb-4">🛒</p>
-        <p className="text-xl text-gray-500 mb-4">Себет бос</p>
-        <Link to="/products" className="bg-blue-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-blue-700 transition inline-block">Өнімдерге →</Link>
+      <div className="max-w-3xl mx-auto px-4 py-20 text-center animate-fade-in">
+        <ShoppingBag size={48} className="mx-auto mb-4 text-gray-300 dark:text-gray-600" />
+        <p className="text-xl font-semibold text-gray-500 dark:text-gray-400 mb-4">Себет бос</p>
+        <Link to="/products" className="inline-flex items-center gap-2 bg-gradient-to-r from-kz-blue to-kz-blue-dark text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transition-all">
+          Өнімдерге <ArrowRight size={16} />
+        </Link>
       </div>
     );
   }
 
+  const totalItems = items.reduce((s: number, i: CartItemData) => s + i.quantity, 0);
+
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">Себет</h1>
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 pb-24 md:pb-8 animate-fade-in-up">
+      <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white mb-8 flex items-center gap-3">
+        <ShoppingBag size={28} className="text-kz-blue" />
+        Себет
+        <span className="text-sm font-normal text-gray-400">({totalItems} тауар)</span>
+      </h1>
 
-      {error && <div className="bg-red-50 text-red-600 p-4 rounded-xl mb-6">{error}</div>}
+      {error && <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-4 rounded-xl mb-6 animate-scale-in">{error}</div>}
 
-      <div className="space-y-4">
+      {/* Items */}
+      <div className="space-y-3">
         {items.map((item: CartItemData) => (
-          <div key={item.id} className="bg-white rounded-xl p-4 flex items-center gap-4 shadow-sm">
-            <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center text-2xl">📦</div>
-            <div className="flex-1">
-              <p className="font-medium text-gray-900">Вариант #{item.variantId}</p>
-              <p className="text-sm text-gray-400">Артикул: VAR-{item.variantId}</p>
+          <div key={item.id} className="glass-card rounded-2xl p-4 flex items-center gap-4 group hover:-translate-y-0.5 transition-all duration-200">
+            <div className="w-16 h-16 bg-gradient-to-br from-kz-blue/20 to-kz-gold/10 rounded-xl flex items-center justify-center text-2xl flex-shrink-0">
+              📦
             </div>
-            <div className="flex items-center gap-2">
-              <button onClick={() => updateQty(item.id, item.quantity - 1)} className="w-8 h-8 rounded-lg border flex items-center justify-center hover:bg-gray-50 transition">−</button>
-              <span className="w-8 text-center font-medium">{item.quantity}</span>
-              <button onClick={() => updateQty(item.id, item.quantity + 1)} className="w-8 h-8 rounded-lg border flex items-center justify-center hover:bg-gray-50 transition">+</button>
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-gray-900 dark:text-white truncate">Вариант #{item.variantId}</p>
+              <p className="text-sm text-gray-400 dark:text-gray-500">SKU: VAR-{item.variantId}</p>
             </div>
-            <button onClick={() => removeItem(item.id)} className="text-red-400 hover:text-red-600 transition p-1">✕</button>
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => updateQty(item.id, item.quantity - 1)}
+                className="w-8 h-8 rounded-lg border border-gray-200 dark:border-white/10 flex items-center justify-center text-gray-500 hover:bg-gray-50 dark:hover:bg-white/5 transition"
+              >
+                <Minus size={14} />
+              </button>
+              <span className="w-8 text-center font-semibold text-gray-900 dark:text-white">{item.quantity}</span>
+              <button
+                onClick={() => updateQty(item.id, item.quantity + 1)}
+                className="w-8 h-8 rounded-lg border border-gray-200 dark:border-white/10 flex items-center justify-center text-gray-500 hover:bg-gray-50 dark:hover:bg-white/5 transition"
+              >
+                <Plus size={14} />
+              </button>
+            </div>
+            <button
+              onClick={() => removeItem(item.id)}
+              className="p-2 text-gray-300 hover:text-red-500 transition-all"
+            >
+              <X size={16} />
+            </button>
           </div>
         ))}
       </div>
 
-      <div className="mt-8 bg-white rounded-xl p-6 shadow-sm">
-        <div className="flex justify-between items-center mb-4">
-          <span className="text-gray-600">Тауарлар саны:</span>
-          <span className="font-medium">{items.reduce((s: number, i: CartItemData) => s + i.quantity, 0)}</span>
+      {/* Summary */}
+      <div className="mt-8 glass-card rounded-2xl p-6">
+        {/* Promo code */}
+        <form onSubmit={handlePromo} className="flex gap-2 mb-6">
+          <div className="relative flex-1">
+            <Tag size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Промокод (мысалы: SHOP10)"
+              value={promo}
+              onChange={e => setPromo(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-sm outline-none focus:ring-2 focus:ring-kz-blue/50 transition text-gray-900 dark:text-white placeholder-gray-400"
+            />
+          </div>
+          <button type="submit" className="px-5 py-2.5 bg-kz-blue/10 text-kz-blue font-semibold rounded-xl text-sm hover:bg-kz-blue/20 transition-all">
+            Қолдану
+          </button>
+        </form>
+        {promoApplied && (
+          <div className="flex items-center gap-2 text-green-500 text-sm mb-4 animate-fade-in">
+            <Tag size={14} /> Промокод қолданылды: -10%
+          </div>
+        )}
+
+        <div className="space-y-3">
+          <div className="flex justify-between text-gray-500 dark:text-gray-400">
+            <span>Тауарлар саны:</span>
+            <span className="font-medium text-gray-900 dark:text-white">{totalItems}</span>
+          </div>
+          <div className="flex justify-between text-gray-500 dark:text-gray-400">
+            <span>Жеткізу:</span>
+            <span className="font-medium text-green-500">Тегін</span>
+          </div>
+          {promoApplied && (
+            <div className="flex justify-between text-green-500">
+              <span>Жеңілдік:</span>
+              <span className="font-medium">-10%</span>
+            </div>
+          )}
+          <div className="border-t border-gray-100 dark:border-white/5 pt-4">
+            <div className="flex justify-between items-center">
+              <span className="text-lg font-bold text-gray-900 dark:text-white">Жалпы:</span>
+              <span className="text-2xl font-extrabold text-kz-blue animate-fade-in">{formatPrice(0)}</span>
+            </div>
+          </div>
         </div>
+
         <button
           onClick={handleCheckout}
           disabled={checkingOut}
-          className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold text-lg hover:bg-blue-700 transition disabled:opacity-50"
+          className="w-full mt-6 bg-gradient-to-r from-kz-blue to-kz-blue-dark text-white py-4 rounded-xl font-bold text-lg hover:shadow-lg hover:shadow-kz-blue/25 transition-all duration-300 disabled:opacity-50 flex items-center justify-center gap-2"
         >
-          {checkingOut ? 'Өңдеу...' : 'Сатып алу'}
+          {checkingOut ? (
+            <>
+              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              Өңдеу...
+            </>
+          ) : (
+            <>Сатып алу <ArrowRight size={18} /></>
+          )}
         </button>
       </div>
     </div>
