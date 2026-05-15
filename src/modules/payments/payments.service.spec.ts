@@ -11,7 +11,7 @@ describe('PaymentsService', () => {
 
   beforeEach(async () => {
     prismaMock = {
-      withTenant: jest.fn((storeId: number, fn: Function) => fn(prismaMock)),
+      withTenant: jest.fn((storeId: number, fn: (...args: unknown[]) => unknown) => fn(prismaMock)),
       order: {
         findUnique: jest.fn().mockResolvedValue(null),
         update: jest.fn(),
@@ -53,7 +53,11 @@ describe('PaymentsService', () => {
     });
 
     it('should throw if order status is not payment_pending', async () => {
-      prismaMock.order.findUnique.mockResolvedValue({ id: 1, status: 'delivered', totalTiyin: 10000 });
+      prismaMock.order.findUnique.mockResolvedValue({
+        id: 1,
+        status: 'delivered',
+        totalTiyin: 10000,
+      });
 
       await expect(
         service.initiatePayment(1, {
@@ -65,7 +69,11 @@ describe('PaymentsService', () => {
     });
 
     it('should return existing payment for same idempotency key', async () => {
-      prismaMock.order.findUnique.mockResolvedValue({ id: 1, status: 'payment_pending', totalTiyin: 10000 });
+      prismaMock.order.findUnique.mockResolvedValue({
+        id: 1,
+        status: 'payment_pending',
+        totalTiyin: 10000,
+      });
       const existingPayment = { id: 1, status: 'pending', amountTiyin: 10000 };
       prismaMock.payment.findUnique.mockResolvedValue(existingPayment);
 
@@ -80,7 +88,11 @@ describe('PaymentsService', () => {
     });
 
     it('should create payment and confirm order for manual provider', async () => {
-      prismaMock.order.findUnique.mockResolvedValue({ id: 1, status: 'payment_pending', totalTiyin: 50000 });
+      prismaMock.order.findUnique.mockResolvedValue({
+        id: 1,
+        status: 'payment_pending',
+        totalTiyin: 50000,
+      });
       prismaMock.payment.findUnique.mockResolvedValue(null);
       const mockPayment = { id: 1, status: 'succeeded', amountTiyin: 50000 };
       prismaMock.payment.create.mockResolvedValue(mockPayment);
@@ -97,7 +109,11 @@ describe('PaymentsService', () => {
     });
 
     it('should return payment URL for gateway providers', async () => {
-      prismaMock.order.findUnique.mockResolvedValue({ id: 1, status: 'payment_pending', totalTiyin: 50000 });
+      prismaMock.order.findUnique.mockResolvedValue({
+        id: 1,
+        status: 'payment_pending',
+        totalTiyin: 50000,
+      });
       prismaMock.payment.findUnique.mockResolvedValue(null);
       prismaMock.payment.create.mockResolvedValue({ id: 1, status: 'pending', amountTiyin: 50000 });
 
@@ -115,25 +131,33 @@ describe('PaymentsService', () => {
     it('should throw if payment not found', async () => {
       prismaMock.payment.findUnique.mockResolvedValue(null);
 
-      await expect(
-        service.refund(1, 999, { amountTiyin: 5000 }),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.refund(1, 999, { amountTiyin: 5000 })).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw if payment not succeeded', async () => {
-      prismaMock.payment.findUnique.mockResolvedValue({ id: 1, status: 'pending', amountTiyin: 10000 });
+      prismaMock.payment.findUnique.mockResolvedValue({
+        id: 1,
+        status: 'pending',
+        amountTiyin: 10000,
+      });
 
-      await expect(
-        service.refund(1, 1, { amountTiyin: 5000 }),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.refund(1, 1, { amountTiyin: 5000 })).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should throw if refund exceeds payment amount', async () => {
-      prismaMock.payment.findUnique.mockResolvedValue({ id: 1, status: 'succeeded', amountTiyin: 10000 });
+      prismaMock.payment.findUnique.mockResolvedValue({
+        id: 1,
+        status: 'succeeded',
+        amountTiyin: 10000,
+      });
 
-      await expect(
-        service.refund(1, 1, { amountTiyin: 20000 }),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.refund(1, 1, { amountTiyin: 20000 })).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 });

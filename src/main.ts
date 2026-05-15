@@ -64,7 +64,12 @@ async function bootstrap() {
     )
     .setVersion('1.0')
     .addBearerAuth(
-      { type: 'http', scheme: 'bearer', bearerFormat: 'JWT', description: 'Paste JWT access token (without "Bearer " prefix)' },
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        description: 'Paste JWT access token (without "Bearer " prefix)',
+      },
       'access-token',
     )
     .addTag('Authentication', 'Merchant registration, login, token management')
@@ -104,11 +109,14 @@ async function bootstrap() {
 
   // Auto-start BullMQ workers in-process
   try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     require('./workers/processors/email.processor');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     require('./workers/processors/abandoned-cart.processor');
     logger.log('⚡ BullMQ workers auto-started');
-  } catch (err: any) {
-    logger.warn(`Worker auto-start note: ${err.message}`);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    logger.warn(`Worker auto-start note: ${msg}`);
     logger.log('💡 Run manually: pnpm run worker:start');
   }
 }

@@ -13,7 +13,7 @@ describe('OrdersService', () => {
 
   beforeEach(async () => {
     prismaMock = {
-      withTenant: jest.fn((storeId: number, fn: Function) => fn(prismaMock)),
+      withTenant: jest.fn((storeId: number, fn: (...args: unknown[]) => unknown) => fn(prismaMock)),
       order: {
         findMany: jest.fn().mockResolvedValue([]),
         findUnique: jest.fn().mockResolvedValue(null),
@@ -67,17 +67,17 @@ describe('OrdersService', () => {
     it('should throw if no active cart', async () => {
       prismaMock.cart.findFirst.mockResolvedValue(null);
 
-      await expect(
-        service.checkout(1, 1, { shippingMethod: 'self_pickup' }),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.checkout(1, 1, { shippingMethod: 'self_pickup' })).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should throw if cart is empty', async () => {
       prismaMock.cart.findFirst.mockResolvedValue({ id: 1, items: [] });
 
-      await expect(
-        service.checkout(1, 1, { shippingMethod: 'self_pickup' }),
-      ).rejects.toThrow('No active cart or cart is empty');
+      await expect(service.checkout(1, 1, { shippingMethod: 'self_pickup' })).rejects.toThrow(
+        'No active cart or cart is empty',
+      );
     });
 
     it('should create order with correct totals', async () => {
@@ -102,8 +102,20 @@ describe('OrdersService', () => {
         orderNumber: 'SB-123-456',
         totalTiyin: 400000, // 100000*2 + 200000*1
         items: [
-          { productTitle: 'Product 1', variantSku: 'SKU-1', quantity: 2, unitPriceTiyin: 100000, totalPriceTiyin: 200000 },
-          { productTitle: 'Product 3', variantSku: 'SKU-3', quantity: 1, unitPriceTiyin: 200000, totalPriceTiyin: 200000 },
+          {
+            productTitle: 'Product 1',
+            variantSku: 'SKU-1',
+            quantity: 2,
+            unitPriceTiyin: 100000,
+            totalPriceTiyin: 200000,
+          },
+          {
+            productTitle: 'Product 3',
+            variantSku: 'SKU-3',
+            quantity: 1,
+            unitPriceTiyin: 200000,
+            totalPriceTiyin: 200000,
+          },
         ],
       };
       prismaMock.order.create.mockResolvedValue(mockOrder);
@@ -153,17 +165,17 @@ describe('OrdersService', () => {
     it('should throw if order not found', async () => {
       prismaMock.order.findUnique.mockResolvedValue(null);
 
-      await expect(
-        service.updateOrderStatus(1, 999, 'confirmed'),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.updateOrderStatus(1, 999, 'confirmed')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw for invalid transition', async () => {
       prismaMock.order.findUnique.mockResolvedValue({ id: 1, status: 'delivered' });
 
-      await expect(
-        service.updateOrderStatus(1, 1, 'confirmed'),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.updateOrderStatus(1, 1, 'confirmed')).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should allow valid transition', async () => {
