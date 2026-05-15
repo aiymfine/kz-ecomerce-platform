@@ -101,6 +101,16 @@ async function bootstrap() {
   await app.listen(port);
   logger.log(`🚀 ShopBuilder API running on http://localhost:${port}`);
   logger.log(`📚 API Docs available at http://localhost:${port}/docs`);
+
+  // Auto-start BullMQ workers in-process
+  try {
+    require('./workers/processors/email.processor');
+    require('./workers/processors/abandoned-cart.processor');
+    logger.log('⚡ BullMQ workers auto-started');
+  } catch (err: any) {
+    logger.warn(`Worker auto-start note: ${err.message}`);
+    logger.log('💡 Run manually: pnpm run worker:start');
+  }
 }
 
 function jsonToYaml(obj: any, indent: number = 0): string {

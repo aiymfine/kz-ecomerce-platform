@@ -1,4 +1,4 @@
-import { Global, Module, OnModuleInit } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { QueueService } from './queue.service';
@@ -31,8 +31,6 @@ import { SchedulerService } from './scheduler.service';
         };
       },
     }),
-    // Register queues only (no path-based processors).
-    // Standalone BullMQ workers run separately via: pnpm run worker:start
     BullModule.registerQueue(
       { name: 'emails' },
       { name: 'abandoned-carts' },
