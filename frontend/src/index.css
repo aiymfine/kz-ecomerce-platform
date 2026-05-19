@@ -19,56 +19,38 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* ==================== INPUT VISIBILITY FIX ==================== */
-/* OS dark mode causes Tailwind dark: classes to activate even in light theme.
-   These rules force correct text color regardless. */
+/* Light mode background is handled by Layout.tsx bg-[#EFF4FF] dark:bg-[#0a0a0f] */
+/* DO NOT add body { background-color: ... } here — it causes dark/light mode mismatch */
 
-html:not(.dark) input,
-html:not(.dark) textarea,
-html:not(.dark) select {
+/* ==================== INPUT TEXT VISIBILITY ==================== */
+/* This is the ONLY place input colors are controlled.
+   Tailwind dark:text-white on inputs is overridden here.
+   Light mode: dark text on light blue bg
+   Dark mode: light text on dark bg */
+
+input, textarea, select {
   color: #1a1a2e !important;
   background-color: #eef2ff !important;
   caret-color: #1a1a2e !important;
 }
 
-html:not(.dark) input::placeholder,
-html:not(.dark) textarea::placeholder {
+input::placeholder, textarea::placeholder {
   color: #8892a8 !important;
   opacity: 1 !important;
 }
 
-.dark input,
-.dark textarea,
-.dark select {
+.dark input, .dark textarea, .dark select {
   color: #f1f5f9 !important;
   background-color: rgba(255, 255, 255, 0.05) !important;
   caret-color: #f1f5f9 !important;
 }
 
-.dark input::placeholder,
-.dark textarea::placeholder {
+.dark input::placeholder, .dark textarea::placeholder {
   color: #64748b !important;
   opacity: 1 !important;
 }
 
-/* ==================== BASE ==================== */
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-/* Light mode base — brighter, more blue tint */
-body {
-  background-color: #EFF4FF;
-  color: #0f172a;
-}
-
-/* Dark mode */
-.dark body, .dark {
-  background-color: #0a0a0f;
-  color: #e5e7eb;
-}
+/* ==================== ANIMATIONS ==================== */
 @keyframes shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
@@ -286,10 +268,6 @@ body {
 /* Premium input focus ring — brighter blue */
 .input-premium {
   transition: all 0.2s ease;
-  color: #1a1a2e !important;
-}
-.dark .input-premium {
-  color: #f1f5f9 !important;
 }
 .input-premium:focus {
   border-color: #0066CC;

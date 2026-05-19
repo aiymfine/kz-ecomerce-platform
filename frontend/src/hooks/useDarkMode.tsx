@@ -5,7 +5,8 @@ export function useDarkMode() {
     try {
       const saved = localStorage.getItem('darkMode');
       if (saved !== null) return saved === 'true';
-      return window.matchMedia('(prefers-color-scheme: dark)').matches;
+      // Default to LIGHT mode — user must explicitly toggle to dark
+      return false;
     } catch { return false; }
   });
 
