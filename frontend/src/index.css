@@ -25,10 +25,18 @@ body {
   color: #0f172a;
 }
 
+/* Force all inputs to dark text in light mode */
+input, textarea, select {
+  color: #111827;
+}
+
 /* Dark mode */
 .dark body, .dark {
   background-color: #0a0a0f;
   color: #e5e7eb;
+}
+.dark input, .dark textarea, .dark select {
+  color: #f9fafb;
 }
 
 /* ==================== ANIMATIONS ==================== */
@@ -249,6 +257,10 @@ body {
 /* Premium input focus ring — brighter blue */
 .input-premium {
   transition: all 0.2s ease;
+  color: #111827;
+}
+.dark .input-premium {
+  color: #f9fafb;
 }
 .input-premium:focus {
   border-color: #0066CC;
