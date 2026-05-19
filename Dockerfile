@@ -11,7 +11,7 @@ RUN npm run build 2>/dev/null || mkdir -p dist
 FROM node:22-slim AS backend-build
 RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN npm install -g pnpm@9
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 COPY . .
@@ -23,14 +23,14 @@ FROM node:22-slim AS runner
 RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 
-# Copy built JS
+# Copy built JS + prisma schema
 COPY --from=backend-build /app/dist ./dist
 COPY --from=backend-build /app/prisma ./prisma
 COPY --from=backend-build /app/package.json ./
 COPY --from=backend-build /app/pnpm-lock.yaml ./
 
 # Install production deps fresh (avoids pnpm symlink breakage from COPY)
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN npm install -g pnpm@9
 RUN pnpm install --prod --frozen-lockfile
 RUN npx prisma generate
 
