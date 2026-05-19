@@ -1,5 +1,5 @@
 # Stage 1: Build frontend
-FROM node:20-slim AS frontend-build
+FROM node:22-slim AS frontend-build
 WORKDIR /app
 RUN corepack enable && corepack prepare npm@latest --activate
 COPY frontend/package.json frontend/package-lock.json ./
@@ -8,7 +8,7 @@ COPY frontend/ .
 RUN npm run build 2>/dev/null || mkdir -p dist
 
 # Stage 2: Build backend
-FROM node:20-slim AS backend-build
+FROM node:22-slim AS backend-build
 RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@latest --activate
@@ -19,7 +19,7 @@ RUN npx prisma generate
 RUN pnpm run build
 
 # Stage 3: Production
-FROM node:20-slim AS runner
+FROM node:22-slim AS runner
 RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 
