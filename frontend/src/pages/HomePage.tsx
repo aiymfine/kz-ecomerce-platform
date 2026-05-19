@@ -2,8 +2,8 @@ import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import type { Product } from '../types';
 import { getProducts } from '../api/storefront';
-import { formatPrice } from '../types';
-import { ArrowRight, Star, TrendingUp, Shield, Truck, Headphones, Heart } from 'lucide-react';
+import { formatPrice, getProductEmoji, getPlaceholderGradient, isDigitalProduct } from '../types';
+import { ArrowRight, Star, TrendingUp, Shield, Truck, Headphones, Heart, Download } from 'lucide-react';
 import { useLang } from '../hooks/useLang';
 
 export function HomePage() {
@@ -26,12 +26,12 @@ export function HomePage() {
     { bg: 'from-purple-500 to-pink-500', emoji: '🎧', badge: t('badge_hit') },
     { bg: 'from-emerald-500 to-teal-500', emoji: '👟', badge: undefined },
     { bg: 'from-orange-500 to-amber-500', emoji: '🎒', badge: '-20%' },
-    { bg: 'from-rose-500 to-pink-500', emoji: '📱', badge: t('badge_new') },
-    { bg: 'from-violet-500 to-indigo-500', emoji: '🎧', badge: undefined },
+    { bg: 'from-violet-500 to-indigo-500', emoji: '🪟', badge: t('badge_new') },
+    { bg: 'from-cyan-500 to-blue-600', emoji: '🎮', badge: undefined },
   ];
 
-  const fakeRatings = [4.8, 4.9, 4.7, 4.5, 4.6, 4.8];
-  const fakeReviews = [124, 89, 203, 56, 178, 92];
+  const fakeRatings = [4.8, 4.9, 4.7, 4.5, 4.6, 4.8, 4.3, 4.9, 4.4, 4.7];
+  const fakeReviews = [124, 89, 203, 56, 178, 92, 67, 145, 34, 111];
 
   return (
     <div>
@@ -153,6 +153,9 @@ export function HomePage() {
               const price = product.variants?.[0]?.priceTiyin || 0;
               const rating = fakeRatings[idx % fakeRatings.length];
               const reviews = fakeReviews[idx % fakeReviews.length];
+              const emoji = getProductEmoji(product);
+              const gradient = getPlaceholderGradient(product);
+              const digital = isDigitalProduct(product);
               return (
                 <Link
                   key={product.id}
@@ -168,16 +171,22 @@ export function HomePage() {
                   </button>
 
                   {/* Badge */}
-                  {placeholder.badge && (
-                    <div className="absolute top-3 left-3 z-10 bg-kz-gold text-gray-900 text-xs font-bold px-2.5 py-1 rounded-lg shadow-md">
-                      {placeholder.badge}
+                  {(digital ? t('digital_label') : placeholder.badge) && (
+                    <div className={`absolute top-3 left-3 z-10 ${digital ? 'bg-violet-500' : 'bg-kz-gold text-gray-900'} text-white text-xs font-bold px-2.5 py-1 rounded-lg shadow-md flex items-center gap-1`}>
+                      {digital && <Download size={10} />}
+                      {digital ? t('digital_label') : placeholder.badge}
                     </div>
                   )}
 
                   {/* Image */}
-                  <div className={`h-52 bg-gradient-to-br ${placeholder.bg} flex items-center justify-center relative overflow-hidden`}>
-                    <span className="text-6xl group-hover:scale-110 transition-transform duration-500">{placeholder.emoji}</span>
+                  <div className={`h-52 bg-gradient-to-br ${gradient} flex items-center justify-center relative overflow-hidden`}>
+                    <span className="text-6xl group-hover:scale-110 transition-transform duration-500">{emoji}</span>
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300" />
+                    {digital && (
+                      <div className="absolute bottom-2 right-2 bg-white/20 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-md">
+                        DIGITAL
+                      </div>
+                    )}
                   </div>
 
                   {/* Info */}

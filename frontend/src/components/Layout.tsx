@@ -28,7 +28,7 @@ function MobileBottomNav() {
     { to: '/', icon: Home, label: t('nav_home') },
     { to: '/products', icon: Search, label: t('nav_search') },
     { to: '/cart', icon: ShoppingCart, label: t('nav_cart'), badge: itemCount },
-    { to: '#profile', icon: User, label: t('nav_profile') },
+    { to: '/profile', icon: User, label: t('nav_profile') },
   ];
 
   return (

@@ -7,7 +7,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../components/Toast';
 import { useLang } from '../hooks/useLang';
 import { formatPrice } from '../types';
-import { Minus, Plus, X, Tag, ShoppingBag, Lock, ArrowRight } from 'lucide-react';
+import { Minus, Plus, X, Tag, ShoppingBag, Lock, ArrowRight, Download } from 'lucide-react';
 
 export function CartPage() {
   const { t } = useLang();
@@ -98,6 +98,22 @@ export function CartPage() {
 
   const totalItems = items.reduce((s: number, i: CartItemData) => s + i.quantity, 0);
 
+  // Calculate total from enriched variant data
+  const subtotal = items.reduce((sum: number, item: CartItemData) => {
+    const price = item.variant?.priceTiyin || 0;
+    return sum + price * item.quantity;
+  }, 0);
+
+  const discount = promoApplied ? Math.round(subtotal * 0.1) : 0;
+  const total = subtotal - discount;
+
+  const hasDigital = items.some((item: CartItemData) => {
+    // Rough check — if variant sku contains software-related keywords
+    const sku = item.variant?.sku?.toLowerCase() || '';
+    return sku.includes('windows') || sku.includes('kaspersly') || sku.includes('office')
+      || sku.includes('steam') || sku.includes('adobe') || sku.includes('photoshop');
+  });
+
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 pb-24 md:pb-8 animate-fade-in-up">
       <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white mb-8 flex items-center gap-3">
@@ -108,40 +124,63 @@ export function CartPage() {
 
       {error && <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-4 rounded-xl mb-6 animate-scale-in">{error}</div>}
 
+      {/* Digital products notice */}
+      {hasDigital && (
+        <div className="bg-violet-50 dark:bg-violet-900/20 text-violet-700 dark:text-violet-300 p-4 rounded-xl mb-6 flex items-center gap-3">
+          <Download size={18} />
+          <span className="text-sm font-medium">{t('cart_digital_notice')}</span>
+        </div>
+      )}
+
       {/* Items */}
       <div className="space-y-3">
-        {items.map((item: CartItemData) => (
-          <div key={item.id} className="bg-white dark:bg-[#14141F]/80 rounded-2xl p-4 flex items-center gap-4 border border-gray-100 dark:border-white/5 card-hover">
-            <div className="w-16 h-16 bg-gradient-to-br from-kz-blue/20 to-kz-gold/10 rounded-xl flex items-center justify-center text-2xl flex-shrink-0">
-              📦
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-semibold text-gray-900 dark:text-white truncate">Вариант #{item.variantId}</p>
-              <p className="text-sm text-gray-400 dark:text-gray-500">SKU: VAR-{item.variantId}</p>
-            </div>
-            <div className="flex items-center gap-1.5">
+        {items.map((item: CartItemData) => {
+          const productTitle = item.variant?.product?.title || `${t('variant')} #${item.variantId}`;
+          const price = item.variant?.priceTiyin || 0;
+          const lineTotal = price * item.quantity;
+          const sku = item.variant?.sku || '';
+          const isDigitalItem = ['windows', 'kaspersly', 'office', 'steam', 'adobe', 'photoshop'].some(k => sku.includes(k));
+
+          return (
+            <div key={item.id} className="bg-white dark:bg-[#14141F]/80 rounded-2xl p-4 flex items-center gap-4 border border-gray-100 dark:border-white/5 card-hover">
+              <div className={`w-16 h-16 bg-gradient-to-br ${isDigitalItem ? 'from-violet-500/20 to-purple-500/10' : 'from-kz-blue/20 to-kz-gold/10'} rounded-xl flex items-center justify-center text-2xl flex-shrink-0`}>
+                {isDigitalItem ? '💾' : '📦'}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-gray-900 dark:text-white truncate">{productTitle}</p>
+                <p className="text-sm text-gray-400 dark:text-gray-500">
+                  SKU: {sku || `VAR-${item.variantId}`}
+                  {isDigitalItem && <span className="ml-2 text-violet-400 text-xs font-medium">📱 {t('digital_label')}</span>}
+                </p>
+                {price > 0 && <p className="text-sm font-semibold text-kz-blue mt-0.5">{formatPrice(price)}</p>}
+              </div>
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => updateQty(item.id, item.quantity - 1)}
+                  className="w-8 h-8 rounded-lg border border-gray-200 dark:border-white/10 flex items-center justify-center text-gray-500 hover:bg-gray-50 dark:hover:bg-white/5 transition"
+                >
+                  <Minus size={14} />
+                </button>
+                <span className="w-8 text-center font-semibold text-gray-900 dark:text-white">{item.quantity}</span>
+                <button
+                  onClick={() => updateQty(item.id, item.quantity + 1)}
+                  className="w-8 h-8 rounded-lg border border-gray-200 dark:border-white/10 flex items-center justify-center text-gray-500 hover:bg-gray-50 dark:hover:bg-white/5 transition"
+                >
+                  <Plus size={14} />
+                </button>
+              </div>
+              <div className="text-right min-w-[80px]">
+                <p className="font-bold text-gray-900 dark:text-white">{formatPrice(lineTotal)}</p>
+              </div>
               <button
-                onClick={() => updateQty(item.id, item.quantity - 1)}
-                className="w-8 h-8 rounded-lg border border-gray-200 dark:border-white/10 flex items-center justify-center text-gray-500 hover:bg-gray-50 dark:hover:bg-white/5 transition"
+                onClick={() => removeItem(item.id)}
+                className="p-2 text-gray-300 hover:text-red-500 transition-all"
               >
-                <Minus size={14} />
-              </button>
-              <span className="w-8 text-center font-semibold text-gray-900 dark:text-white">{item.quantity}</span>
-              <button
-                onClick={() => updateQty(item.id, item.quantity + 1)}
-                className="w-8 h-8 rounded-lg border border-gray-200 dark:border-white/10 flex items-center justify-center text-gray-500 hover:bg-gray-50 dark:hover:bg-white/5 transition"
-              >
-                <Plus size={14} />
+                <X size={16} />
               </button>
             </div>
-            <button
-              onClick={() => removeItem(item.id)}
-              className="p-2 text-gray-300 hover:text-red-500 transition-all"
-            >
-              <X size={16} />
-            </button>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Summary */}
@@ -174,19 +213,23 @@ export function CartPage() {
             <span className="font-medium text-gray-900 dark:text-white">{totalItems}</span>
           </div>
           <div className="flex justify-between text-gray-500 dark:text-gray-400">
+            <span>{t('cart_subtotal')}</span>
+            <span className="font-medium text-gray-900 dark:text-white">{formatPrice(subtotal)}</span>
+          </div>
+          <div className="flex justify-between text-gray-500 dark:text-gray-400">
             <span>{t('cart_shipping')}</span>
             <span className="font-medium text-green-500">{t('cart_shipping_free')}</span>
           </div>
           {promoApplied && (
             <div className="flex justify-between text-green-500">
               <span>{t('cart_discount')}</span>
-              <span className="font-medium">-10%</span>
+              <span className="font-medium">-{formatPrice(discount)}</span>
             </div>
           )}
           <div className="border-t border-gray-100 dark:border-white/5 pt-4">
             <div className="flex justify-between items-center">
               <span className="text-lg font-bold text-gray-900 dark:text-white">{t('cart_total')}</span>
-              <span className="text-2xl font-extrabold text-kz-blue animate-fade-in">{formatPrice(0)}</span>
+              <span className="text-2xl font-extrabold text-kz-blue animate-fade-in">{formatPrice(total)}</span>
             </div>
           </div>
         </div>

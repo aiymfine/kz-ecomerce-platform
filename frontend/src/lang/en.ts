@@ -38,11 +38,25 @@ export const en: Record<string, string> = {
 
   // Product cards
   btn_add_to_cart: 'Add to Cart',
+  btn_buy_digital: 'Buy Now',
   btn_added: '✓ Added!',
   badge_new: 'New',
   badge_hit: 'Hit',
   reviews_count: 'reviews',
   product_found: 'products found',
+
+  // Categories
+  category_all: 'All',
+  category_physical: 'Physical',
+  category_digital: 'Digital',
+
+  // Digital products
+  digital_label: 'Digital',
+  digital_product: 'Digital Product',
+  digital_delivery_title: 'Digital Delivery',
+  digital_instant_delivery: 'Instant delivery after payment',
+  digital_email_delivery: 'License key sent to your email',
+  digital_guarantee: 'Official guarantee from manufacturer',
 
   // Products page
   products_title: 'Products',
@@ -60,6 +74,7 @@ export const en: Record<string, string> = {
   back_to_catalog: 'Back to Catalog',
   color_label: 'Color',
   size_label: 'Size',
+  variant_label: 'Variant',
   quantity_label: 'Quantity',
   login_to_add: 'Login to add to cart',
   tab_description: 'Description',
@@ -74,6 +89,11 @@ export const en: Record<string, string> = {
   detail_free_shipping: 'Free Shipping',
   detail_1yr_warranty: '1 year warranty',
   detail_14day_return: '14-day returns',
+  detail_type: 'Type',
+  detail_type_digital: 'Digital (download)',
+  detail_type_physical: 'Physical (delivery)',
+  detail_digital_warranty: 'Lifetime license',
+  detail_digital_delivery: 'Instant (email)',
   product_not_found: 'Product not found',
 
   // Cart
@@ -83,6 +103,7 @@ export const en: Record<string, string> = {
   cart_login_required: 'Login to view your cart',
   cart_back_to_products: 'Back to Products →',
   cart_go_to_products: 'Products',
+  cart_subtotal: 'Subtotal:',
   promo_placeholder: 'Promo code (e.g. SHOP10)',
   promo_apply: 'Apply',
   promo_applied: 'Promo code applied! -10%',
@@ -97,6 +118,8 @@ export const en: Record<string, string> = {
   cart_processing: 'Processing...',
   cart_item_removed: 'Item removed',
   cart_checkout_error: 'Checkout failed',
+  cart_digital_notice: 'Your cart contains digital products. License keys will be sent to your email after purchase.',
+  variant: 'Variant',
 
   // Order confirmation
   order_confirmed: 'Order Confirmed!',
@@ -109,6 +132,13 @@ export const en: Record<string, string> = {
   order_not_found: 'Order not found',
   order_back_to_products: 'Back to Products →',
   order_shop_more: 'Shop More',
+
+  // Profile
+  profile_login_required: 'Login to view your profile',
+  profile_my_orders: 'My Orders',
+  profile_no_orders: 'No orders yet',
+  profile_orders_count: 'orders',
+  back_to_orders: 'Back to orders',
 
   // Auth
   auth_login: 'Login',

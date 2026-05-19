@@ -33,7 +33,6 @@ import { JwtPayload } from '../../common/guards/jwt-auth.guard';
 @ApiBearerAuth()
 @Controller('stores/:storeId/orders')
 @UseGuards(JwtAuthGuard, RolesGuard, StoreOwnershipGuard)
-@Roles('merchant')
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
@@ -56,14 +55,16 @@ export class OrdersController {
   }
 
   @Get()
+  @Roles('merchant', 'customer')
   @ApiOperation({ summary: 'List orders' })
   async listOrders(
     @Param('storeId', ParseIntPipe) storeId: number,
+    @CurrentUser() user: JwtPayload,
     @Query() query: Record<string, any>,
   ) {
     const parsed = orderFilterSchema.safeParse(query);
     const params = parsed.success ? parsed.data : { limit: 20, sort: 'desc' as const };
-    return this.ordersService.listOrders(storeId, params);
+    return this.ordersService.listOrders(storeId, params, user);
   }
 
   @Get(':orderNumber')

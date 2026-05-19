@@ -5,6 +5,7 @@ import { ProductsPage } from './pages/ProductsPage';
 import { ProductDetailPage } from './pages/ProductDetailPage';
 import { CartPage } from './pages/CartPage';
 import { OrderConfirmationPage } from './pages/OrderConfirmationPage';
+import { ProfilePage } from './pages/ProfilePage';
 import { AuthProvider } from './hooks/useAuth';
 import { CartProvider } from './hooks/useCart';
 import { ToastProvider } from './components/Toast';
@@ -46,6 +47,7 @@ export default function App() {
                       <Route path="/products/:slug" element={<ProductDetailPage />} />
                       <Route path="/cart" element={<CartPage />} />
                       <Route path="/order-confirmation" element={<OrderConfirmationPage />} />
+                      <Route path="/profile" element={<ProfilePage />} />
                     </Routes>
                   </PageTransition>
                 </Layout>

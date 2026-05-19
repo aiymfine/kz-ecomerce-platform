@@ -200,7 +200,8 @@ export class StorefrontService {
         orderBy: { createdAt: params.sort === 'asc' ? 'asc' : 'desc' },
         include: {
           images: { orderBy: { position: 'asc' }, take: 1 },
-          variants: { where: { isActive: true }, take: 1, orderBy: { position: 'asc' } },
+          variants: { where: { isActive: true }, orderBy: { position: 'asc' } },
+          categories: { include: { category: true } },
         },
       }),
     );

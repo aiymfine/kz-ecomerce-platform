@@ -38,11 +38,25 @@ export const kk: Record<string, string> = {
 
   // Product cards
   btn_add_to_cart: 'Себетке қосу',
+  btn_buy_digital: 'Қазір сатып алу',
   btn_added: '✓ Қосылды!',
   badge_new: 'Жаңа',
   badge_hit: 'Хит',
   reviews_count: 'пікір',
   product_found: 'тауар табылды',
+
+  // Categories
+  category_all: 'Барлығы',
+  category_physical: 'Физикалық',
+  category_digital: 'Цифрлық',
+
+  // Digital products
+  digital_label: 'Цифрлық',
+  digital_product: 'Цифрлық өнім',
+  digital_delivery_title: 'Цифрлық жеткізу',
+  digital_instant_delivery: 'Төлемнен кейін лезде жеткізу',
+  digital_email_delivery: 'Лицензия кілті email-ға жіберіледі',
+  digital_guarantee: 'Өндірушіден ресми кепілдік',
 
   // Products page
   products_title: 'Өнімдер',
@@ -60,6 +74,7 @@ export const kk: Record<string, string> = {
   back_to_catalog: 'Каталогқа оралу',
   color_label: 'Түс',
   size_label: 'Өлшем',
+  variant_label: 'Вариант',
   quantity_label: 'Саны',
   login_to_add: 'Себетке қосу үшін кіріңіз',
   tab_description: 'Сипаттамасы',
@@ -74,6 +89,11 @@ export const kk: Record<string, string> = {
   detail_free_shipping: 'Тегін жеткізу',
   detail_1yr_warranty: '1 жыл кепілдік',
   detail_14day_return: '14 күнде қайтару',
+  detail_type: 'Түрі',
+  detail_type_digital: 'Цифрлық (жүктеу)',
+  detail_type_physical: 'Физикалық (жеткізу)',
+  detail_digital_warranty: 'Мәңгі лицензия',
+  detail_digital_delivery: 'Лезде (email)',
   product_not_found: 'Өнім табылмады',
 
   // Cart
@@ -83,6 +103,7 @@ export const kk: Record<string, string> = {
   cart_login_required: 'Себетті көру үшін кіріңіз',
   cart_back_to_products: 'Өнімдерге оралу →',
   cart_go_to_products: 'Өнімдерге',
+  cart_subtotal: 'Барлығы:',
   promo_placeholder: 'Промокод (мысалы: SHOP10)',
   promo_apply: 'Қолдану',
   promo_applied: 'Промокод қолданылды! -10%',
@@ -97,6 +118,8 @@ export const kk: Record<string, string> = {
   cart_processing: 'Өңдеу...',
   cart_item_removed: 'Тауар жойылды',
   cart_checkout_error: 'Сатып алу сәтсіз аяқталды',
+  cart_digital_notice: 'Себетіңізде цифрлық өнімдер бар. Лицензия кілттері сатып алғаннан кейін email-ға жіберіледі.',
+  variant: 'Вариант',
 
   // Order confirmation
   order_confirmed: 'Тапсырыс қабылданды!',
@@ -109,6 +132,13 @@ export const kk: Record<string, string> = {
   order_not_found: 'Тапсырыс табылмады',
   order_back_to_products: 'Өнімдерге оралу →',
   order_shop_more: 'Тағы сатып алу',
+
+  // Profile
+  profile_login_required: 'Профильді көру үшін кіріңіз',
+  profile_my_orders: 'Менің тапсырыстарым',
+  profile_no_orders: 'Әлі тапсырыс жоқ',
+  profile_orders_count: 'тапсырыс',
+  back_to_orders: 'Тапсырыстарға оралу',
 
   // Auth
   auth_login: 'Кіру',

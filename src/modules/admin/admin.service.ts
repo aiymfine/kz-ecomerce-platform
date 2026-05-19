@@ -377,7 +377,7 @@ export class AdminService {
     if (params.resourceType) where.resourceType = params.resourceType;
     if (params.level) where.level = params.level;
 
-    const items = await this.prisma.platformAuditLog.findMany({
+    const items = await this.prisma.storeAuditLog.findMany({
       where,
       take: params.limit + 1,
       cursor: params.cursor ? { id: parseInt(params.cursor) } : undefined,

@@ -1,50 +1,55 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import type { Product } from '../types';
-import { getProducts } from '../api/storefront';
-import { formatPrice } from '../types';
+import type { Product, Category } from '../types';
+import { getProducts, getCategories } from '../api/storefront';
+import { formatPrice, getProductEmoji, getPlaceholderGradient, isDigitalProduct } from '../types';
 import { useCartContext } from '../hooks/useCart';
 import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../components/Toast';
 import { useLang } from '../hooks/useLang';
-import { Search, Star, Heart, ShoppingCart, SlidersHorizontal } from 'lucide-react';
-
-const placeholders = [
-  { bg: 'from-blue-500 to-cyan-500', emoji: '📱' },
-  { bg: 'from-purple-500 to-pink-500', emoji: '🎧' },
-  { bg: 'from-emerald-500 to-teal-500', emoji: '👟' },
-  { bg: 'from-orange-500 to-amber-500', emoji: '🎒' },
-  { bg: 'from-rose-500 to-pink-500', emoji: '📱' },
-  { bg: 'from-violet-500 to-indigo-500', emoji: '🎧' },
-];
-
-const fakeRatings = [4.8, 4.9, 4.7, 4.5, 4.6, 4.8, 4.3, 4.9];
+import { Search, Star, Heart, ShoppingCart, SlidersHorizontal, Download, Package } from 'lucide-react';
 
 export function ProductsPage() {
   const { t } = useLang();
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState<'default' | 'price-asc' | 'price-desc' | 'name'>('default');
+  const [activeCategory, setActiveCategory] = useState<number | null>(null);
+  const [productType, setProductType] = useState<'all' | 'physical' | 'digital'>('all');
   const { addItem } = useCartContext();
   const { isAuthenticated } = useAuth();
   const { addToast } = useToast();
 
-  const badges = [t('badge_new'), t('badge_hit'), '-20%', t('badge_new'), undefined, '-10%'];
+  const badges = [t('badge_new'), t('badge_hit'), '-20%', t('badge_new'), undefined, '-10%', '🎮', '🛡️', '📋', '🎨'];
 
   useEffect(() => {
-    getProducts()
-      .then((d: any) => {
+    setLoading(true);
+    Promise.all([
+      getProducts().then((d: any) => {
         const items = d?.data || d || [];
         setProducts(Array.isArray(items) ? items : []);
-      }).finally(() => setLoading(false));
+      }),
+      getCategories().then((d: any) => {
+        const cats = d || [];
+        setCategories(Array.isArray(cats) ? cats : []);
+      }).catch(() => {}),
+    ]).finally(() => setLoading(false));
   }, []);
 
-  const filtered = products.filter(p =>
-    p.title.toLowerCase().includes(search.toLowerCase()) ||
-    p.description?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = products.filter(p => {
+    // Search filter
+    const matchSearch = p.title.toLowerCase().includes(search.toLowerCase()) ||
+      p.description?.toLowerCase().includes(search.toLowerCase());
+    // Type filter
+    const digital = isDigitalProduct(p);
+    const matchType = productType === 'all' || (productType === 'digital' && digital) || (productType === 'physical' && !digital);
+    // Category filter
+    const matchCategory = activeCategory === null || p.categories?.some(c => c.category?.id === activeCategory);
+    return matchSearch && matchType && matchCategory;
+  });
 
   const sorted = [...filtered].sort((a, b) => {
     if (sortBy === 'price-asc') return (a.variants?.[0]?.priceTiyin || 0) - (b.variants?.[0]?.priceTiyin || 0);
@@ -61,7 +66,7 @@ export function ProductsPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
           <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white">{t('products_title')}</h1>
           <p className="text-gray-500 dark:text-gray-400 mt-1">{filtered.length} {t('product_found')}</p>
@@ -84,6 +89,53 @@ export function ProductsPage() {
             <SlidersHorizontal size={18} />
           </button>
         </div>
+      </div>
+
+      {/* Category pills */}
+      <div className="flex flex-wrap gap-2 mb-6">
+        <button
+          onClick={() => { setActiveCategory(null); setProductType('all'); }}
+          className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+            activeCategory === null && productType === 'all'
+              ? 'bg-kz-blue text-white shadow-md'
+              : 'bg-white dark:bg-white/5 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 border border-gray-100 dark:border-white/5'
+          }`}
+        >
+          {t('category_all')}
+        </button>
+        <button
+          onClick={() => { setActiveCategory(null); setProductType('physical'); }}
+          className={`px-4 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-1.5 ${
+            productType === 'physical'
+              ? 'bg-kz-blue text-white shadow-md'
+              : 'bg-white dark:bg-white/5 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 border border-gray-100 dark:border-white/5'
+          }`}
+        >
+          <Package size={14} /> {t('category_physical')}
+        </button>
+        <button
+          onClick={() => { setActiveCategory(null); setProductType('digital'); }}
+          className={`px-4 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-1.5 ${
+            productType === 'digital'
+              ? 'bg-violet-600 text-white shadow-md'
+              : 'bg-white dark:bg-white/5 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 border border-gray-100 dark:border-white/5'
+          }`}
+        >
+          <Download size={14} /> {t('category_digital')}
+        </button>
+        {categories.filter(c => c.slug !== 'all').map(cat => (
+          <button
+            key={cat.id}
+            onClick={() => { setActiveCategory(cat.id === activeCategory ? null : cat.id); setProductType('all'); }}
+            className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+              activeCategory === cat.id
+                ? 'bg-kz-blue text-white shadow-md'
+                : 'bg-white dark:bg-white/5 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 border border-gray-100 dark:border-white/5'
+            }`}
+          >
+            {cat.name}
+          </button>
+        ))}
       </div>
 
       {/* Filters */}
@@ -125,10 +177,13 @@ export function ProductsPage() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {sorted.map((product, idx) => {
-            const ph = placeholders[idx % placeholders.length];
+            const gradient = getPlaceholderGradient(product);
             const badge = badges[idx % badges.length];
             const price = product.variants?.[0]?.priceTiyin || 0;
-            const rating = fakeRatings[idx % fakeRatings.length];
+            const rating = [4.8, 4.9, 4.7, 4.5, 4.6, 4.8, 4.3, 4.9, 4.4, 4.7][idx % 10];
+            const emoji = getProductEmoji(product);
+            const digital = isDigitalProduct(product);
+
             return (
               <div
                 key={product.id}
@@ -144,14 +199,27 @@ export function ProductsPage() {
 
                 {/* Badge */}
                 {badge && (
-                  <div className="absolute top-3 left-3 z-10 bg-kz-gold text-gray-900 text-xs font-bold px-2.5 py-1 rounded-lg shadow-md">
+                  <div className={`absolute top-3 left-3 z-10 ${digital ? 'bg-violet-500' : 'bg-kz-gold'} text-white text-xs font-bold px-2.5 py-1 rounded-lg shadow-md flex items-center gap-1`}>
+                    {digital && <Download size={10} />}
                     {badge}
                   </div>
                 )}
 
+                {/* Digital badge when no other badge */}
+                {!badge && digital && (
+                  <div className="absolute top-3 left-3 z-10 bg-violet-500 text-white text-xs font-bold px-2.5 py-1 rounded-lg shadow-md flex items-center gap-1">
+                    <Download size={10} /> {t('digital_label')}
+                  </div>
+                )}
+
                 <Link to={`/products/${product.slug}`}>
-                  <div className={`h-44 bg-gradient-to-br ${ph.bg} flex items-center justify-center relative overflow-hidden`}>
-                    <span className="text-5xl group-hover:scale-110 transition-transform duration-500">{ph.emoji}</span>
+                  <div className={`h-44 bg-gradient-to-br ${gradient} flex items-center justify-center relative overflow-hidden`}>
+                    <span className="text-5xl group-hover:scale-110 transition-transform duration-500">{emoji}</span>
+                    {digital && (
+                      <div className="absolute bottom-2 right-2 bg-white/20 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-md">
+                        DIGITAL
+                      </div>
+                    )}
                   </div>
                 </Link>
 
@@ -175,7 +243,7 @@ export function ProductsPage() {
                       className="mt-3 w-full flex items-center justify-center gap-2 btn-primary text-white py-2.5 rounded-xl text-sm font-semibold"
                     >
                       <ShoppingCart size={14} />
-                      {t('btn_add_to_cart')}
+                      {digital ? t('btn_buy_digital') : t('btn_add_to_cart')}
                     </button>
                   )}
                 </div>

@@ -38,9 +38,14 @@ export class OrdersService {
   async listOrders(
     storeId: number,
     params: { status?: string; cursor?: string; limit: number; sort: 'asc' | 'desc' },
+    user?: { sub: number; role: string },
   ) {
     const where: any = {};
     if (params.status) where.status = params.status;
+    // If customer role, only show their own orders
+    if (user && user.role === 'customer') {
+      where.customerId = user.sub;
+    }
 
     const items = await this.prisma.withTenant(storeId, (client) =>
       client.order.findMany({

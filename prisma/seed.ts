@@ -92,6 +92,7 @@ async function provisionTenant(storeId: number) {
     ['Аксессуары', 'accessories', '/4/', 0, 3],
     ['Новинки', 'new-arrivals', '/5/', 0, 4],
     ['Распродажа', 'sale', '/6/', 0, 5],
+    ['Цифровые товары', 'digital', '/7/', 0, 6],
   ];
   for (const [name, slug, path, depth, sortOrder] of categories) {
     await prisma.$executeRawUnsafe(
@@ -108,11 +109,16 @@ async function seedTenant(storeId: number, storeName: string) {
 
   await prisma.$executeRawUnsafe(`
     INSERT INTO ${schema}.products (title, slug, description, status, weight_grams) VALUES
-      ('Телефон Samsung Galaxy A54', 'samsung-galaxy-a54', 'Флагманский смартфон Samsung', 'active', 200),
-      ('Наушники AirPods Pro', 'airpods-pro', 'Беспроводные наушники', 'active', 50),
-      ('Чехол для iPhone 15', 'iphone-15-case', 'Силиконовый чехол', 'active', 30),
-      ('Кроссовки Nike Air Max', 'nike-air-max', 'Спортивные кроссовки', 'active', 400),
-      ('Рюкзак для ноутбука', 'laptop-backpack', 'Вместительный рюкзак', 'active', 600)
+      ('Телефон Samsung Galaxy A54', 'samsung-galaxy-a54', 'Флагманский смартфон Samsung с AMOLED экраном и мощным процессором. Поддержка 5G, камера 50 МП.', 'active', 200),
+      ('Наушники AirPods Pro', 'airpods-pro', 'Беспроводные наушники с активным шумоподавлением и пространственным звуком.', 'active', 50),
+      ('Чехол для iPhone 15', 'iphone-15-case', 'Силиконовый чехол с магнетиком. Защита от ударов и царапин.', 'active', 30),
+      ('Кроссовки Nike Air Max', 'nike-air-max', 'Спортивные кроссовки с воздушной подушкой. Комфорт и стиль.', 'active', 400),
+      ('Рюкзак для ноутбука', 'laptop-backpack', 'Вместительный рюкзак с отделением для ноутбука до 16 дюймов. Водоотталкивающая ткань.', 'active', 600),
+      ('Windows 11 Pro — Лицензия', 'windows-11-pro', 'Цифровая лицензия Windows 11 Professional. Мгновенная доставка ключа на email. Подходит для 1 ПК.', 'active', 0),
+      ('Kaspersky Total Security 1 год', 'kaspersky-total-security', 'Антивирусная защита для 5 устройств на 1 год. Включает VPN, менеджер паролей и родительский контроль.', 'active', 0),
+      ('Microsoft Office 365 Personal', 'office-365-personal', 'Подписка на Office 365 для 1 пользователя. Word, Excel, PowerPoint, Outlook + 1 ТБ OneDrive на 12 месяцев.', 'active', 0),
+      ('Steam Gift Card ₸10 000', 'steam-gift-card-10000', 'Подарочная карта Steam номиналом 10 000 тенге. Цифровой код, мгновенная доставка.', 'active', 0),
+      ('Adobe Photoshop — Подписка', 'adobe-photoshop-sub', 'Подписка на Adobe Photoshop на 3 месяца. Профессиональный редактор фото и дизайна.', 'active', 0)
   `);
 
   await prisma.$executeRawUnsafe(`
@@ -133,7 +139,14 @@ async function seedTenant(storeId: number, storeName: string) {
       (4, 'nike-air-max-43', 8990000, true, 1),
       (4, 'nike-air-max-44', 9490000, true, 2),
       (5, 'laptop-backpack-black', 1599000, true, 0),
-      (5, 'laptop-backpack-grey', 1599000, true, 1)
+      (5, 'laptop-backpack-grey', 1599000, true, 1),
+      (6, 'windows-11-pro-key', 4990000, true, 0),
+      (7, 'kaspersly-total-1y', 3990000, true, 0),
+      (7, 'kaspersly-total-2y', 6990000, true, 1),
+      (8, 'office-365-personal-1y', 4490000, true, 0),
+      (9, 'steam-gift-10k', 1000000, true, 0),
+      (10, 'adobe-photoshop-3m', 5990000, true, 0),
+      (10, 'adobe-photoshop-1y', 18990000, true, 1)
   `);
 
   await prisma.$executeRawUnsafe(`
@@ -202,17 +215,23 @@ async function seedPublicSchema() {
       (3, 'Одежда', 'clothing', '/3/', 0, 2),
       (4, 'Аксессуары', 'accessories', '/4/', 0, 3),
       (5, 'Новинки', 'new-arrivals', '/5/', 0, 4),
-      (6, 'Распродажа', 'sale', '/6/', 0, 5)
+      (6, 'Распродажа', 'sale', '/6/', 0, 5),
+      (7, 'Цифровые товары', 'digital', '/7/', 0, 6)
   `);
 
   // Products (updated_at required, no DB default in public)
   await prisma.$executeRawUnsafe(`
     INSERT INTO public.products (id, title, slug, description, status, weight_grams, updated_at) VALUES
-      (1, 'Телефон Samsung Galaxy A54', 'samsung-galaxy-a54', 'Флагманский смартфон Samsung', 'active', 200, NOW()),
-      (2, 'Наушники AirPods Pro', 'airpods-pro', 'Беспроводные наушники', 'active', 50, NOW()),
-      (3, 'Чехол для iPhone 15', 'iphone-15-case', 'Силиконовый чехол', 'active', 30, NOW()),
-      (4, 'Кроссовки Nike Air Max', 'nike-air-max', 'Спортивные кроссовки', 'active', 400, NOW()),
-      (5, 'Рюкзак для ноутбука', 'laptop-backpack', 'Вместительный рюкзак', 'active', 600, NOW())
+      (1, 'Телефон Samsung Galaxy A54', 'samsung-galaxy-a54', 'Флагманский смартфон Samsung с AMOLED экраном и мощным процессором. Поддержка 5G, камера 50 МП.', 'active', 200, NOW()),
+      (2, 'Наушники AirPods Pro', 'airpods-pro', 'Беспроводные наушники с активным шумоподавлением и пространственным звуком.', 'active', 50, NOW()),
+      (3, 'Чехол для iPhone 15', 'iphone-15-case', 'Силиконовый чехол с магнетиком. Защита от ударов и царапин.', 'active', 30, NOW()),
+      (4, 'Кроссовки Nike Air Max', 'nike-air-max', 'Спортивные кроссовки с воздушной подушкой. Комфорт и стиль.', 'active', 400, NOW()),
+      (5, 'Рюкзак для ноутбука', 'laptop-backpack', 'Вместительный рюкзак с отделением для ноутбука до 16 дюймов. Водоотталкивающая ткань.', 'active', 600, NOW()),
+      (6, 'Windows 11 Pro — Лицензия', 'windows-11-pro', 'Цифровая лицензия Windows 11 Professional. Мгновенная доставка ключа на email. Подходит для 1 ПК.', 'active', 0, NOW()),
+      (7, 'Kaspersky Total Security 1 год', 'kaspersky-total-security', 'Антивирусная защита для 5 устройств на 1 год. Включает VPN, менеджер паролей и родительский контроль.', 'active', 0, NOW()),
+      (8, 'Microsoft Office 365 Personal', 'office-365-personal', 'Подписка на Office 365 для 1 пользователя. Word, Excel, PowerPoint, Outlook + 1 ТБ OneDrive на 12 месяцев.', 'active', 0, NOW()),
+      (9, 'Steam Gift Card ₸10 000', 'steam-gift-card-10000', 'Подарочная карта Steam номиналом 10 000 тенге. Цифровой код, мгновенная доставка.', 'active', 0, NOW()),
+      (10, 'Adobe Photoshop — Подписка', 'adobe-photoshop-sub', 'Подписка на Adobe Photoshop на 3 месяца. Профессиональный редактор фото и дизайна.', 'active', 0, NOW())
   `);
 
   // Variant attributes
@@ -235,7 +254,14 @@ async function seedPublicSchema() {
       (7, 4, 'nike-air-max-43', 8990000, true, 1, NOW()),
       (8, 4, 'nike-air-max-44', 9490000, true, 2, NOW()),
       (9, 5, 'laptop-backpack-black', 1599000, true, 0, NOW()),
-      (10, 5, 'laptop-backpack-grey', 1599000, true, 1, NOW())
+      (10, 5, 'laptop-backpack-grey', 1599000, true, 1, NOW()),
+      (11, 6, 'windows-11-pro-key', 4990000, true, 0, NOW()),
+      (12, 7, 'kaspersly-total-1y', 3990000, true, 0, NOW()),
+      (13, 7, 'kaspersly-total-2y', 6990000, true, 1, NOW()),
+      (14, 8, 'office-365-personal-1y', 4490000, true, 0, NOW()),
+      (15, 9, 'steam-gift-10k', 1000000, true, 0, NOW()),
+      (16, 10, 'adobe-photoshop-3m', 5990000, true, 0, NOW()),
+      (17, 10, 'adobe-photoshop-1y', 18990000, true, 1, NOW())
   `);
 
   // Variant attribute values
@@ -250,6 +276,24 @@ async function seedPublicSchema() {
       (10, 2, 'Grey')
   `);
 
+  // Product-Category associations
+  await prisma.$executeRawUnsafe(`
+    INSERT INTO public.product_categories (product_id, category_id) VALUES
+      (1, 2),
+      (2, 2),
+      (3, 4),
+      (4, 3),
+      (5, 4),
+      (6, 7),
+      (6, 2),
+      (7, 7),
+      (7, 2),
+      (8, 7),
+      (8, 2),
+      (9, 7),
+      (10, 7)
+  `);
+
   // Warehouses
   await prisma.$executeRawUnsafe(`
     INSERT INTO public.warehouses (id, name, city, address, is_active) VALUES
@@ -258,8 +302,8 @@ async function seedPublicSchema() {
   `);
 
   // Inventory for all variants (updated_at required)
-  const inventoryValues = [1,2,3,4,5,6,7,8,9,10].map(
-    (variantId, i) => `(${variantId}, 1, ${50 + i * 10}, 0, 5, NOW())`
+  const inventoryValues = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17].map(
+    (variantId, i) => `(${variantId}, 1, ${variantId >= 11 ? 999 : 50 + i * 10}, 0, ${variantId >= 11 ? 0 : 5}, NOW())`
   ).join(',\n      ');
   await prisma.$executeRawUnsafe(`
     INSERT INTO public.inventory (variant_id, warehouse_id, quantity_available, quantity_reserved, low_stock_threshold, updated_at) VALUES

@@ -75,6 +75,11 @@ export function Header() {
             <Link to="/products" className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-kz-blue dark:hover:text-kz-blue rounded-xl hover:bg-kz-blue/5 transition-all font-medium text-sm">
               {t('nav_products')}
             </Link>
+            {isAuthenticated && (
+              <Link to="/profile" className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-kz-blue dark:hover:text-kz-blue rounded-xl hover:bg-kz-blue/5 transition-all font-medium text-sm">
+                {t('nav_profile')}
+              </Link>
+            )}
           </nav>
 
           {/* Actions */}
