@@ -1,246 +1,52 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe, Logger } from '@nestjs/common';
+import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
-import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
-import { ConfigService } from '@nestjs/config';
-import helmet from 'helmet';
-import * as compression from 'compression';
-import * as fs from 'fs';
+import { ZodValidationPipe } from './common/pipes/zod-validation.pipe';
+import * as express from 'express';
 import * as path from 'path';
-
-const logger = new Logger('Bootstrap');
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  const configService = app.get(ConfigService);
-  const port = configService.get<number>('PORT', 3000);
-  const nodeEnv = configService.get<string>('NODE_ENV', 'development');
-  const corsOrigins = configService.get<string>('CORS_ORIGINS', 'http://localhost:3000');
-
-  // Global prefix
+  // Global prefixes and pipes
   app.setGlobalPrefix('api');
-
-  // Security headers (Helmet)
-  app.use(helmet({ contentSecurityPolicy: nodeEnv === 'production' ? undefined : false }));
-
-  // Response compression (gzip)
-  app.use(compression());
-
-  // Enable graceful shutdown on SIGTERM and SIGINT
-  app.enableShutdownHooks();
-
-  // CORS
-  const origins = corsOrigins.split(',').map((o) => o.trim());
-  app.enableCors({
-    origin: nodeEnv === 'production' ? origins : true,
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
-  });
-
-  // Global pipes
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: false, // Zod handles validation
-      transform: true,
-    }),
-  );
-
-  // Global filters and interceptors
+  app.useGlobalPipes(new ValidationPipe({ whitelist: true }), new ZodValidationPipe());
   app.useGlobalFilters(new HttpExceptionFilter());
   app.useGlobalInterceptors(new TransformInterceptor());
-  app.useGlobalInterceptors(new LoggingInterceptor());
+
+  // CORS
+  app.enableCors({
+    origin: process.env.CORS_ORIGINS?.split(',') || ['http://localhost:5173', 'http://localhost:3000'],
+    credentials: true,
+  });
+
+  // Serve frontend static files (if they exist — Docker production only)
+  const frontendPath = path.join(__dirname, '..', 'public');
+  const fs = require('fs');
+  if (fs.existsSync(frontendPath) && fs.readdirSync(frontendPath).length > 0) {
+    app.use(express.static(frontendPath));
+    // SPA fallback: serve index.html for non-API routes
+    app.use('*', (req: express.Request, res: express.Response, next: express.NextFunction) => {
+      if (req.originalUrl.startsWith('/api')) return next();
+      res.sendFile(path.join(frontendPath, 'index.html'));
+    });
+    console.log('📦 Serving frontend from /public');
+  }
 
   // Swagger
   const config = new DocumentBuilder()
-    .setTitle('ShopBuilder API')
-    .setDescription(
-      'ShopBuilder — Shopify Clone for Local Kazakh Merchants. E-commerce platform API.',
-    )
+    .setTitle('ShopBuilder KZ API')
+    .setDescription('Multi-tenant e-commerce platform API')
     .setVersion('1.0')
-    .addBearerAuth(
-      {
-        type: 'http',
-        scheme: 'bearer',
-        bearerFormat: 'JWT',
-        description: 'Paste JWT access token (without "Bearer " prefix)',
-      },
-      'access-token',
-    )
-    .addTag('Authentication', 'Merchant registration, login, token management')
-    .addTag('Admin', 'Platform administration endpoints')
-    .addTag('Stores', 'Store management and tenant provisioning')
-    .addTag('Products', 'Product catalog and variant management')
-    .addTag('Categories', 'Category tree with materialized path')
-    .addTag('Webhooks', 'Webhook registration and event delivery log')
-    .addTag('Staff', 'Staff invitation and management')
-    .addTag('Customers', 'Customer profile and address management')
-    .addTag('Storefront', 'Public storefront API and customer auth')
-    .addTag('Cart', 'Shopping cart management')
-    .addTag('Orders', 'Order management and fulfillment')
-    .addTag('Inventory', 'Warehouse and stock management')
-    .addTag('Payments', 'Payment processing and refunds')
-    .addTag('Discounts', 'Promo codes and discount validation')
-    .addTag('Subscriptions', 'Subscription boxes and billing')
-    .addTag('Abandoned Carts', 'Cart recovery management')
-    .addTag('Analytics', 'Sales, product, and customer analytics')
-    .addTag('Templates', 'Theme template management and rendering')
+    .addBearerAuth()
     .build();
-
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, document);
+  SwaggerModule.setup('docs', app, document);
 
-  // Export OpenAPI specs
-  const specDir = path.resolve(process.cwd());
-  fs.writeFileSync(path.join(specDir, 'openapi.json'), JSON.stringify(document, null, 2));
-
-  // Export YAML (simple conversion)
-  const yaml = jsonToYaml(document);
-  fs.writeFileSync(path.join(specDir, 'openapi.yaml'), yaml);
-
-  await app.listen(port);
-  logger.log(`🚀 ShopBuilder API running on http://localhost:${port}`);
-  logger.log(`📚 API Docs available at http://localhost:${port}/docs`);
-
-  // Auto-start BullMQ workers in-process
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    require('./workers/processors/email.processor');
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    require('./workers/processors/abandoned-cart.processor');
-    logger.log('⚡ BullMQ workers auto-started');
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
-    logger.warn(`Worker auto-start note: ${msg}`);
-    logger.log('💡 Run manually: pnpm run worker:start');
-  }
+  await app.listen(process.env.PORT || 3001, '0.0.0.0');
+  console.log(`🚀 Server running on port ${process.env.PORT || 3001}`);
 }
-
-function jsonToYaml(obj: any, indent: number = 0): string {
-  const pad = '  '.repeat(indent);
-  let result = '';
-
-  if (obj === null || obj === undefined) {
-    return 'null\n';
-  }
-
-  if (typeof obj === 'boolean') {
-    return obj ? 'true\n' : 'false\n';
-  }
-
-  if (typeof obj === 'number') {
-    return `${obj}\n`;
-  }
-
-  if (typeof obj === 'string') {
-    // Handle multi-line strings
-    if (obj.includes('\n')) {
-      return `|\n${obj
-        .split('\n')
-        .map((line) => pad + '  ' + line)
-        .join('\n')}\n`;
-    }
-    // Quote strings that need it
-    if (
-      obj === '' ||
-      obj.includes(':') ||
-      obj.includes('#') ||
-      obj.includes('{') ||
-      obj.includes('}') ||
-      obj.includes('[') ||
-      obj.includes(']') ||
-      obj.includes(',') ||
-      obj.includes('&') ||
-      obj.includes('*') ||
-      obj.includes('?') ||
-      obj.includes('|') ||
-      obj.includes('<') ||
-      obj.includes('>') ||
-      obj.includes('=') ||
-      obj.includes('!') ||
-      obj.includes('%') ||
-      obj.includes('@') ||
-      obj.includes('`') ||
-      obj.includes('"') ||
-      obj.includes("'") ||
-      obj.startsWith(' ') ||
-      obj.endsWith(' ') ||
-      obj === 'true' ||
-      obj === 'false' ||
-      obj === 'null' ||
-      !isNaN(Number(obj))
-    ) {
-      // Use double quotes, escape internal quotes
-      return `"${obj.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"\n`;
-    }
-    return `${obj}\n`;
-  }
-
-  if (Array.isArray(obj)) {
-    if (obj.length === 0) {
-      return '[]\n';
-    }
-    for (const item of obj) {
-      if (typeof item === 'object' && item !== null && !Array.isArray(item)) {
-        const keys = Object.keys(item);
-        if (keys.length === 0) {
-          result += `${pad}- {}\n`;
-        } else {
-          const firstKey = keys[0];
-          const firstVal = item[firstKey];
-          if (typeof firstVal !== 'object' || firstVal === null) {
-            result += `${pad}- ${firstKey}: ${jsonToYaml(firstVal, 0).trimEnd()}\n`;
-            for (let i = 1; i < keys.length; i++) {
-              const key = keys[i];
-              const val = item[key];
-              if (typeof val === 'object' && val !== null) {
-                result += `${pad}  ${key}:\n${jsonToYaml(val, indent + 2)}`;
-              } else {
-                result += `${pad}  ${key}: ${jsonToYaml(val, 0).trimEnd()}\n`;
-              }
-            }
-          } else {
-            result += `${pad}- ${firstKey}:\n${jsonToYaml(firstVal, indent + 2)}`;
-            for (let i = 1; i < keys.length; i++) {
-              const key = keys[i];
-              const val = item[key];
-              if (typeof val === 'object' && val !== null) {
-                result += `${pad}  ${key}:\n${jsonToYaml(val, indent + 2)}`;
-              } else {
-                result += `${pad}  ${key}: ${jsonToYaml(val, 0).trimEnd()}\n`;
-              }
-            }
-          }
-        }
-      } else {
-        result += `${pad}- ${jsonToYaml(item, indent + 1).trimEnd()}\n`;
-      }
-    }
-    return result;
-  }
-
-  // Object
-  const keys = Object.keys(obj);
-  for (const key of keys) {
-    const val = obj[key];
-    if (typeof val === 'object' && val !== null && !Array.isArray(val)) {
-      const inner = jsonToYaml(val, indent + 1);
-      if (inner.trim() === '{}') {
-        result += `${pad}${key}: {}\n`;
-      } else {
-        result += `${pad}${key}:\n${inner}`;
-      }
-    } else {
-      result += `${pad}${key}: ${jsonToYaml(val, 0).trimEnd()}\n`;
-    }
-  }
-
-  return result;
-}
-
 bootstrap();
