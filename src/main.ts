@@ -4,7 +4,6 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
-import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import * as express from 'express';
 import * as path from 'path';
 import * as fs from 'fs';
