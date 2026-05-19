@@ -5,52 +5,56 @@
 - [x] Application boots locally with `docker compose up`
 - [ ] Application is LIVE on dashboard.deployrocks.com with working public URL
 - [ ] `DEPLOYED_URL.txt` contains the generated domain name
-- [ ] `VIDEO_LINK.txt` contains unlisted YouTube/video link (4-6 min)
+- [ ] `VIDEO_LINK.txt` contains unlisted video link (4-6 min)
 
 ## Repository & Setup
 
 - [x] GitHub repo: https://github.com/aiymfine/kz-ecomerce-platform
-- [x] `docker-compose.yml` orchestrates backend + frontend + PostgreSQL + Redis + workers
-- [x] `.env.example` with all environment variables documented
-- [x] `README.md` with setup guide, architecture, testing instructions
-- [x] `migrations/` — full Prisma Migrate history (3 migrations)
-- [x] `tests/` — unit + integration tests (27+ pass)
+- [x] `docker-compose.yml` orchestrates backend + frontend + PostgreSQL + Redis
+- [x] `.env.example` with all 20+ environment variables documented
+- [x] `README.md` with setup guide, architecture, testing, deployment
+- [x] `migrations/` — 3 Prisma Migrate migrations
+- [x] `tests/` — 6 test files, 51+ tests pass
 - [x] `frontend/` — React + Vite + TailwindCSS demo app
-- [x] `openapi.yaml` / `openapi.json` — complete API contract
+- [x] `openapi.yaml` + `openapi.json` — complete API contract
 
 ## Auth & Security
 
 - [x] Registration / Login / Logout / Refresh — complete JWT lifecycle with rotation
-- [x] Email verification on signup — REAL email via Gmail SMTP
-- [x] Password reset via email — token-based reset flow
-- [x] RBAC: admin / merchant / customer roles — 403 for wrong role
-- [x] Rate limiting: Redis token bucket on all auth endpoints (5/min)
-- [x] CORS: configured for deployed domain (no wildcards in prod)
+- [x] Email verification on signup — REAL email via Gmail SMTP (aiymfine@gmail.com)
+- [x] Password reset via email — token-based reset with real email
+- [x] RBAC: admin / merchant / customer roles — 403 for wrong role (tested)
+- [x] Rate limiting: Redis token bucket on auth endpoints (5/min)
+- [x] CORS: configurable for deployed domain (no wildcards in prod)
 - [x] JWT access (30m) + refresh (7d) with Redis blacklisting
+- [x] Unverified users blocked from protected routes
 - [x] No hardcoded secrets — all env vars externalized
 
-## Email Integration (3rd Party — Gmail SMTP)
+## Email Integration (Gmail SMTP — Real 3rd Party)
 
-- [x] Email verification sends REAL email on signup
-- [x] Password reset sends REAL email with token
+- [x] Email verification sends REAL email on signup (6-digit code)
+- [x] Password reset sends REAL email with reset token
 - [x] Order confirmation email (queued via BullMQ)
 - [x] Payment receipt email (queued via BullMQ)
 - [x] All email sending is async via BullMQ worker queue (non-blocking)
+- [x] Email job enqueue tested (4 unit tests)
 
 ## ShopBuilder Business Logic
 
-- [x] Multi-tenancy: schema-per-tenant with dynamic connection routing
+- [x] Multi-tenancy: schema-per-tenant with dynamic PrismaService.withTenant()
 - [x] Product variant matrix: generates Size × Color × Material SKU combinations
-- [x] Multi-warehouse inventory with smart routing
+- [x] Multi-warehouse inventory with smart routing (Almaty, Astana)
 - [x] Full checkout flow: cart → order → payment → webhook
 - [x] Payment integration: Kaspi Pay / Halyk Bank with idempotency keys
+- [x] 3D Secure redirect handling (mock payment URL + token)
 - [x] Webhook engine: HMAC-SHA256, exponential backoff, dead-letter queue (5 retries)
 - [x] Discount / promo engine: stackable vs exclusive, percentage/fixed/free_shipping
+- [x] VAT calculation (12% Kazakhstan) with stacked vs exclusive promo rules
 - [x] Abandoned cart recovery: cron every 15 min, BullMQ repeatable job
 - [x] Storefront API: token-based auth, rate limiting, Redis caching
-- [x] Analytics aggregation endpoint
+- [x] Analytics aggregation endpoint (no full table scans)
 - [x] Subscription / recurring billing module
-- [x] Digital products with instant delivery
+- [x] Digital products with instant delivery (5 software products)
 
 ## API Documentation
 
@@ -59,45 +63,49 @@
 - [x] Standardized error responses: 400, 401, 403, 404, 409, 422, 500
 - [x] Cursor-based pagination on all list endpoints
 - [x] Realistic request/response examples (not placeholder values)
+- [x] openapi.yaml + openapi.json committed in repo
 
 ## Background Workers & Async Processing
 
-- [x] Redis-backed BullMQ email worker
+- [x] Redis-backed BullMQ email worker (3 retries, exponential backoff)
 - [x] Redis-backed BullMQ abandoned cart worker (cron every 15 min)
-- [x] Email queue: non-blocking enqueue, 3 retries with exponential backoff
+- [x] Email queue: non-blocking enqueue, job data preserved
 - [x] Queue visibility: `GET /api/admin/queue/status` (waiting/active/completed/failed)
-- [x] Cron scheduling via `SchedulerService` on startup
+- [x] Cron scheduling via SchedulerService on startup
+- [x] 81+ email jobs processed, 19+ cart checks completed
 
 ## Testing
 
-- [x] Unit tests: 27+ pass (business logic, auth, RBAC)
+- [x] Unit tests: 51 pass, 2 skip (rate-limited)
 - [x] Integration tests: auth e2e (register, login, verify, refresh, reset)
-- [x] Auth tests: missing/expired/wrong-role tokens rejected
-- [x] All tests green on `npm test`
+- [x] Auth tests: missing/expired/wrong-role tokens → 401/403
+- [x] Email job enqueue tests: 4 tests (verification, order, payment, reset)
+- [x] Admin RBAC tests: merchant gets 403
+- [x] All tests green on `npx jest`
 
 ## Frontend Demo Application
 
 - [x] React + Vite + TailwindCSS — modern SPA
 - [x] Consumes real backend API (no mocked data)
 - [x] User registration, login, logout (storefront customer auth)
-- [x] Email verification page (`/verify-email`)
-- [x] Password reset flow (`/forgot-password` → `/reset-password`)
-- [x] Product browsing with search, category filter, physical/digital filter
+- [x] Email verification page (`/verify-email`) with 6-digit code
+- [x] Password reset flow (`/forgot-password` → email → `/reset-password`)
+- [x] Product browsing with search, category filter, Physical/Digital toggle
 - [x] Product detail page with variant selection, reviews, digital product info
 - [x] Shopping cart with quantity controls, promo codes, total calculation
-- [x] Checkout flow → order confirmation
-- [x] Profile page with order history
-- [x] Admin dashboard: merchants, stores, queue status
-- [x] Role-based views (customer storefront + admin dashboard)
+- [x] Checkout flow → order confirmation page
+- [x] Profile page with order history and order detail view
+- [x] Admin dashboard: merchants, stores, queue status tabs (role-based)
+- [x] Role-based views: customer storefront + admin dashboard
 - [x] Error handling: displays backend errors (401, 403, validation)
 - [x] Responsive: works on desktop + mobile
 - [x] Bilingual: Kazakh (kk) + English (en)
 - [x] Dark mode support
-- [x] Containerized in docker-compose.yml
+- [x] Containerized in docker-compose.yml (Dockerfile + nginx)
 
 ## Technical Non-Negotiables
 
-- [x] Framework: Express.js (NestJS 10+) — matches Week 1 choice
+- [x] Framework: NestJS 10+ (Express.js) — matches Week 1 choice
 - [x] ORM: Prisma 5+ — zero raw SQL in app code (seed.ts DDL only)
 - [x] Database: PostgreSQL 15+ (ACID for all state changes)
 - [x] Cache/Queue: Redis for rate limiting, sessions, BullMQ jobs
@@ -108,18 +116,72 @@
 ## Track-Specific: ShopBuilder
 
 - [x] Multi-tenancy: schema isolation working for multiple merchants
-- [x] Product variant matrix generates all SKU combinations
+- [x] Product variant matrix generates all SKU combinations programmatically
 - [x] Webhook event queue with retry count, next_attempt, dead-letter
-- [x] Discount engine: stackable vs exclusive, min order, first-buyer, per-customer limits
-- [x] Payment flow with idempotency keys
+- [x] Discount engine: stacked vs exclusive, VAT 12%, min order, first-buyer
+- [x] Payment flow with idempotency keys and 3D Secure redirect
 - [x] Analytics endpoint (aggregated queries, no full table scans)
 
 ## Defense Preparation
 
 - [x] Postman collection: `postman-collection.json` in repo root
-- [x] Test accounts documented:
+- [x] Test accounts:
   - Admin: admin@shopbuilder.kz / Admin123456
   - Merchant: merchant1@example.com / Merchant123
   - Customer: test@customer.kz / Customer123
-- [x] Variant IDs documented: 1-17
-- [x] Demo flow: register → email → verify → login → browse → cart → checkout → order
+- [x] Variant IDs: 1-17 documented
+- [x] Demo flow: login → browse → cart → checkout → order → profile
+
+## 37 API Endpoints Verified Working
+
+### Auth (8)
+- POST /api/storefront/auth/register (201)
+- POST /api/storefront/auth/login (200/401)
+- POST /api/auth/login — merchant (200)
+- POST /api/auth/admin/login (200)
+- POST /api/auth/verify-email (200)
+- POST /api/auth/forgot-password (200)
+- POST /api/auth/resend-verification (200)
+- POST /api/auth/refresh (200)
+
+### Storefront (4)
+- GET /api/storefront/products (200) — 10+ products with categories
+- GET /api/storefront/products/:slug (200)
+- GET /api/storefront/categories (200) — 7 categories
+- GET /api/storefront/categories/:slug/products (200)
+
+### Cart + Checkout (4)
+- POST /api/stores/:storeId/cart/items (200) — enriched with title+price
+- GET /api/stores/:storeId/cart (200)
+- PATCH /api/stores/:storeId/cart/items/:id (200)
+- POST /api/stores/:storeId/orders/checkout (200)
+
+### Orders (2)
+- GET /api/stores/:storeId/orders (200) — filtered by customer
+- GET /api/stores/:storeId/orders/:orderNumber (200)
+
+### Merchant (8)
+- GET /api/stores (200)
+- GET /api/stores/:storeId/products (200)
+- POST /api/stores/:storeId/products (201)
+- POST /api/stores/:storeId/products/:id/variants (201)
+- GET/POST /api/stores/:storeId/webhooks (200/201)
+- GET /api/stores/:storeId/inventory (200)
+- POST /api/stores/:storeId/promo-codes (201)
+- POST /api/stores/:storeId/promo-codes/:code/validate (200)
+- POST /api/stores/:storeId/promo-codes/apply (200) — VAT + stacked/exclusive
+
+### Payments (2)
+- POST /api/stores/:storeId/payments/initiate (201) — idempotency keys
+- POST /api/stores/:storeId/payments/callback/:provider (200)
+
+### Admin (3)
+- GET /api/admin/merchants (200)
+- GET /api/admin/stores (200)
+- GET /api/admin/queue/status (200)
+
+### Other (4)
+- GET /api/analytics/sales?storeId=1 (200)
+- GET /api/subscriptions/my (200)
+- GET /api/health (200)
+- GET /api/docs — Swagger UI (200)
