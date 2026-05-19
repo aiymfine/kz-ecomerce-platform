@@ -3489,6 +3489,35 @@
         ]
       }
     },
+    "/api/stores/{storeId}/promo-codes/apply": {
+      "post": {
+        "operationId": "DiscountsController_applyDiscounts",
+        "summary": "Apply multiple promo codes with VAT calculation (stacked vs exclusive)",
+        "parameters": [
+          {
+            "name": "storeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Discounted totals with VAT"
+          }
+        },
+        "tags": [
+          "Promo Codes"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
     "/api/subscriptions/subscribe": {
       "post": {
         "operationId": "SubscriptionsController_subscribe",

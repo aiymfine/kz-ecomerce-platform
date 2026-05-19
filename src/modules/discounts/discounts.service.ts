@@ -224,4 +224,114 @@ export class DiscountsService {
       isStackable: promo.isStackable,
     };
   }
+
+  /**
+   * Apply multiple promo codes to a cart subtotal.
+   * Handles stacked vs exclusive rules and VAT calculation.
+   * - Exclusive promos: only the highest-value exclusive promo is applied
+   * - Stackable promos: all are applied sequentially
+   * - VAT (12% Kazakhstan) is calculated AFTER discounts
+   */
+  async applyDiscounts(
+    storeId: number,
+    data: {
+      codes: string[];
+      subtotalTiyin: number;
+      customerId?: number;
+      shippingTiyin?: number;
+    },
+  ) {
+    const VAT_RATE = 0.12; // 12% Kazakhstan VAT
+    let remainingSubtotal = data.subtotalTiyin;
+    const applied: Array<{
+      code: string;
+      type: string;
+      discountTiyin: number;
+    }> = [];
+
+    // Separate into exclusive and stackable
+    const exclusiveDiscounts: Array<{
+      code: string;
+      type: string;
+      discountTiyin: number;
+    }> = [];
+    const stackableDiscounts: Array<{
+      code: string;
+      type: string;
+      discountTiyin: number;
+    }> = [];
+
+    for (const code of data.codes) {
+      try {
+        const result = await this.validatePromoCode(storeId, {
+          code,
+          cartSubtotalTiyin: remainingSubtotal,
+          customerId: data.customerId,
+        });
+
+        if (result.isStackable) {
+          stackableDiscounts.push({
+            code: result.code,
+            type: result.type,
+            discountTiyin: result.discountTiyin,
+          });
+        } else {
+          exclusiveDiscounts.push({
+            code: result.code,
+            type: result.type,
+            discountTiyin: result.discountTiyin,
+          });
+        }
+      } catch {
+        // Skip invalid codes silently
+      }
+    }
+
+    // Apply exclusive: pick highest value one only
+    if (exclusiveDiscounts.length > 0) {
+      exclusiveDiscounts.sort((a, b) => b.discountTiyin - a.discountTiyin);
+      const best = exclusiveDiscounts[0];
+      const actualDiscount = Math.min(best.discountTiyin, remainingSubtotal);
+      remainingSubtotal -= actualDiscount;
+      applied.push({ ...best, discountTiyin: actualDiscount });
+    }
+
+    // Apply stackable: apply each sequentially
+    for (const disc of stackableDiscounts) {
+      let discountAmount = disc.discountTiyin;
+      // For percentage, recalculate on remaining subtotal
+      if (disc.type === 'percentage') {
+        const promo = await this.prisma.withTenant(storeId, (client) =>
+          client.promoCode.findUnique({ where: { code: disc.code } }),
+        );
+        if (promo) {
+          discountAmount = Math.floor(remainingSubtotal * (promo.value / 100));
+        }
+      }
+      const actualDiscount = Math.min(discountAmount, remainingSubtotal);
+      remainingSubtotal -= actualDiscount;
+      applied.push({ ...disc, discountTiyin: actualDiscount });
+    }
+
+    const totalDiscount = data.subtotalTiyin - remainingSubtotal;
+    const discountedSubtotal = remainingSubtotal;
+
+    // VAT calculation: VAT is on the discounted subtotal
+    const vatTiyin = Math.floor(discountedSubtotal * VAT_RATE);
+    const grandTotal = discountedSubtotal + (data.shippingTiyin || 0) + vatTiyin;
+
+    return {
+      originalSubtotal: data.subtotalTiyin,
+      totalDiscount,
+      discountedSubtotal,
+      shippingTiyin: data.shippingTiyin || 0,
+      vatRate: VAT_RATE,
+      vatTiyin,
+      grandTotal,
+      appliedPromos: applied,
+      skippedExclusive: exclusiveDiscounts.length > 1
+        ? exclusiveDiscounts.slice(1).map((d) => d.code)
+        : [],
+    };
+  }
 }

@@ -116,8 +116,25 @@ export class DiscountsController {
     const dto = body as any;
     return this.discountsService.validatePromoCode(storeId, {
       code,
-      cartSubtotalTiyin: dto.cart_subtotal_tiyin,
+      cartSubtotalTiyin: dto.cart_subtotal_tiyin ?? dto.orderAmount,
       customerId: dto.customer_id,
+    });
+  }
+
+  @Post('apply')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Apply multiple promo codes with VAT calculation (stacked vs exclusive)' })
+  @ApiResponse({ status: 200, description: 'Discounted totals with VAT' })
+  async applyDiscounts(
+    @Param('storeId', ParseIntPipe) storeId: number,
+    @Body() body: unknown,
+  ) {
+    const dto = body as any;
+    return this.discountsService.applyDiscounts(storeId, {
+      codes: dto.codes || [],
+      subtotalTiyin: dto.subtotal_tiyin,
+      customerId: dto.customer_id,
+      shippingTiyin: dto.shipping_tiyin,
     });
   }
 }
