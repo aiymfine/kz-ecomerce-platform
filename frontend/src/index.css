@@ -39,13 +39,17 @@ input::placeholder, textarea::placeholder {
   opacity: 1 !important;
 }
 
-.dark input, .dark textarea, .dark select {
+/* Dark mode — must override the rule above */
+html.dark input,
+html.dark textarea,
+html.dark select {
   color: #f1f5f9 !important;
-  background-color: rgba(255, 255, 255, 0.05) !important;
+  background-color: rgba(255, 255, 255, 0.06) !important;
   caret-color: #f1f5f9 !important;
 }
 
-.dark input::placeholder, .dark textarea::placeholder {
+html.dark input::placeholder,
+html.dark textarea::placeholder {
   color: #64748b !important;
   opacity: 1 !important;
 }
