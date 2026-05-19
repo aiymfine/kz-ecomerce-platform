@@ -19,7 +19,7 @@ services:
       SMTP_PASSWORD: ${SMTP_PASSWORD:-}
       EMAIL_FROM_ADDRESS: ${EMAIL_FROM_ADDRESS:-noreply@shopbuilder.kz}
     command: >
-      sh -c "npx prisma migrate deploy && node prisma/seed.js && node dist/main"
+      sh -c "npx prisma migrate deploy && node dist/prisma/seed.js && node dist/main"
     depends_on:
       postgres:
         condition: service_healthy
