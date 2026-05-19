@@ -3,11 +3,7 @@ dist
 .git
 .env
 .env.local
-*.md
+*.log
 coverage
 .nyc_output
-test
 .husky
-.vscode
-.idea
-*.log
