@@ -11,6 +11,9 @@ import {
   HttpCode,
   HttpStatus,
   ParseIntPipe,
+  ConflictException,
+  UnauthorizedException,
+  NotFoundException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { StorefrontService } from './storefront.service';
@@ -22,8 +25,6 @@ import {
 } from './dto/storefront.dto';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import { RolesGuard } from '../../common/guards/roles.guard';
-import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { JwtPayload } from '../../common/guards/jwt-auth.guard';
 import type { Response } from 'express';
@@ -44,8 +45,7 @@ export class StorefrontController {
   async register(@Query('storeId', ParseIntPipe) storeId: number, @Body() body: unknown) {
     const result = await this.storefrontService.register(storeId, body as any);
     if (result.error) {
-      const statusMap: Record<string, number> = { CONFLICT: 409 };
-      return { statusCode: statusMap[result.error] || 400, ...result };
+      throw new ConflictException(result.message || 'Registration failed');
     }
     return result;
   }
@@ -59,8 +59,7 @@ export class StorefrontController {
   async login(@Query('storeId', ParseIntPipe) storeId: number, @Body() body: unknown) {
     const result = await this.storefrontService.login(storeId, body as any);
     if (result.error) {
-      const statusMap: Record<string, number> = { UNAUTHORIZED: 401 };
-      return { statusCode: statusMap[result.error] || 400, ...result };
+      throw new UnauthorizedException(result.message || 'Invalid credentials');
     }
     return result;
   }
@@ -74,7 +73,7 @@ export class StorefrontController {
   async refresh(@Body() body: unknown) {
     const result = await this.storefrontService.refreshToken((body as any).refreshToken);
     if (result.error) {
-      return { statusCode: 401, ...result };
+      throw new UnauthorizedException(result.message || 'Invalid refresh token');
     }
     return result;
   }
@@ -125,7 +124,7 @@ export class StorefrontController {
     const { data, cached } = await this.storefrontService.getProductBySlug(storeId, slug);
     res.setHeader('X-Cache-Status', cached ? 'HIT' : 'MISS');
     if (data.error) {
-      return { statusCode: 404, ...data };
+      throw new NotFoundException(data.message || 'Product not found');
     }
     return data;
   }
@@ -160,7 +159,7 @@ export class StorefrontController {
     const params = parsed.success ? parsed.data : { limit: 20, sort: 'desc' as const };
     const result = await this.storefrontService.getCategoryProducts(storeId, slug, params);
     if (result && typeof result === 'object' && 'error' in result) {
-      return { statusCode: 404, ...result };
+      throw new NotFoundException(result.message || 'Category not found');
     }
     return result;
   }
