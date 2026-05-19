@@ -20,12 +20,18 @@ export class PaymentsService {
       idempotencyKey: string;
     },
   ) {
-    // Validate order
-    const order = await this.prisma.withTenant(storeId, (client) =>
+    // Validate order — check tenant schema first, then public
+    let order = await this.prisma.withTenant(storeId, (client) =>
       client.order.findUnique({
         where: { id: data.orderId },
       }),
     );
+    if (!order) {
+      // Fallback: check public schema directly
+      order = await this.prisma.order.findUnique({
+        where: { id: data.orderId },
+      });
+    }
 
     if (!order) {
       throw new NotFoundException('Order not found');
