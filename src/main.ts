@@ -4,7 +4,7 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
-import { ZodValidationPipe } from './common/pipes/zod-validation.pipe';
+import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import * as express from 'express';
 import * as path from 'path';
 import * as fs from 'fs';
@@ -14,7 +14,7 @@ async function bootstrap() {
 
   // Global prefixes and pipes
   app.setGlobalPrefix('api');
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true }), new ZodValidationPipe());
+  app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
   app.useGlobalFilters(new HttpExceptionFilter());
   app.useGlobalInterceptors(new TransformInterceptor());
 
