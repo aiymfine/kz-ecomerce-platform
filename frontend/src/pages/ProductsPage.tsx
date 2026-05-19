@@ -33,7 +33,7 @@ export function ProductsPage() {
         setProducts(Array.isArray(items) ? items : []);
       }),
       getCategories().then((d: any) => {
-        const cats = d || [];
+        const cats = d?.data || d || [];
         setCategories(Array.isArray(cats) ? cats : []);
       }).catch(() => {}),
     ]).finally(() => setLoading(false));
