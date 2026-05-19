@@ -142,7 +142,7 @@ export function CartPage() {
           const isDigitalItem = ['windows', 'kaspersly', 'office', 'steam', 'adobe', 'photoshop'].some(k => sku.includes(k));
 
           return (
-            <div key={item.id} className="bg-white dark:bg-[#14141F]/80 rounded-2xl p-4 flex items-center gap-4 border border-gray-100 dark:border-white/5 card-hover">
+            <div key={item.id} className="bg-white dark:bg-[#14141F]/80 rounded-2xl p-4 flex items-center gap-4 border border-blue-100/60 dark:border-white/5 shadow-sm card-hover">
               <div className={`w-16 h-16 bg-gradient-to-br ${isDigitalItem ? 'from-violet-500/20 to-purple-500/10' : 'from-kz-blue/20 to-kz-gold/10'} rounded-xl flex items-center justify-center text-2xl flex-shrink-0`}>
                 {isDigitalItem ? '💾' : '📦'}
               </div>
@@ -184,7 +184,7 @@ export function CartPage() {
       </div>
 
       {/* Summary */}
-      <div className="mt-8 bg-white dark:bg-[#14141F]/80 rounded-2xl p-6 border border-gray-100 dark:border-white/5">
+      <div className="mt-8 bg-white dark:bg-[#14141F]/80 rounded-2xl p-6 border border-blue-100/60 dark:border-white/5 shadow-sm">
         {/* Promo code */}
         <form onSubmit={handlePromo} className="flex gap-2 mb-6">
           <div className="relative flex-1">
@@ -194,7 +194,7 @@ export function CartPage() {
               placeholder={t('promo_placeholder')}
               value={promo}
               onChange={e => setPromo(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-sm outline-none input-premium text-gray-900 dark:text-white placeholder-gray-400"
+              className="w-full pl-10 pr-4 py-2.5 bg-blue-50/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-sm outline-none input-premium text-gray-900 dark:text-white placeholder-gray-400"
             />
           </div>
           <button type="submit" className="px-5 py-2.5 bg-kz-blue/10 text-kz-blue font-semibold rounded-xl text-sm hover:bg-kz-blue/20 transition-all">
@@ -226,7 +226,7 @@ export function CartPage() {
               <span className="font-medium">-{formatPrice(discount)}</span>
             </div>
           )}
-          <div className="border-t border-gray-100 dark:border-white/5 pt-4">
+          <div className="border-t border-blue-100/60 dark:border-white/5 shadow-sm pt-4">
             <div className="flex justify-between items-center">
               <span className="text-lg font-bold text-gray-900 dark:text-white">{t('cart_total')}</span>
               <span className="text-2xl font-extrabold text-kz-blue animate-fade-in">{formatPrice(total)}</span>

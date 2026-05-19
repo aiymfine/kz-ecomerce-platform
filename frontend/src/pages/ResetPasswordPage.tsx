@@ -57,7 +57,7 @@ export function ResetPasswordPage() {
 
   return (
     <div className="max-w-md mx-auto px-4 py-16 animate-fade-in-up">
-      <div className="bg-white dark:bg-[#14141F]/80 rounded-2xl p-8 border border-gray-100 dark:border-white/5 shadow-sm">
+      <div className="bg-white dark:bg-[#14141F]/80 rounded-2xl p-8 border border-blue-100/60 dark:border-white/5 shadow-sm shadow-sm">
         <div className="text-center mb-6">
           <div className="w-14 h-14 bg-green-100 dark:bg-green-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <KeyRound size={24} className="text-green-600" />
@@ -80,7 +80,7 @@ export function ResetPasswordPage() {
               value={token}
               onChange={e => setToken(e.target.value)}
               required
-              className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl input-premium outline-none text-gray-900 dark:text-white placeholder-gray-400 font-mono text-sm"
+              className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-blue-200 dark:border-white/10 rounded-xl input-premium outline-none text-gray-900 dark:text-white placeholder-gray-400 font-mono text-sm"
             />
           )}
           <div className="relative">
@@ -91,7 +91,7 @@ export function ResetPasswordPage() {
               onChange={e => setNewPassword(e.target.value)}
               required
               minLength={8}
-              className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl input-premium outline-none text-gray-900 dark:text-white placeholder-gray-400"
+              className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-blue-200 dark:border-white/10 rounded-xl input-premium outline-none text-gray-900 dark:text-white placeholder-gray-400"
             />
             <button
               type="button"
@@ -107,7 +107,7 @@ export function ResetPasswordPage() {
             value={confirmPassword}
             onChange={e => setConfirmPassword(e.target.value)}
             required
-            className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl input-premium outline-none text-gray-900 dark:text-white placeholder-gray-400"
+            className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-blue-200 dark:border-white/10 rounded-xl input-premium outline-none text-gray-900 dark:text-white placeholder-gray-400"
           />
           <button
             type="submit"

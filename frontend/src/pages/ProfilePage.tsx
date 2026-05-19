@@ -79,7 +79,7 @@ export function ProfilePage() {
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 pb-24 md:pb-8 animate-fade-in-up">
       {/* Profile Header */}
-      <div className="bg-white dark:bg-[#14141F]/80 rounded-2xl p-6 border border-gray-100 dark:border-white/5 mb-8">
+      <div className="bg-white dark:bg-[#14141F]/80 rounded-2xl p-6 border border-blue-100/60 dark:border-white/5 shadow-sm mb-8">
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 bg-gradient-to-br from-kz-blue to-kz-gold rounded-2xl flex items-center justify-center text-white text-2xl font-bold shadow-lg">
             {user?.firstName?.charAt(0) || 'U'}
@@ -98,7 +98,7 @@ export function ProfilePage() {
 
       {/* Selected Order Detail */}
       {selectedOrder && (
-        <div className="bg-white dark:bg-[#14141F]/80 rounded-2xl p-6 border border-gray-100 dark:border-white/5 mb-8 animate-scale-in">
+        <div className="bg-white dark:bg-[#14141F]/80 rounded-2xl p-6 border border-blue-100/60 dark:border-white/5 shadow-sm mb-8 animate-scale-in">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
               <Package size={20} className="text-kz-blue" />
@@ -120,7 +120,7 @@ export function ProfilePage() {
 
           <div className="space-y-3">
             {selectedOrder.items.map(item => (
-              <div key={item.id} className="flex items-center justify-between py-3 border-b border-gray-100 dark:border-white/5 last:border-0">
+              <div key={item.id} className="flex items-center justify-between py-3 border-b border-blue-100/60 dark:border-white/5 shadow-sm last:border-0">
                 <div>
                   <p className="font-semibold text-gray-900 dark:text-white text-sm">{item.productTitle}</p>
                   <p className="text-xs text-gray-400">{item.variantSku} × {item.quantity}</p>
@@ -130,7 +130,7 @@ export function ProfilePage() {
             ))}
           </div>
 
-          <div className="flex justify-between items-center mt-4 pt-4 border-t-2 border-gray-100 dark:border-white/5">
+          <div className="flex justify-between items-center mt-4 pt-4 border-t-2 border-blue-100/60 dark:border-white/5 shadow-sm">
             <span className="text-lg font-bold text-gray-900 dark:text-white">{t('order_total')}</span>
             <span className="text-2xl font-extrabold text-kz-blue">{formatPrice(selectedOrder.totalTiyin)}</span>
           </div>
@@ -159,7 +159,7 @@ export function ProfilePage() {
             <button
               key={order.id}
               onClick={() => setSelectedOrder(order)}
-              className="w-full text-left bg-white dark:bg-[#14141F]/80 rounded-2xl p-5 border border-gray-100 dark:border-white/5 card-hover group"
+              className="w-full text-left bg-white dark:bg-[#14141F]/80 rounded-2xl p-5 border border-blue-100/60 dark:border-white/5 shadow-sm card-hover group"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">

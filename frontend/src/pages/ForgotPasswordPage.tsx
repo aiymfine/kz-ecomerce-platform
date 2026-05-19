@@ -46,7 +46,7 @@ export function ForgotPasswordPage() {
 
   return (
     <div className="max-w-md mx-auto px-4 py-16 animate-fade-in-up">
-      <div className="bg-white dark:bg-[#14141F]/80 rounded-2xl p-8 border border-gray-100 dark:border-white/5 shadow-sm">
+      <div className="bg-white dark:bg-[#14141F]/80 rounded-2xl p-8 border border-blue-100/60 dark:border-white/5 shadow-sm shadow-sm">
         <div className="text-center mb-6">
           <div className="w-14 h-14 bg-amber-100 dark:bg-amber-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <KeyRound size={24} className="text-amber-600" />
@@ -68,7 +68,7 @@ export function ForgotPasswordPage() {
             value={email}
             onChange={e => setEmail(e.target.value)}
             required
-            className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl input-premium outline-none text-gray-900 dark:text-white placeholder-gray-400"
+            className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-blue-200 dark:border-white/10 rounded-xl input-premium outline-none text-gray-900 dark:text-white placeholder-gray-400"
           />
           <button
             type="submit"

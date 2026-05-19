@@ -192,9 +192,9 @@ export function Header() {
             {mode === 'login' ? (
               <form onSubmit={handleLogin} className="space-y-4">
                 <input type="email" placeholder={t('auth_email_placeholder')} value={email} onChange={e => setEmail(e.target.value)} required
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl input-premium outline-none text-gray-900 dark:text-white placeholder-gray-400" />
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-blue-200 dark:border-white/10 rounded-xl input-premium outline-none text-gray-900 dark:text-white placeholder-gray-400" />
                 <input type="password" placeholder={t('auth_password_placeholder')} value={password} onChange={e => setPassword(e.target.value)} required
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl input-premium outline-none text-gray-900 dark:text-white placeholder-gray-400" />
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-blue-200 dark:border-white/10 rounded-xl input-premium outline-none text-gray-900 dark:text-white placeholder-gray-400" />
                 <button type="submit" disabled={submitting}
                   className="w-full btn-primary text-white py-3 rounded-xl font-semibold disabled:opacity-50">
                   {submitting ? '...' : t('auth_login')}
@@ -204,16 +204,16 @@ export function Header() {
               <form onSubmit={handleRegister} className="space-y-3">
                 <div className="grid grid-cols-2 gap-3">
                   <input type="text" placeholder={t('auth_firstname_placeholder')} value={firstName} onChange={e => setFirstName(e.target.value)} required
-                    className="px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl input-premium outline-none text-gray-900 dark:text-white placeholder-gray-400" />
+                    className="px-4 py-3 bg-gray-50 dark:bg-white/5 border border-blue-200 dark:border-white/10 rounded-xl input-premium outline-none text-gray-900 dark:text-white placeholder-gray-400" />
                   <input type="text" placeholder={t('auth_lastname_placeholder')} value={lastName} onChange={e => setLastName(e.target.value)}
-                    className="px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl input-premium outline-none text-gray-900 dark:text-white placeholder-gray-400" />
+                    className="px-4 py-3 bg-gray-50 dark:bg-white/5 border border-blue-200 dark:border-white/10 rounded-xl input-premium outline-none text-gray-900 dark:text-white placeholder-gray-400" />
                 </div>
                 <input type="email" placeholder={t('auth_email_placeholder')} value={email} onChange={e => setEmail(e.target.value)} required
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl input-premium outline-none text-gray-900 dark:text-white placeholder-gray-400" />
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-blue-200 dark:border-white/10 rounded-xl input-premium outline-none text-gray-900 dark:text-white placeholder-gray-400" />
                 <input type="tel" placeholder={t('auth_phone_placeholder')} value={phone} onChange={e => setPhone(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl input-premium outline-none text-gray-900 dark:text-white placeholder-gray-400" />
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-blue-200 dark:border-white/10 rounded-xl input-premium outline-none text-gray-900 dark:text-white placeholder-gray-400" />
                 <input type="password" placeholder={t('auth_password_placeholder')} value={password} onChange={e => setPassword(e.target.value)} required minLength={8}
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl input-premium outline-none text-gray-900 dark:text-white placeholder-gray-400" />
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-blue-200 dark:border-white/10 rounded-xl input-premium outline-none text-gray-900 dark:text-white placeholder-gray-400" />
                 <button type="submit" disabled={submitting}
                   className="w-full btn-primary text-white py-3 rounded-xl font-semibold disabled:opacity-50">
                   {submitting ? '...' : t('auth_register')}

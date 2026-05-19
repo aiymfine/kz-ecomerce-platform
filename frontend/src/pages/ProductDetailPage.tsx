@@ -111,7 +111,7 @@ export function ProductDetailPage() {
         <div>
           <div className="flex items-start justify-between gap-4">
             <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white">{product.title}</h1>
-            <button className="p-2.5 rounded-xl border border-gray-200 dark:border-white/10 text-gray-400 hover:text-red-500 hover:border-red-200 transition-all flex-shrink-0">
+            <button className="p-2.5 rounded-xl border border-blue-200 dark:border-white/10 text-gray-400 hover:text-red-500 hover:border-red-200 transition-all flex-shrink-0">
               <Heart size={20} />
             </button>
           </div>
@@ -172,7 +172,7 @@ export function ProductDetailPage() {
                           className={`px-5 py-2.5 rounded-xl border-2 text-sm font-medium transition-all ${
                             selectedVariant === i
                               ? 'border-kz-blue bg-kz-blue/5 text-kz-blue dark:bg-kz-blue/10'
-                              : 'border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:border-gray-300'
+                              : 'border-blue-200 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:border-gray-300'
                           }`}>
                           {color}
                         </button>
@@ -192,7 +192,7 @@ export function ProductDetailPage() {
                           className={`w-14 h-14 rounded-xl border-2 text-sm font-semibold transition-all ${
                             selectedVariant === i
                               ? 'border-kz-blue bg-kz-blue/5 text-kz-blue dark:bg-kz-blue/10'
-                              : 'border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:border-gray-300'
+                              : 'border-blue-200 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:border-gray-300'
                           }`}>
                           {size}
                         </button>
@@ -211,7 +211,7 @@ export function ProductDetailPage() {
                         className={`px-5 py-2.5 rounded-xl border-2 text-sm font-medium transition-all ${
                           selectedVariant === i
                             ? digital ? 'border-violet-500 bg-violet-500/5 text-violet-600 dark:bg-violet-500/10' : 'border-kz-blue bg-kz-blue/5 text-kz-blue'
-                            : 'border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:border-gray-300'
+                            : 'border-blue-200 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:border-gray-300'
                         }`}>
                         {formatPrice(v.priceTiyin)}
                       </button>
@@ -225,7 +225,7 @@ export function ProductDetailPage() {
           {/* Quantity + Add to Cart */}
           {variant && (
             <div className="flex items-center gap-4 mt-8">
-              <div className="flex items-center border-2 border-gray-200 dark:border-white/10 rounded-xl overflow-hidden">
+              <div className="flex items-center border-2 border-blue-200 dark:border-white/10 rounded-xl overflow-hidden">
                 <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="p-3 text-gray-500 hover:bg-gray-50 dark:hover:bg-white/5 transition">
                   <Minus size={16} />
                 </button>
@@ -260,7 +260,7 @@ export function ProductDetailPage() {
 
       {/* Tabs */}
       <div className="mt-16">
-        <div className="flex gap-6 border-b border-gray-200 dark:border-white/10">
+        <div className="flex gap-6 border-b border-blue-200 dark:border-white/10">
           <button
             onClick={() => setActiveTab('desc')}
             className={`pb-3 font-semibold transition-all ${activeTab === 'desc' ? 'text-kz-blue border-b-2 border-kz-blue' : 'text-gray-400 dark:text-gray-500'}`}
@@ -277,22 +277,22 @@ export function ProductDetailPage() {
 
         <div className="mt-6 animate-fade-in">
           {activeTab === 'desc' ? (
-            <div className="bg-white dark:bg-[#14141F]/80 rounded-2xl p-6 border border-gray-100 dark:border-white/5">
+            <div className="bg-white dark:bg-[#14141F]/80 rounded-2xl p-6 border border-blue-100/60 dark:border-white/5 shadow-sm">
               <p className="text-gray-600 dark:text-gray-300 leading-relaxed">{product.description || t('no_description')}</p>
               <div className="grid sm:grid-cols-2 gap-4 mt-6">
-                <div className="flex justify-between py-2 border-b border-gray-100 dark:border-white/5">
+                <div className="flex justify-between py-2 border-b border-blue-100/60 dark:border-white/5 shadow-sm">
                   <span className="text-gray-500 dark:text-gray-400">{t('detail_warranty')}</span>
                   <span className="font-medium text-gray-900 dark:text-white">{digital ? t('detail_digital_warranty') : t('detail_warranty_value')}</span>
                 </div>
-                <div className="flex justify-between py-2 border-b border-gray-100 dark:border-white/5">
+                <div className="flex justify-between py-2 border-b border-blue-100/60 dark:border-white/5 shadow-sm">
                   <span className="text-gray-500 dark:text-gray-400">{t('detail_delivery')}</span>
                   <span className="font-medium text-gray-900 dark:text-white">{digital ? t('detail_digital_delivery') : t('detail_delivery_value')}</span>
                 </div>
-                <div className="flex justify-between py-2 border-b border-gray-100 dark:border-white/5">
+                <div className="flex justify-between py-2 border-b border-blue-100/60 dark:border-white/5 shadow-sm">
                   <span className="text-gray-500 dark:text-gray-400">SKU</span>
                   <span className="font-medium text-gray-900 dark:text-white font-mono">{variant?.sku}</span>
                 </div>
-                <div className="flex justify-between py-2 border-b border-gray-100 dark:border-white/5">
+                <div className="flex justify-between py-2 border-b border-blue-100/60 dark:border-white/5 shadow-sm">
                   <span className="text-gray-500 dark:text-gray-400">{t('detail_type')}</span>
                   <span className="font-medium text-gray-900 dark:text-white">{digital ? t('detail_type_digital') : t('detail_type_physical')}</span>
                 </div>
@@ -301,7 +301,7 @@ export function ProductDetailPage() {
           ) : (
             <div className="space-y-4">
               {fakeReviews.map((review, i) => (
-                <div key={i} className="bg-white dark:bg-[#14141F]/80 rounded-2xl p-5 border border-gray-100 dark:border-white/5">
+                <div key={i} className="bg-white dark:bg-[#14141F]/80 rounded-2xl p-5 border border-blue-100/60 dark:border-white/5 shadow-sm">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-gradient-to-br from-kz-blue to-kz-gold rounded-full flex items-center justify-center text-white font-bold text-sm">

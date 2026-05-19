@@ -8,7 +8,7 @@
   --color-kz-blue-dark: #003D7A;
   --color-glass: rgba(255, 255, 255, 0.08);
   --color-glass-border: rgba(255, 255, 255, 0.12);
-  --color-light-bg: #F7F8FA;
+  --color-light-bg: #F0F4FF;
   --color-light-card: #FFFFFF;
 }
 
@@ -19,10 +19,10 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* Light mode base */
+/* Light mode base — brighter, more blue tint */
 body {
-  background-color: #F7F8FA;
-  color: #111827;
+  background-color: #EFF4FF;
+  color: #0f172a;
 }
 
 /* Dark mode */
@@ -155,25 +155,27 @@ body {
 .animate-delay-500 { animation-delay: 0.5s; }
 .animate-delay-700 { animation-delay: 0.7s; }
 
-/* Glass morphism — light mode: white glass, dark mode: dark glass */
+/* Glass morphism — light mode: bright glass with subtle blue tint */
 .glass {
-  background: rgba(255, 255, 255, 0.72);
+  background: rgba(255, 255, 255, 0.82);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-bottom: 1px solid rgba(0, 102, 204, 0.08);
+  box-shadow: 0 1px 8px rgba(0, 51, 153, 0.06);
 }
 
 .dark .glass {
   background: rgba(15, 15, 25, 0.7);
   border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: none;
 }
 
 .glass-card {
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06);
+  border: 1px solid rgba(0, 102, 204, 0.08);
+  box-shadow: 0 2px 12px rgba(0, 51, 153, 0.06), 0 1px 3px rgba(0,0,0,0.04);
 }
 
 .dark .glass-card {
@@ -182,13 +184,13 @@ body {
   box-shadow: none;
 }
 
-/* Premium card hover */
+/* Premium card hover — light mode gets colorful shadow */
 .card-hover {
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 .card-hover:hover {
   transform: translateY(-6px);
-  box-shadow: 0 12px 24px rgba(0,0,0,0.08), 0 4px 8px rgba(0,0,0,0.04);
+  box-shadow: 0 12px 32px rgba(0, 102, 204, 0.12), 0 4px 12px rgba(0, 51, 153, 0.08);
 }
 .dark .card-hover:hover {
   box-shadow: 0 12px 40px rgba(0,0,0,0.4);
@@ -197,11 +199,11 @@ body {
 /* Page transition */
 .page-enter { animation: fade-in-up 0.4s ease-out both; }
 
-/* Skeleton shimmer */
+/* Skeleton shimmer — brighter in light */
 .skeleton {
   position: relative;
   overflow: hidden;
-  background: #e8eaed;
+  background: linear-gradient(135deg, #dbe4f8, #e8eeff);
   border-radius: 0.75rem;
 }
 
@@ -213,7 +215,7 @@ body {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.7), transparent);
   background-size: 200% 100%;
   animation: shimmer 1.5s ease-in-out infinite;
 }
@@ -237,30 +239,30 @@ body {
 /* Scrollbar */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }
+::-webkit-scrollbar-thumb { background: #a3b8d6; border-radius: 3px; }
 .dark ::-webkit-scrollbar-thumb { background: #374151; }
 
 /* Star rating */
 .star-filled { color: #fbbf24; }
 .star-empty { color: #d1d5db; }
 
-/* Premium input focus ring */
+/* Premium input focus ring — brighter blue */
 .input-premium {
   transition: all 0.2s ease;
 }
 .input-premium:focus {
   border-color: #0066CC;
-  box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.12);
+  box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.15);
 }
 
-/* Premium button */
+/* Premium button — more vivid gradient */
 .btn-primary {
-  background: linear-gradient(135deg, #0066CC, #004C99);
+  background: linear-gradient(135deg, #0077EE, #0055BB);
   transition: all 0.25s ease;
 }
 .btn-primary:hover {
-  background: linear-gradient(135deg, #0052A3, #003D7A);
-  box-shadow: 0 8px 24px rgba(0, 102, 204, 0.25);
+  background: linear-gradient(135deg, #0066CC, #004499);
+  box-shadow: 0 8px 28px rgba(0, 102, 204, 0.35);
   transform: translateY(-1px);
 }
 .btn-primary:active {
@@ -276,4 +278,22 @@ body {
     radial-gradient(ellipse at 40% 30%, rgba(0, 60, 120, 0.8) 0%, transparent 60%);
   background-size: 300% 300%;
   animation: hero-gradient 12s ease infinite;
+}
+
+/* ==================== LIGHT MODE BRIGHTENING ==================== */
+
+/* Cards in light mode — white with blue-tinted border */
+.bg-white {
+  border-color: rgba(0, 102, 204, 0.06);
+}
+
+/* Input backgrounds — more contrast */
+input.bg-gray-50 {
+  background-color: #f0f4ff !important;
+  border-color: #c7d5ec !important;
+}
+
+/* Links — more vivid blue */
+.text-kz-blue {
+  color: #0066CC !important;
 }

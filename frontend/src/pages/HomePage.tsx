@@ -97,7 +97,7 @@ export function HomePage() {
         {/* Bottom wave */}
         <div className="absolute bottom-0 left-0 right-0">
           <svg viewBox="0 0 1440 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M0 80V40C240 70 480 10 720 40C960 70 1200 10 1440 40V80H0Z" className="fill-[#F7F8FA] dark:fill-[#0a0a0f]" />
+            <path d="M0 80V40C240 70 480 10 720 40C960 70 1200 10 1440 40V80H0Z" className="fill-[#EFF4FF] dark:fill-[#0a0a0f]" />
           </svg>
         </div>
       </section>
@@ -113,7 +113,7 @@ export function HomePage() {
           ].map((s, i) => (
             <div
               key={s.label}
-              className="bg-white dark:bg-[#14141F]/80 rounded-2xl p-5 text-center card-hover border border-gray-100 dark:border-white/5"
+              className="bg-white dark:bg-[#14141F]/80 rounded-2xl p-5 text-center card-hover border border-blue-100 dark:border-white/5 shadow-sm"
               style={{ animationDelay: `${i * 0.1}s` }}
             >
               <s.icon size={24} className={`mx-auto mb-2 ${s.color}`} />
@@ -160,7 +160,7 @@ export function HomePage() {
                 <Link
                   key={product.id}
                   to={`/products/${product.slug}`}
-                  className="group bg-white dark:bg-[#14141F]/80 rounded-2xl overflow-hidden card-hover border border-gray-100 dark:border-white/5 relative"
+                  className="group bg-white dark:bg-[#14141F]/80 rounded-2xl overflow-hidden card-hover border border-blue-100/60 dark:border-white/5 shadow-sm relative"
                 >
                   {/* Wishlist */}
                   <button

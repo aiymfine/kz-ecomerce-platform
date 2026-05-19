@@ -89,7 +89,7 @@ export function AdminDashboardPage() {
   if (!logged) {
     return (
       <div className="max-w-md mx-auto px-4 py-16 animate-fade-in-up">
-        <div className="bg-white dark:bg-[#14141F]/80 rounded-2xl p-8 border border-gray-100 dark:border-white/5 shadow-sm">
+        <div className="bg-white dark:bg-[#14141F]/80 rounded-2xl p-8 border border-blue-100/60 dark:border-white/5 shadow-sm shadow-sm">
           <div className="text-center mb-6">
             <div className="w-14 h-14 bg-red-100 dark:bg-red-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <Shield size={24} className="text-red-600" />
@@ -141,7 +141,7 @@ export function AdminDashboardPage() {
             className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
               activeTab === tab.key
                 ? 'bg-kz-blue text-white shadow-md'
-                : 'bg-white dark:bg-white/5 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 border border-gray-100 dark:border-white/5'
+                : 'bg-white dark:bg-white/5 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 border border-blue-100/60 dark:border-white/5 shadow-sm'
             }`}>
             <tab.icon size={16} /> {tab.label}
           </button>
@@ -160,7 +160,7 @@ export function AdminDashboardPage() {
 
       {/* Merchants Tab */}
       {activeTab === 'merchants' && (
-        <div className="bg-white dark:bg-[#14141F]/80 rounded-2xl border border-gray-100 dark:border-white/5 overflow-hidden">
+        <div className="bg-white dark:bg-[#14141F]/80 rounded-2xl border border-blue-100/60 dark:border-white/5 shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-gray-50 dark:bg-white/5">
@@ -175,7 +175,7 @@ export function AdminDashboardPage() {
               </thead>
               <tbody>
                 {merchants.map(m => (
-                  <tr key={m.id} className="border-t border-gray-100 dark:border-white/5">
+                  <tr key={m.id} className="border-t border-blue-100/60 dark:border-white/5 shadow-sm">
                     <td className="px-4 py-3 font-mono text-gray-400">#{m.id}</td>
                     <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">{m.name}</td>
                     <td className="px-4 py-3 text-gray-500">{m.email}</td>
@@ -201,7 +201,7 @@ export function AdminDashboardPage() {
       {activeTab === 'stores' && (
         <div className="grid gap-4">
           {stores.map(s => (
-            <div key={s.id} className="bg-white dark:bg-[#14141F]/80 rounded-2xl p-5 border border-gray-100 dark:border-white/5 flex items-center justify-between">
+            <div key={s.id} className="bg-white dark:bg-[#14141F]/80 rounded-2xl p-5 border border-blue-100/60 dark:border-white/5 shadow-sm flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-gradient-to-br from-kz-blue to-kz-gold rounded-xl flex items-center justify-center text-white font-bold">
                   {s.name.charAt(0)}
@@ -248,7 +248,7 @@ function StatCard({ icon: Icon, label, value, color }: { icon: any; label: strin
     amber: 'from-amber-500 to-amber-600',
   };
   return (
-    <div className="bg-white dark:bg-[#14141F]/80 rounded-2xl p-5 border border-gray-100 dark:border-white/5">
+    <div className="bg-white dark:bg-[#14141F]/80 rounded-2xl p-5 border border-blue-100/60 dark:border-white/5 shadow-sm">
       <div className={`w-10 h-10 bg-gradient-to-br ${colorMap[color]} rounded-xl flex items-center justify-center text-white mb-3`}>
         <Icon size={18} />
       </div>
@@ -261,7 +261,7 @@ function StatCard({ icon: Icon, label, value, color }: { icon: any; label: strin
 function QueueCard({ title, data }: { title: string; data: any }) {
   if (!data) return null;
   return (
-    <div className="bg-white dark:bg-[#14141F]/80 rounded-2xl p-6 border border-gray-100 dark:border-white/5">
+    <div className="bg-white dark:bg-[#14141F]/80 rounded-2xl p-6 border border-blue-100/60 dark:border-white/5 shadow-sm">
       <h3 className="font-bold text-gray-900 dark:text-white mb-4">{title}</h3>
       <div className="grid grid-cols-2 gap-3">
         {[

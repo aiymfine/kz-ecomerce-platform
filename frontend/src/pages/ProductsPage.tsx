@@ -79,12 +79,12 @@ export function ProductsPage() {
               placeholder={t('search_placeholder')}
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="w-full sm:w-72 pl-10 pr-4 py-2.5 bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl input-premium outline-none text-gray-900 dark:text-white placeholder-gray-400"
+              className="w-full sm:w-72 pl-10 pr-4 py-2.5 bg-white dark:bg-white/5 border border-blue-200 dark:border-white/10 rounded-xl input-premium outline-none text-gray-900 dark:text-white placeholder-gray-400 shadow-sm"
             />
           </div>
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className={`p-2.5 rounded-xl border transition-all ${showFilters ? 'bg-kz-blue text-white border-kz-blue' : 'bg-white dark:bg-white/5 border-gray-200 dark:border-white/10 text-gray-500'}`}
+            className={`p-2.5 rounded-xl border transition-all ${showFilters ? 'bg-kz-blue text-white border-kz-blue' : 'bg-white dark:bg-white/5 border-blue-200 dark:border-white/10 text-gray-500 shadow-sm'}`}
           >
             <SlidersHorizontal size={18} />
           </button>
@@ -97,8 +97,8 @@ export function ProductsPage() {
           onClick={() => { setActiveCategory(null); setProductType('all'); }}
           className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
             activeCategory === null && productType === 'all'
-              ? 'bg-kz-blue text-white shadow-md'
-              : 'bg-white dark:bg-white/5 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 border border-gray-100 dark:border-white/5'
+              ? 'bg-kz-blue text-white shadow-md shadow-kz-blue/20'
+              : 'bg-white dark:bg-white/5 text-gray-600 dark:text-gray-400 hover:bg-blue-50 dark:hover:bg-white/10 border border-blue-200 dark:border-white/5 shadow-sm'
           }`}
         >
           {t('category_all')}
@@ -108,7 +108,7 @@ export function ProductsPage() {
           className={`px-4 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-1.5 ${
             productType === 'physical'
               ? 'bg-kz-blue text-white shadow-md'
-              : 'bg-white dark:bg-white/5 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 border border-gray-100 dark:border-white/5'
+              : 'bg-white dark:bg-white/5 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 border border-blue-100/60 dark:border-white/5 shadow-sm'
           }`}
         >
           <Package size={14} /> {t('category_physical')}
@@ -118,7 +118,7 @@ export function ProductsPage() {
           className={`px-4 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-1.5 ${
             productType === 'digital'
               ? 'bg-violet-600 text-white shadow-md'
-              : 'bg-white dark:bg-white/5 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 border border-gray-100 dark:border-white/5'
+              : 'bg-white dark:bg-white/5 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 border border-blue-100/60 dark:border-white/5 shadow-sm'
           }`}
         >
           <Download size={14} /> {t('category_digital')}
@@ -130,7 +130,7 @@ export function ProductsPage() {
             className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
               activeCategory === cat.id
                 ? 'bg-kz-blue text-white shadow-md'
-                : 'bg-white dark:bg-white/5 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 border border-gray-100 dark:border-white/5'
+                : 'bg-white dark:bg-white/5 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 border border-blue-100/60 dark:border-white/5 shadow-sm'
             }`}
           >
             {cat.name}
@@ -140,7 +140,7 @@ export function ProductsPage() {
 
       {/* Filters */}
       {showFilters && (
-        <div className="bg-white dark:bg-[#14141F]/80 rounded-2xl p-5 mb-6 animate-fade-in-up flex flex-wrap items-center gap-3 border border-gray-100 dark:border-white/5 shadow-sm">
+        <div className="bg-white dark:bg-[#14141F]/80 rounded-2xl p-5 mb-6 animate-fade-in-up flex flex-wrap items-center gap-3 border border-blue-100/60 dark:border-white/5 shadow-sm shadow-sm">
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('sort_label')}</span>
           {([
             ['default', t('sort_default')],
@@ -154,7 +154,7 @@ export function ProductsPage() {
               className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
                 sortBy === key
                   ? 'bg-kz-blue text-white shadow-md'
-                  : 'bg-gray-50 dark:bg-white/5 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10'
+                  : 'bg-blue-50/50 dark:bg-white/5 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10'
               }`}
             >
               {label}
@@ -187,7 +187,7 @@ export function ProductsPage() {
             return (
               <div
                 key={product.id}
-                className="bg-white dark:bg-[#14141F]/80 rounded-2xl overflow-hidden card-hover border border-gray-100 dark:border-white/5 group relative"
+                className="bg-white dark:bg-[#14141F]/80 rounded-2xl overflow-hidden card-hover border border-blue-100/60 dark:border-white/5 shadow-sm group relative"
               >
                 {/* Wishlist */}
                 <button

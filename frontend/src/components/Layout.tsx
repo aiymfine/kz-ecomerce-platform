@@ -8,7 +8,7 @@ import { useLang } from '../hooks/useLang';
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen flex flex-col bg-[#F7F8FA] dark:bg-[#0a0a0f] transition-colors duration-300">
+    <div className="min-h-screen flex flex-col bg-[#EFF4FF] dark:bg-[#0a0a0f] transition-colors duration-300">
       <Header />
       <main className="flex-1">{children}</main>
       <Footer />
