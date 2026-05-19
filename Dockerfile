@@ -12,6 +12,7 @@ WORKDIR /app
 COPY package.json pnpm-lock.yaml ./
 RUN npm install -g pnpm && pnpm install --frozen-lockfile
 COPY . .
+RUN npx prisma generate
 RUN pnpm run build
 
 # Stage 3: Production
