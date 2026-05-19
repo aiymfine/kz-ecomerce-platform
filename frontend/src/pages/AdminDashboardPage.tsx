@@ -79,10 +79,8 @@ export function AdminDashboardPage() {
     setLoading(false);
   };
 
-  useEffect(() => {
-    const saved = localStorage.getItem('admin_token');
-    if (saved) { setToken(saved); setLogged(true); }
-  }, []);
+  // Always require explicit admin login (no auto-restore from localStorage)
+  // This ensures admin access is deliberate
 
   useEffect(() => { if (logged) fetchData(); }, [logged]);
 
