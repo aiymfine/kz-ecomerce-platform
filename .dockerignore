@@ -1,15 +1,12 @@
 node_modules
 dist
 .git
-.gitignore
 .env
 .env.local
 *.md
 coverage
 .nyc_output
 test
-docker-compose.yml
-Dockerfile
 .husky
 .vscode
 .idea
