@@ -8,18 +8,16 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3001
-      DATABASE_URL: ${DATABASE_URL:-postgresql://postgres:postgres@postgres:5432/shopbuilder}
-      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
-      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2}
-      JWT_REFRESH_SECRET_KEY: ${JWT_REFRESH_SECRET_KEY:-f6e5d4c3b2a1f6e5d4c3b2a1f6e5d4c3b2a1f6e5d4c3b2a1f6e5d4c3b2a1f6e5}
-      CORS_ORIGINS: ${CORS_ORIGINS:-*}
-      SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}
-      SMTP_PORT: ${SMTP_PORT:-587}
-      SMTP_USER: ${SMTP_USER:-}
-      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
-      EMAIL_FROM_ADDRESS: ${EMAIL_FROM_ADDRESS:-noreply@shopbuilder.kz}
-    command: >
-      sh -c "npx prisma migrate deploy || true && node dist/prisma/seed.js || true && exec node dist/main"
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/shopbuilder
+      REDIS_URL: redis://redis:6379/0
+      JWT_SECRET_KEY: a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2
+      JWT_REFRESH_SECRET_KEY: f6e5d4c3b2a1f6e5d4c3b2a1f6e5d4c3b2a1f6e5d4c3b2a1f6e5d4c3b2a1f6e5
+      CORS_ORIGINS: "*"
+      SMTP_HOST: smtp.gmail.com
+      SMTP_PORT: 587
+      SMTP_USER: ""
+      SMTP_PASSWORD: ""
+      EMAIL_FROM_ADDRESS: noreply@shopbuilder.kz
     depends_on:
       postgres:
         condition: service_healthy

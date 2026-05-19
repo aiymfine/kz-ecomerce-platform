@@ -1,15 +1,14 @@
 # Build stage
 FROM node:20-alpine AS build
 WORKDIR /app
-COPY package.json pnpm-lock.yaml ./
-RUN npm install -g pnpm && pnpm install --frozen-lockfile
+COPY package.json package-lock.json ./
+RUN npm ci
 COPY . .
-RUN pnpm run build
+RUN npm run build
 
 # Production stage — serve with nginx
 FROM nginx:alpine
 COPY --from=build /app/dist /usr/share/nginx/html
-# SPA routing: redirect all routes to index.html
 COPY <<'EOF' /etc/nginx/conf.d/default.conf
 server {
     listen 80;

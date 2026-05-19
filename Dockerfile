@@ -40,4 +40,4 @@ RUN npx prisma generate
 
 EXPOSE 3001
 
-CMD ["node", "dist/main"]
+CMD ["sh", "-c", "npx prisma migrate deploy || true && node dist/prisma/seed.js || true && exec node dist/main"]
