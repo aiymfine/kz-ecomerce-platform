@@ -27,7 +27,8 @@ body {
 
 /* Force all inputs to dark text in light mode */
 input, textarea, select {
-  color: #111827;
+  color: #111827 !important;
+  background-color: #eef2ff;
 }
 
 /* Dark mode */
@@ -36,7 +37,8 @@ input, textarea, select {
   color: #e5e7eb;
 }
 .dark input, .dark textarea, .dark select {
-  color: #f9fafb;
+  color: #f9fafb !important;
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
 /* ==================== ANIMATIONS ==================== */
