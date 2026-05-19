@@ -7,6 +7,7 @@ import { TransformInterceptor } from './common/interceptors/transform.intercepto
 import { ZodValidationPipe } from './common/pipes/zod-validation.pipe';
 import * as express from 'express';
 import * as path from 'path';
+import * as fs from 'fs';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -25,7 +26,6 @@ async function bootstrap() {
 
   // Serve frontend static files (if they exist — Docker production only)
   const frontendPath = path.join(__dirname, '..', 'public');
-  const fs = require('fs');
   if (fs.existsSync(frontendPath) && fs.readdirSync(frontendPath).length > 0) {
     app.use(express.static(frontendPath));
     // SPA fallback: serve index.html for non-API routes
