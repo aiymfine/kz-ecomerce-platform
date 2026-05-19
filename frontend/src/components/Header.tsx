@@ -224,6 +224,17 @@ export function Header() {
             <p className="text-xs text-gray-400 dark:text-gray-500 mt-4 text-center">
               {t('auth_demo')}
             </p>
+            <div className="flex justify-center gap-4 mt-3">
+              <Link to="/forgot-password" onClick={() => setShowAuth(false)} className="text-xs text-gray-400 hover:text-kz-blue transition">
+                {t('forgot_title')}
+              </Link>
+              <Link to="/verify-email" onClick={() => setShowAuth(false)} className="text-xs text-gray-400 hover:text-kz-blue transition">
+                {t('verify_title')}
+              </Link>
+            </div>
+            <Link to="/admin" onClick={() => setShowAuth(false)} className="block text-center text-xs text-red-400 hover:text-red-500 mt-2 transition">
+              {t('admin_dashboard')} →
+            </Link>
           </div>
         </div>
       )}

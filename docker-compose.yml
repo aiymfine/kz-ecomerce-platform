@@ -1,35 +1,46 @@
 services:
-  app:
+  backend:
     build:
       context: .
       dockerfile: Dockerfile
     ports:
-      - '3001:3001'
+      - '${BACKEND_PORT:-3001}:3001'
     environment:
-      NODE_ENV: production
+      NODE_ENV: ${ENVIRONMENT:-production}
       PORT: 3001
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/shopbuilder
-      REDIS_URL: redis://redis:6379/0
-      JWT_SECRET_KEY: a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2
-      CORS_ORIGINS: http://localhost:3000,http://localhost:5173
-      SMTP_HOST: smtp.gmail.com
-      SMTP_PORT: 587
-      SMTP_USER: ""
-      SMTP_PASSWORD: ""
+      DATABASE_URL: ${DATABASE_URL:-postgresql://postgres:postgres@postgres:5432/shopbuilder}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2}
+      JWT_REFRESH_SECRET_KEY: ${JWT_REFRESH_SECRET_KEY:-f6e5d4c3b2a1f6e5d4c3b2a1f6e5d4c3b2a1f6e5d4c3b2a1f6e5d4c3b2a1f6e5}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://localhost:5173}
+      SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      EMAIL_FROM_ADDRESS: ${EMAIL_FROM_ADDRESS:-noreply@shopbuilder.kz}
     command: >
-      sh -c "npx prisma migrate deploy && node dist/prisma/seed.js && node dist/main"
+      sh -c "npx prisma migrate deploy && node prisma/seed.js && node dist/main"
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
 
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - '${FRONTEND_PORT:-3000}:80'
+    depends_on:
+      - backend
+
   postgres:
     image: postgres:15-alpine
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: shopbuilder
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-shopbuilder}
     ports:
       - '5432:5432'
     volumes:

@@ -6,6 +6,10 @@ import { ProductDetailPage } from './pages/ProductDetailPage';
 import { CartPage } from './pages/CartPage';
 import { OrderConfirmationPage } from './pages/OrderConfirmationPage';
 import { ProfilePage } from './pages/ProfilePage';
+import { VerifyEmailPage } from './pages/VerifyEmailPage';
+import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
+import { ResetPasswordPage } from './pages/ResetPasswordPage';
+import { AdminDashboardPage } from './pages/AdminDashboardPage';
 import { AuthProvider } from './hooks/useAuth';
 import { CartProvider } from './hooks/useCart';
 import { ToastProvider } from './components/Toast';
@@ -48,6 +52,10 @@ export default function App() {
                       <Route path="/cart" element={<CartPage />} />
                       <Route path="/order-confirmation" element={<OrderConfirmationPage />} />
                       <Route path="/profile" element={<ProfilePage />} />
+                      <Route path="/verify-email" element={<VerifyEmailPage />} />
+                      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                      <Route path="/reset-password" element={<ResetPasswordPage />} />
+                      <Route path="/admin" element={<AdminDashboardPage />} />
                     </Routes>
                   </PageTransition>
                 </Layout>

@@ -16,23 +16,28 @@ function useAuthInner() {
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
-    const res = await authApi.login(email, password);
-    localStorage.setItem('auth_token', res.accessToken);
-    localStorage.setItem('auth_user', JSON.stringify(res.customer));
-    setUser(res.customer);
+    const res = await authApi.customerLogin(email, password);
+    const d = res.data || res;
+    localStorage.setItem('auth_token', d.accessToken);
+    localStorage.setItem('auth_refresh', d.refreshToken);
+    localStorage.setItem('auth_user', JSON.stringify(d.customer));
+    setUser(d.customer);
   }, []);
 
   const register = useCallback(async (body: {
     email: string; password: string; firstName: string; lastName: string; phone: string;
   }) => {
-    const res = await authApi.register(body);
-    localStorage.setItem('auth_token', res.accessToken);
-    localStorage.setItem('auth_user', JSON.stringify(res.customer));
-    setUser(res.customer);
+    const res = await authApi.customerRegister(body);
+    const d = res.data || res;
+    localStorage.setItem('auth_token', d.accessToken);
+    localStorage.setItem('auth_refresh', d.refreshToken);
+    localStorage.setItem('auth_user', JSON.stringify(d.customer));
+    setUser(d.customer);
   }, []);
 
   const logout = useCallback(() => {
     localStorage.removeItem('auth_token');
+    localStorage.removeItem('auth_refresh');
     localStorage.removeItem('auth_user');
     setUser(null);
   }, []);

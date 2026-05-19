@@ -1,0 +1,125 @@
+# ShopBuilder KZ — Final Project Defense Checklist
+
+## Submission Verification
+
+- [x] Application boots locally with `docker compose up`
+- [ ] Application is LIVE on dashboard.deployrocks.com with working public URL
+- [ ] `DEPLOYED_URL.txt` contains the generated domain name
+- [ ] `VIDEO_LINK.txt` contains unlisted YouTube/video link (4-6 min)
+
+## Repository & Setup
+
+- [x] GitHub repo: https://github.com/aiymfine/kz-ecomerce-platform
+- [x] `docker-compose.yml` orchestrates backend + frontend + PostgreSQL + Redis + workers
+- [x] `.env.example` with all environment variables documented
+- [x] `README.md` with setup guide, architecture, testing instructions
+- [x] `migrations/` — full Prisma Migrate history (3 migrations)
+- [x] `tests/` — unit + integration tests (27+ pass)
+- [x] `frontend/` — React + Vite + TailwindCSS demo app
+- [x] `openapi.yaml` / `openapi.json` — complete API contract
+
+## Auth & Security
+
+- [x] Registration / Login / Logout / Refresh — complete JWT lifecycle with rotation
+- [x] Email verification on signup — REAL email via Gmail SMTP
+- [x] Password reset via email — token-based reset flow
+- [x] RBAC: admin / merchant / customer roles — 403 for wrong role
+- [x] Rate limiting: Redis token bucket on all auth endpoints (5/min)
+- [x] CORS: configured for deployed domain (no wildcards in prod)
+- [x] JWT access (30m) + refresh (7d) with Redis blacklisting
+- [x] No hardcoded secrets — all env vars externalized
+
+## Email Integration (3rd Party — Gmail SMTP)
+
+- [x] Email verification sends REAL email on signup
+- [x] Password reset sends REAL email with token
+- [x] Order confirmation email (queued via BullMQ)
+- [x] Payment receipt email (queued via BullMQ)
+- [x] All email sending is async via BullMQ worker queue (non-blocking)
+
+## ShopBuilder Business Logic
+
+- [x] Multi-tenancy: schema-per-tenant with dynamic connection routing
+- [x] Product variant matrix: generates Size × Color × Material SKU combinations
+- [x] Multi-warehouse inventory with smart routing
+- [x] Full checkout flow: cart → order → payment → webhook
+- [x] Payment integration: Kaspi Pay / Halyk Bank with idempotency keys
+- [x] Webhook engine: HMAC-SHA256, exponential backoff, dead-letter queue (5 retries)
+- [x] Discount / promo engine: stackable vs exclusive, percentage/fixed/free_shipping
+- [x] Abandoned cart recovery: cron every 15 min, BullMQ repeatable job
+- [x] Storefront API: token-based auth, rate limiting, Redis caching
+- [x] Analytics aggregation endpoint
+- [x] Subscription / recurring billing module
+- [x] Digital products with instant delivery
+
+## API Documentation
+
+- [x] Swagger UI live at `/api/docs`
+- [x] All endpoints documented with tags, descriptions, examples
+- [x] Standardized error responses: 400, 401, 403, 404, 409, 422, 500
+- [x] Cursor-based pagination on all list endpoints
+- [x] Realistic request/response examples (not placeholder values)
+
+## Background Workers & Async Processing
+
+- [x] Redis-backed BullMQ email worker
+- [x] Redis-backed BullMQ abandoned cart worker (cron every 15 min)
+- [x] Email queue: non-blocking enqueue, 3 retries with exponential backoff
+- [x] Queue visibility: `GET /api/admin/queue/status` (waiting/active/completed/failed)
+- [x] Cron scheduling via `SchedulerService` on startup
+
+## Testing
+
+- [x] Unit tests: 27+ pass (business logic, auth, RBAC)
+- [x] Integration tests: auth e2e (register, login, verify, refresh, reset)
+- [x] Auth tests: missing/expired/wrong-role tokens rejected
+- [x] All tests green on `npm test`
+
+## Frontend Demo Application
+
+- [x] React + Vite + TailwindCSS — modern SPA
+- [x] Consumes real backend API (no mocked data)
+- [x] User registration, login, logout (storefront customer auth)
+- [x] Email verification page (`/verify-email`)
+- [x] Password reset flow (`/forgot-password` → `/reset-password`)
+- [x] Product browsing with search, category filter, physical/digital filter
+- [x] Product detail page with variant selection, reviews, digital product info
+- [x] Shopping cart with quantity controls, promo codes, total calculation
+- [x] Checkout flow → order confirmation
+- [x] Profile page with order history
+- [x] Admin dashboard: merchants, stores, queue status
+- [x] Role-based views (customer storefront + admin dashboard)
+- [x] Error handling: displays backend errors (401, 403, validation)
+- [x] Responsive: works on desktop + mobile
+- [x] Bilingual: Kazakh (kk) + English (en)
+- [x] Dark mode support
+- [x] Containerized in docker-compose.yml
+
+## Technical Non-Negotiables
+
+- [x] Framework: Express.js (NestJS 10+) — matches Week 1 choice
+- [x] ORM: Prisma 5+ — zero raw SQL in app code (seed.ts DDL only)
+- [x] Database: PostgreSQL 15+ (ACID for all state changes)
+- [x] Cache/Queue: Redis for rate limiting, sessions, BullMQ jobs
+- [x] Schema validation: Zod on all request bodies
+- [x] Security: no hardcoded secrets, bcrypt passwords, JWT with refresh
+- [x] Email: Gmail SMTP (real 3rd party service)
+
+## Track-Specific: ShopBuilder
+
+- [x] Multi-tenancy: schema isolation working for multiple merchants
+- [x] Product variant matrix generates all SKU combinations
+- [x] Webhook event queue with retry count, next_attempt, dead-letter
+- [x] Discount engine: stackable vs exclusive, min order, first-buyer, per-customer limits
+- [x] Payment flow with idempotency keys
+- [x] Analytics endpoint (aggregated queries, no full table scans)
+
+## Defense Preparation
+
+- [x] Postman collection: `postman-collection.json` in repo root
+- [x] Test accounts documented:
+  - Admin: admin@shopbuilder.kz / Admin123456
+  - Merchant: merchant1@example.com / Merchant123
+  - Customer: test@customer.kz / Customer123
+- [x] Variant IDs documented: 1-17
+- [x] Demo flow: register → email → verify → login → browse → cart → checkout → order
