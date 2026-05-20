@@ -32,7 +32,8 @@ COPY --from=backend-build /app/pnpm-lock.yaml ./
 # Install production deps fresh (avoids pnpm symlink breakage from COPY)
 RUN npm install -g pnpm@9
 RUN pnpm install --prod --frozen-lockfile
-RUN npx prisma generate
+## @prisma/client postinstall already runs prisma generate — no need for a separate step
+## (npx would download latest prisma v7 which breaks our v5 schema)
 
 # Copy frontend static files (if built)
 COPY --from=frontend-build /app/dist ./public
