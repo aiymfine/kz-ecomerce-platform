@@ -25,8 +25,9 @@ WORKDIR /app
 
 # Sensible defaults for all required env vars.
 # Override via Dokku config:set or docker-compose environment.
+# NOTE: Do NOT set PORT here — Dokku assigns its own port at runtime
+# and configures nginx to proxy to it.
 ENV NODE_ENV=production \
-    PORT=3001 \
     DATABASE_POOL_SIZE=20 \
     JWT_SECRET_KEY=change-me-in-production-min-32-chars!! \
     JWT_ALGORITHM=HS256 \
@@ -55,6 +56,7 @@ RUN pnpm install --prod --frozen-lockfile
 # Copy frontend static files (if built)
 COPY --from=frontend-build /app/dist ./public
 
-EXPOSE 3001
+# Dokku assigns PORT at runtime — app listens on $PORT (defaults to 3001)
+EXPOSE 3001 8080
 # Use prisma@5 explicitly to avoid npx downloading incompatible v7+
 CMD ["sh", "-c", "npx prisma@5 migrate deploy && node dist/main.js"]
