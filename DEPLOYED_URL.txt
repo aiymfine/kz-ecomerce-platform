@@ -1,1 +1,2 @@
-https://your-app.deployrocks.com
+https://aiymfine-kz-ecomerce-platform-backend.kazi.rocks
+https://aiymfine-kz-ecomerce-platform.kazi.rocks

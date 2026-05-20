@@ -32,11 +32,10 @@ COPY --from=backend-build /app/pnpm-lock.yaml ./
 # Install production deps fresh (avoids pnpm symlink breakage from COPY)
 RUN npm install -g pnpm@9
 RUN pnpm install --prod --frozen-lockfile
-## @prisma/client postinstall already runs prisma generate — no need for a separate step
-## (npx would download latest prisma v7 which breaks our v5 schema)
 
 # Copy frontend static files (if built)
 COPY --from=frontend-build /app/dist ./public
 
 EXPOSE 3001
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/main.js"]
+# Use prisma@5 explicitly to avoid npx downloading incompatible v7+
+CMD ["sh", "-c", "npx prisma@5 migrate deploy && node dist/main.js"]
