@@ -5,7 +5,7 @@ RUN corepack enable && corepack prepare npm@latest --activate
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
 COPY frontend/ .
-RUN npm run build 2>/dev/null || mkdir -p dist
+RUN npm run build
 
 # Stage 2: Build backend
 FROM node:22-slim AS backend-build
