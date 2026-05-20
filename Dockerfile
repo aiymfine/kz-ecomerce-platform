@@ -29,8 +29,10 @@ COPY --from=backend-build /app/prisma ./prisma
 COPY --from=backend-build /app/package.json ./
 COPY --from=backend-build /app/pnpm-lock.yaml ./
 
-# Install production deps fresh (avoids pnpm symlink breakage from COPY)
+# Install production deps — use hoisted layout so transitive deps (express, etc.)
+# are accessible from the root, matching how NestJS imports work
 RUN npm install -g pnpm@9
+RUN echo "node-linker=hoisted" > .npmrc
 RUN pnpm install --prod --frozen-lockfile
 
 # Copy frontend static files (if built)
