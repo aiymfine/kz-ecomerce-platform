@@ -23,6 +23,23 @@ FROM node:22-slim AS runner
 RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 
+# Sensible defaults for all required env vars.
+# Override via Dokku config:set or docker-compose environment.
+ENV NODE_ENV=production \
+    PORT=3001 \
+    DATABASE_POOL_SIZE=20 \
+    JWT_SECRET_KEY=change-me-in-production-min-32-chars!! \
+    JWT_ALGORITHM=HS256 \
+    JWT_ACCESS_TOKEN_EXPIRE_MINUTES=30 \
+    JWT_REFRESH_TOKEN_EXPIRE_DAYS=7 \
+    CORS_ORIGINS="*" \
+    SMTP_HOST=smtp.gmail.com \
+    SMTP_PORT=587 \
+    SMTP_USER="" \
+    SMTP_PASSWORD="" \
+    SMTP_FROM="" \
+    APP_URL=http://localhost:3000
+
 # Copy built JS + prisma schema
 COPY --from=backend-build /app/dist ./dist
 COPY --from=backend-build /app/prisma ./prisma
