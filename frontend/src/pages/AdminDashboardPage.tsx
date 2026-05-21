@@ -34,8 +34,8 @@ export function AdminDashboardPage() {
   const { addToast } = useToast();
   const [token, setToken] = useState('');
   const [logged, setLogged] = useState(false);
-  const [email, setEmail] = useState('admin@shopbuilder.kz');
-  const [password, setPassword] = useState('Admin123456');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [queue, setQueue] = useState<QueueStatus | null>(null);
   const [merchants, setMerchants] = useState<Merchant[]>([]);
   const [stores, setStores] = useState<Store[]>([]);

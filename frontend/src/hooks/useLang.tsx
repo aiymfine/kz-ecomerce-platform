@@ -15,8 +15,9 @@ export function LangProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>(() => {
     try {
       const saved = localStorage.getItem('lang');
-      return saved === 'en' ? 'en' : 'kk';
-    } catch { return 'kk'; }
+      if (saved === 'kk' || saved === 'en') return saved;
+      return 'en';
+    } catch { return 'en'; }
   });
 
   const setLang = useCallback((l: Lang) => {
