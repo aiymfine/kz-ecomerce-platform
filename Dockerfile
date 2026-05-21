@@ -33,7 +33,7 @@ ENV NODE_ENV=production \
     JWT_ALGORITHM=HS256 \
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES=30 \
     JWT_REFRESH_TOKEN_EXPIRE_DAYS=7 \
-    CORS_ORIGINS="*" \
+    CORS_ORIGINS="https://kz-ecomerce-platform.onrender.com" \
     SMTP_HOST=smtp.gmail.com \
     SMTP_PORT=587 \
     SMTP_USER="" \
@@ -41,15 +41,15 @@ ENV NODE_ENV=production \
     SMTP_FROM="" \
     APP_URL=http://localhost:3000
 
-# Copy built JS + prisma schema
 COPY --from=backend-build /app/dist ./dist
 COPY --from=backend-build /app/prisma ./prisma
 COPY --from=backend-build /app/package.json ./
 COPY --from=backend-build /app/pnpm-lock.yaml ./
+COPY --from=backend-build /app/tsconfig.json ./
 
 # Install production deps — use hoisted layout so transitive deps (express, etc.)
 # are accessible from the root, matching how NestJS imports work
-RUN npm install -g pnpm@9
+RUN npm install -g pnpm@9 tsx
 RUN echo "node-linker=hoisted" > .npmrc
 RUN pnpm install --prod --frozen-lockfile
 
@@ -59,4 +59,4 @@ COPY --from=frontend-build /app/dist ./public
 # Dokku proxies to port 8080 by default
 EXPOSE 8080
 # Dokku uses Procfile for web process; fallback CMD for docker-compose
-CMD ["sh", "-c", "echo \"Starting on PORT=$PORT\" && npx prisma@5 migrate deploy 2>&1 && node dist/main.js"]
+CMD ["sh", "-c", "echo \"Starting on PORT=$PORT\" && npx prisma@5 migrate deploy 2>&1 && tsx prisma/seed.ts 2>&1 && node dist/main.js"]

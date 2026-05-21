@@ -3,8 +3,8 @@
 ## Submission Verification
 
 - [x] Application boots locally with `docker compose up`
-- [ ] Application is LIVE on dashboard.deployrocks.com with working public URL
-- [ ] `DEPLOYED_URL.txt` contains the generated domain name
+- [ ] Application is LIVE on Render with working public URL
+- [x] `DEPLOYED_URL.txt` contains the deployed domain name
 - [ ] `VIDEO_LINK.txt` contains unlisted video link (4-6 min)
 
 ## Repository & Setup
