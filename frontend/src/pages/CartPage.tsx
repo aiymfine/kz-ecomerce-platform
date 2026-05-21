@@ -57,7 +57,7 @@ export function CartPage() {
     setCheckingOut(true);
     setError('');
     try {
-      const order = await orderApi.checkout('self_pickup', 'Алматы, Қазақстан');
+      const order = await orderApi.checkout('self_pickup', 'Almaty, Kazakhstan');
       navigate('/order-confirmation', { state: { order } });
     } catch (err: any) {
       setError(err?.response?.data?.message || t('cart_checkout_error'));

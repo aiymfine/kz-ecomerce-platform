@@ -10,9 +10,9 @@ import { useLang } from '../hooks/useLang';
 import { Star, Heart, Shield, Truck, RotateCcw, Minus, Plus, ChevronLeft, ShoppingCart, Download, Zap } from 'lucide-react';
 
 const fakeReviews = [
-  { name: 'Айдана К.', rating: 5, text: 'Өте жақсы сапа! Жеткізу тез болды.', date: '2026-05-10' },
-  { name: 'Данияр М.', rating: 4, text: 'Бағасы қолжетімді, сапасы жақсы.', date: '2026-05-08' },
-  { name: 'Сара Т.', rating: 5, text: 'Керемет! Барлығына кеңес беремін.', date: '2026-05-05' },
+  { name: 'Aidana K.', rating: 5, text: 'Great quality! Fast delivery.', date: '2026-05-10' },
+  { name: 'Daniyar M.', rating: 4, text: 'Good price, excellent quality.', date: '2026-05-08' },
+  { name: 'Sara T.', rating: 5, text: 'Amazing! Would recommend to everyone.', date: '2026-05-05' },
 ];
 
 export function ProductDetailPage() {

@@ -33,14 +33,14 @@ function statusColor(status: string): string {
 
 function statusLabel(status: string): string {
   const map: Record<string, string> = {
-    payment_pending: '⏳ Ожидание оплаты',
-    payment_failed: '❌ Оплата не удалась',
-    confirmed: '✅ Подтверждён',
-    processing: '🔄 В обработке',
-    shipped: '🚚 Отправлен',
-    delivered: '✅ Доставлен',
-    cancelled: '🚫 Отменён',
-    refunded: '💰 Возврат',
+    payment_pending: '⏳ Payment Pending',
+    payment_failed: '❌ Payment Failed',
+    confirmed: '✅ Confirmed',
+    processing: '🔄 Processing',
+    shipped: '🚚 Shipped',
+    delivered: '✅ Delivered',
+    cancelled: '🚫 Cancelled',
+    refunded: '💰 Refunded',
   };
   return map[status] || status;
 }

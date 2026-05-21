@@ -66,7 +66,7 @@ export function Footer() {
             <ul className="space-y-2.5 text-sm">
               <li className="flex items-center gap-2"><Mail size={14} /> support@techshop.kz</li>
               <li className="flex items-center gap-2"><Phone size={14} /> +7 (727) 000-00-00</li>
-              <li className="flex items-center gap-2"><MapPin size={14} /> Алматы, Қазақстан</li>
+              <li className="flex items-center gap-2"><MapPin size={14} /> Almaty, Kazakhstan</li>
             </ul>
           </div>
 

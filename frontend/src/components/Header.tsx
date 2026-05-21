@@ -90,7 +90,7 @@ export function Header() {
               className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 transition-all"
             >
               <Globe size={15} />
-              <span>{lang === 'kk' ? 'ҚАЗ' : 'EN'}</span>
+              <span>{lang === 'kk' ? 'RU' : 'EN'}</span>
             </button>
 
             {/* Dark mode toggle */}
@@ -148,7 +148,7 @@ export function Header() {
                 onClick={() => { setLang(lang === 'kk' ? 'en' : 'kk'); }}
                 className="w-full text-left px-4 py-2.5 rounded-xl text-gray-700 dark:text-gray-200 hover:bg-kz-blue/5 font-medium flex items-center gap-2"
               >
-                <Globe size={15} /> {lang === 'kk' ? 'Қазақша → English' : 'English → Қазақша'}
+                <Globe size={15} /> {lang === 'kk' ? 'Русский → English' : 'English → Рус'}
               </button>
               {!isAuthenticated && (
                 <button

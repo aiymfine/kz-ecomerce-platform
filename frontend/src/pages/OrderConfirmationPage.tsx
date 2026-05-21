@@ -126,7 +126,7 @@ export function OrderConfirmationPage() {
           {/* Footer info */}
           <div className="bg-gray-50 dark:bg-white/[0.02] px-6 py-4 flex flex-wrap gap-4 text-sm text-gray-500 dark:text-gray-400">
             <div className="flex items-center gap-1.5">
-              <MapPin size={14} /> Алматы, Қазақстан
+              <MapPin size={14} /> Almaty, Kazakhstan
             </div>
             <div className="flex items-center gap-1.5">
               <CreditCard size={14} /> Kaspi Pay

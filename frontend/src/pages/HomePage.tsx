@@ -108,7 +108,7 @@ export function HomePage() {
           {[
             { num: '1000+', label: t('stat_products'), icon: TrendingUp, color: 'text-blue-500' },
             { num: '24/7', label: t('stat_support'), icon: Headphones, color: 'text-green-500' },
-            { num: '2 күн', label: t('stat_delivery'), icon: Truck, color: 'text-purple-500' },
+            { num: '2 days', label: t('stat_delivery'), icon: Truck, color: 'text-purple-500' },
             { num: 'Kaspi', label: t('stat_payment'), icon: Shield, color: 'text-kz-gold' },
           ].map((s, i) => (
             <div
