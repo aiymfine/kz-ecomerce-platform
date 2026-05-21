@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
 import { RedisService } from '../../common/redis/redis.service';
+import { QueueService } from '../../common/queue/queue.service';
 import * as bcrypt from 'bcryptjs';
 import { randomUUID } from 'crypto';
 import type { JwtPayload } from '../../common/guards/jwt-auth.guard';
@@ -20,6 +21,7 @@ export class StorefrontService {
     private jwtService: JwtService,
     private configService: ConfigService,
     private redisService: RedisService,
+    private queueService: QueueService,
   ) {}
 
   async register(
@@ -43,6 +45,10 @@ export class StorefrontService {
 
     const passwordHash = await bcrypt.hash(dto.password, 12);
 
+    // Generate verification code
+    const verificationCode = String(Math.floor(100000 + Math.random() * 900000));
+    const verificationCodeExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
     const customer = await this.prisma.withTenant(storeId, (client) =>
       client.customer.create({
         data: {
@@ -51,9 +57,25 @@ export class StorefrontService {
           firstName: dto.first_name,
           lastName: dto.last_name,
           phone: dto.phone,
+          verificationCode,
+          verificationCodeExpiresAt,
         },
       }),
     );
+
+    // Log verification code for demo/testing
+    console.log(`📧 Verification code for ${customer.email}: ${verificationCode}`);
+
+    // Enqueue verification email (non-blocking)
+    try {
+      await this.queueService.enqueueEmail({
+        type: 'verification',
+        to: customer.email,
+        data: { code: verificationCode },
+      });
+    } catch (err) {
+      this.logger.warn('Failed to enqueue verification email', err);
+    }
 
     const tokens = await this.generateTokens({
       sub: customer.id,

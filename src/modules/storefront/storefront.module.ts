@@ -3,6 +3,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { ConfigService, ConfigModule } from '@nestjs/config';
 import { StorefrontController } from './storefront.controller';
 import { StorefrontService } from './storefront.service';
+import { QueueModule } from '../../common/queue/queue.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { StorefrontService } from './storefront.service';
         signOptions: { expiresIn: `${config.get<number>('JWT_ACCESS_TOKEN_EXPIRE_MINUTES', 30)}m` },
       }),
     }),
+    QueueModule,
   ],
   controllers: [StorefrontController],
   providers: [StorefrontService],
