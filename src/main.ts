@@ -23,6 +23,18 @@ async function bootstrap() {
     credentials: true,
   });
 
+  // Swagger — set up BEFORE static serving so it doesn't get intercepted
+  const config = new DocumentBuilder()
+    .setTitle('ShopBuilder KZ API')
+    .setDescription('Multi-tenant e-commerce platform API')
+    .setVersion('1.0')
+    .addBearerAuth()
+    .build();
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api/docs', app, document, {
+    swaggerOptions: { persistAuthorization: true },
+  });
+
   // Serve frontend static files (if they exist — Docker production only)
   const frontendPath = path.join(__dirname, '..', 'public');
   if (fs.existsSync(frontendPath) && fs.readdirSync(frontendPath).length > 0) {
@@ -34,16 +46,6 @@ async function bootstrap() {
     });
     console.log('📦 Serving frontend from /public');
   }
-
-  // Swagger
-  const config = new DocumentBuilder()
-    .setTitle('ShopBuilder KZ API')
-    .setDescription('Multi-tenant e-commerce platform API')
-    .setVersion('1.0')
-    .addBearerAuth()
-    .build();
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('docs', app, document);
 
   const port = parseInt(process.env.PORT || '3001', 10);
   await app.listen(port, '0.0.0.0');
