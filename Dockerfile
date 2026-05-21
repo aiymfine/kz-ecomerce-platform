@@ -59,4 +59,4 @@ COPY --from=frontend-build /app/dist ./public
 # Dokku proxies to port 8080 by default
 EXPOSE 8080
 # Dokku uses Procfile for web process; fallback CMD for docker-compose
-CMD ["sh", "-c", "echo \"Starting on PORT=$PORT\" && npx prisma@5 migrate deploy && node dist/main.js"]
+CMD ["sh", "-c", "echo \"Starting on PORT=$PORT\" && npx prisma@5 migrate deploy 2>&1 && node dist/main.js"]
