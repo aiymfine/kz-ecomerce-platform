@@ -10,6 +10,9 @@ import { VerifyEmailPage } from './pages/VerifyEmailPage';
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
 import { ResetPasswordPage } from './pages/ResetPasswordPage';
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
+import { MerchantRegisterPage } from './pages/MerchantRegisterPage';
+import { MerchantLoginPage } from './pages/MerchantLoginPage';
+import { MerchantDashboardPage } from './pages/MerchantDashboardPage';
 import { AuthProvider } from './hooks/useAuth';
 import { CartProvider } from './hooks/useCart';
 import { ToastProvider } from './components/Toast';
@@ -56,6 +59,9 @@ export default function App() {
                       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                       <Route path="/reset-password" element={<ResetPasswordPage />} />
                       <Route path="/admin" element={<AdminDashboardPage />} />
+                      <Route path="/merchant/register" element={<MerchantRegisterPage />} />
+                      <Route path="/merchant/login" element={<MerchantLoginPage />} />
+                      <Route path="/merchant/dashboard" element={<MerchantDashboardPage />} />
                     </Routes>
                   </PageTransition>
                 </Layout>

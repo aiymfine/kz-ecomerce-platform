@@ -75,6 +75,9 @@ export function Header() {
             <Link to="/products" className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-kz-blue dark:hover:text-kz-blue rounded-xl hover:bg-kz-blue/5 transition-all font-medium text-sm">
               {t('nav_products')}
             </Link>
+            <Link to="/merchant/dashboard" className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-kz-blue dark:hover:text-kz-blue rounded-xl hover:bg-kz-blue/5 transition-all font-medium text-sm">
+              {t('nav_merchant')}
+            </Link>
             {isAuthenticated && (
               <Link to="/profile" className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-kz-blue dark:hover:text-kz-blue rounded-xl hover:bg-kz-blue/5 transition-all font-medium text-sm">
                 {t('nav_profile')}
@@ -143,6 +146,7 @@ export function Header() {
             <div className="px-4 py-4 space-y-2">
               <Link to="/" onClick={() => setMobileMenu(false)} className="block px-4 py-2.5 rounded-xl text-gray-700 dark:text-gray-200 hover:bg-kz-blue/5 font-medium">{t('nav_home')}</Link>
               <Link to="/products" onClick={() => setMobileMenu(false)} className="block px-4 py-2.5 rounded-xl text-gray-700 dark:text-gray-200 hover:bg-kz-blue/5 font-medium">{t('nav_products')}</Link>
+              <Link to="/merchant/dashboard" onClick={() => setMobileMenu(false)} className="block px-4 py-2.5 rounded-xl text-gray-700 dark:text-gray-200 hover:bg-kz-blue/5 font-medium">{t('nav_merchant')}</Link>
               {/* Mobile lang toggle */}
               <button
                 onClick={() => { setLang(lang === 'kk' ? 'en' : 'kk'); }}
@@ -234,6 +238,12 @@ export function Header() {
             </div>
             <Link to="/admin" onClick={() => setShowAuth(false)} className="block text-center text-xs text-red-400 hover:text-red-500 mt-2 transition">
               {t('admin_dashboard')} →
+            </Link>
+            <Link to="/merchant/login" onClick={() => setShowAuth(false)} className="block text-center text-xs text-kz-blue hover:text-kz-blue-dark mt-1 transition">
+              {t('merchant_login_title')} →
+            </Link>
+            <Link to="/merchant/register" onClick={() => setShowAuth(false)} className="block text-center text-xs text-kz-blue hover:text-kz-blue-dark transition">
+              {t('merchant_register_title')} →
             </Link>
           </div>
         </div>

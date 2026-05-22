@@ -16,23 +16,24 @@ function useAuthInner() {
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
-    const res = await authApi.customerLogin(email, password);
-    const d = res.data || res;
-    localStorage.setItem('auth_token', d.accessToken);
-    localStorage.setItem('auth_refresh', d.refreshToken);
-    localStorage.setItem('auth_user', JSON.stringify(d.customer));
-    setUser(d.customer);
+    // customerLogin now returns unwrapped { accessToken, refreshToken, customer }
+    const d = await authApi.customerLogin(email, password);
+    const tokens = d?.data || d;
+    localStorage.setItem('auth_token', tokens.accessToken);
+    localStorage.setItem('auth_refresh', tokens.refreshToken);
+    localStorage.setItem('auth_user', JSON.stringify(tokens.customer));
+    setUser(tokens.customer);
   }, []);
 
   const register = useCallback(async (body: {
     email: string; password: string; firstName: string; lastName: string; phone: string;
   }) => {
-    const res = await authApi.customerRegister(body);
-    const d = res.data || res;
-    localStorage.setItem('auth_token', d.accessToken);
-    localStorage.setItem('auth_refresh', d.refreshToken);
-    localStorage.setItem('auth_user', JSON.stringify(d.customer));
-    setUser(d.customer);
+    const d = await authApi.customerRegister(body);
+    const tokens = d?.data || d;
+    localStorage.setItem('auth_token', tokens.accessToken);
+    localStorage.setItem('auth_refresh', tokens.refreshToken);
+    localStorage.setItem('auth_user', JSON.stringify(tokens.customer));
+    setUser(tokens.customer);
   }, []);
 
   const logout = useCallback(() => {

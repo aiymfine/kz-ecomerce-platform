@@ -61,6 +61,7 @@ export class AdminService {
         businessName: true,
         status: true,
         isActive: true,
+        emailVerified: true,
         createdAt: true,
         _count: { select: { stores: true } },
       },

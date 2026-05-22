@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import client from '../api/client';
+import { adminLogin } from '../api/auth';
 import { useLang } from '../hooks/useLang';
 import { useToast } from '../components/Toast';
 import { Shield, Users, Store, BarChart3, Mail, ShoppingCart, Activity, Clock, CheckCircle, XCircle, AlertTriangle, RefreshCw } from 'lucide-react';
@@ -50,8 +51,8 @@ export function AdminDashboardPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await client.post('/auth/admin/login', { email, password });
-      const tok = res.data?.accessToken || res.data;
+      const res = await adminLogin(email, password);
+      const tok = res?.accessToken || res?.data?.accessToken;
       if (tok) {
         setToken(tok);
         setLogged(true);
