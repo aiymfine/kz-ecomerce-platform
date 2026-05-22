@@ -3,10 +3,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import client from '../api/client';
 import { useLang } from '../hooks/useLang';
 import { useToast } from '../components/Toast';
-import { formatPrice } from '../types';
 import {
-  Store, Plus, Package, ShoppingCart, Settings, BarChart3,
-  ExternalLink, RefreshCw, LogOut, ChevronRight, Globe, Zap,
+  Store, Plus, Settings,
+  RefreshCw, LogOut, Globe, Zap,
 } from 'lucide-react';
 
 interface StoreData {
@@ -36,7 +35,7 @@ export function MerchantDashboardPage() {
   const [merchant, setMerchant] = useState<MerchantInfo | null>(null);
   const [stores, setStores] = useState<StoreData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showCreate, setShowCreate] = useState(false);
+  const [_showCreate, setShowCreate] = useState(false);
   const [createForm, setCreateForm] = useState({ name: '', subdomain: '', timezone: 'Asia/Almaty' });
   const [creating, setCreating] = useState(false);
   const [activeTab, setActiveTab] = useState<'stores' | 'create'>('stores');

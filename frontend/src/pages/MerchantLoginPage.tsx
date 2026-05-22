@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import client from '../api/client';
 import { useLang } from '../hooks/useLang';
 import { useToast } from '../components/Toast';
-import { LogIn, Store, ArrowRight } from 'lucide-react';
+import { LogIn, ArrowRight } from 'lucide-react';
 
 export function MerchantLoginPage() {
   const { t } = useLang();
