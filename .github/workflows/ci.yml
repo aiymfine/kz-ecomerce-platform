@@ -77,14 +77,14 @@ jobs:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/shopbuilder_test
           DIRECT_URL: postgresql://postgres:postgres@localhost:5432/shopbuilder_test
           REDIS_URL: redis://localhost:6379/0
-          JWT_SECRET_KEY: a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2
+          JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
 
       - name: Test
         run: pnpm test
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/shopbuilder_test
           REDIS_URL: redis://localhost:6379/0
-          JWT_SECRET_KEY: a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2
+          JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
           NODE_ENV: test
 
       - name: Docker build test
