@@ -69,22 +69,27 @@ async function provisionTenant(storeId: number) {
   const schema = `store_${storeId}`;
   console.log(`  Provisioning tenant schema ${schema}...`);
 
-  await prisma.$executeRawUnsafe(`DROP SCHEMA IF EXISTS ${schema} CASCADE`);
-  await prisma.$executeRawUnsafe(`CREATE SCHEMA ${schema}`);
+  // Create schema if it doesn't exist (idempotent — no destructive DROP)
+  await prisma.$executeRawUnsafe(`CREATE SCHEMA IF NOT EXISTS ${schema}`);
 
+  // Only create tables if they don't already exist
   for (const table of tenantTables) {
     await prisma.$executeRawUnsafe(
-      `CREATE TABLE ${schema}.${table} (LIKE public.${table} INCLUDING ALL)`,
+      `CREATE TABLE IF NOT EXISTS ${schema}.${table} (LIKE public.${table} INCLUDING ALL)`,
     );
   }
 
   for (const table of tablesWithUpdatedAt) {
-    await prisma.$executeRawUnsafe(
-      `ALTER TABLE ${schema}.${table} ALTER COLUMN updated_at SET DEFAULT NOW()`,
-    );
+    try {
+      await prisma.$executeRawUnsafe(
+        `ALTER TABLE ${schema}.${table} ALTER COLUMN updated_at SET DEFAULT NOW()`,
+      );
+    } catch {
+      // column may already have default or table structure differs
+    }
   }
 
-  // Insert default categories into tenant schema
+  // Insert default categories into tenant schema (idempotent)
   const categories = [
     ['Все товары', 'all', '/1/', 0, 0],
     ['Электроника', 'electronics', '/2/', 0, 1],
@@ -94,9 +99,9 @@ async function provisionTenant(storeId: number) {
     ['Распродажа', 'sale', '/6/', 0, 5],
     ['Цифровые товары', 'digital', '/7/', 0, 6],
   ];
-  for (const [name, slug, path, depth, sortOrder] of categories) {
+  for (const [name, slug, catPath, depth, sortOrder] of categories) {
     await prisma.$executeRawUnsafe(
-      `INSERT INTO ${schema}.categories (name, slug, path, depth, sort_order) VALUES ('${name}', '${slug}', '${path}', ${depth}, ${sortOrder})`,
+      `INSERT INTO ${schema}.categories (name, slug, path, depth, sort_order) VALUES ('${name}', '${slug}', '${catPath}', ${depth}, ${sortOrder}) ON CONFLICT DO NOTHING`,
     );
   }
 
@@ -119,6 +124,7 @@ async function seedTenant(storeId: number, storeName: string) {
       ('Microsoft Office 365 Personal', 'office-365-personal', 'Подписка на Office 365 для 1 пользователя. Word, Excel, PowerPoint, Outlook + 1 ТБ OneDrive на 12 месяцев.', 'active', 0),
       ('Steam Gift Card ₸10 000', 'steam-gift-card-10000', 'Подарочная карта Steam номиналом 10 000 тенге. Цифровой код, мгновенная доставка.', 'active', 0),
       ('Adobe Photoshop — Подписка', 'adobe-photoshop-sub', 'Подписка на Adobe Photoshop на 3 месяца. Профессиональный редактор фото и дизайна.', 'active', 0)
+    ON CONFLICT DO NOTHING
   `);
 
   await prisma.$executeRawUnsafe(`
@@ -126,6 +132,7 @@ async function seedTenant(storeId: number, storeName: string) {
       ('Размер', 'size'),
       ('Цвет', 'color'),
       ('Материал', 'material')
+    ON CONFLICT DO NOTHING
   `);
 
   await prisma.$executeRawUnsafe(`
@@ -147,6 +154,7 @@ async function seedTenant(storeId: number, storeName: string) {
       (9, 'steam-gift-10k', 1000000, true, 0),
       (10, 'adobe-photoshop-3m', 5990000, true, 0),
       (10, 'adobe-photoshop-1y', 18990000, true, 1)
+    ON CONFLICT DO NOTHING
   `);
 
   await prisma.$executeRawUnsafe(`
@@ -158,11 +166,13 @@ async function seedTenant(storeId: number, storeName: string) {
       (8, 1, '44'),
       (9, 2, 'Black'),
       (10, 2, 'Grey')
+    ON CONFLICT DO NOTHING
   `);
 
   await prisma.$executeRawUnsafe(`
     INSERT INTO ${schema}.webhooks (url, secret, events, is_active) VALUES
       ('https://example.com/webhook', '${Array.from({ length: 64 }, () => '0').join('')}', '["order.created","product.updated"]'::json, true)
+    ON CONFLICT DO NOTHING
   `);
 
   const customerHash = await bcrypt.hash('Customer123', 12);
@@ -186,26 +196,8 @@ async function seedTenant(storeId: number, storeName: string) {
 async function seedPublicSchema() {
   console.log('7. Seeding operational data into public schema...');
 
-  // Clean public tenant tables (keep platform tables: merchants, stores, admins, etc.)
-  const cleanOrder = [
-    'public.store_audit_log', 'public.webhook_events', 'public.webhooks',
-    'public.order_discounts', 'public.order_fulfillments', 'public.order_items',
-    'public.payments', 'public.orders', 'public.cart_items', 'public.carts',
-    'public.abandoned_carts', 'public.subscription_box_items', 'public.subscription_orders',
-    'public.subscription_boxes', 'public.addresses', 'public.inventory',
-    'public.variant_attribute_values', 'public.variant_attributes',
-    'public.product_variants', 'public.product_categories', 'public.product_images',
-    'public.products', 'public.warehouses', 'public.categories',
-    'public.promo_codes', 'public.staff_members', 'public.theme_templates',
-  ];
-  // Only delete from tables that have FK-safe order — customers last
-  for (const t of [...cleanOrder, 'public.customers']) {
-    try {
-      await prisma.$executeRawUnsafe(`DELETE FROM ${t}`);
-    } catch {
-      // table might not exist or be empty, ignore
-    }
-  }
+  // NOTE: No destructive DELETE — all inserts use ON CONFLICT for idempotency.
+  // Safe to run multiple times.
 
   // Categories
   await prisma.$executeRawUnsafe(`
@@ -217,6 +209,7 @@ async function seedPublicSchema() {
       (5, 'Новинки', 'new-arrivals', '/5/', 0, 4),
       (6, 'Распродажа', 'sale', '/6/', 0, 5),
       (7, 'Цифровые товары', 'digital', '/7/', 0, 6)
+    ON CONFLICT (id) DO NOTHING
   `);
 
   // Products (updated_at required, no DB default in public)
@@ -232,6 +225,7 @@ async function seedPublicSchema() {
       (8, 'Microsoft Office 365 Personal', 'office-365-personal', 'Подписка на Office 365 для 1 пользователя. Word, Excel, PowerPoint, Outlook + 1 ТБ OneDrive на 12 месяцев.', 'active', 0, NOW()),
       (9, 'Steam Gift Card ₸10 000', 'steam-gift-card-10000', 'Подарочная карта Steam номиналом 10 000 тенге. Цифровой код, мгновенная доставка.', 'active', 0, NOW()),
       (10, 'Adobe Photoshop — Подписка', 'adobe-photoshop-sub', 'Подписка на Adobe Photoshop на 3 месяца. Профессиональный редактор фото и дизайна.', 'active', 0, NOW())
+    ON CONFLICT (id) DO NOTHING
   `);
 
   // Variant attributes
@@ -240,6 +234,7 @@ async function seedPublicSchema() {
       (1, 'Размер', 'size'),
       (2, 'Цвет', 'color'),
       (3, 'Материал', 'material')
+    ON CONFLICT (id) DO NOTHING
   `);
 
   // Product variants (updated_at required)
@@ -262,6 +257,7 @@ async function seedPublicSchema() {
       (15, 9, 'steam-gift-10k', 1000000, true, 0, NOW()),
       (16, 10, 'adobe-photoshop-3m', 5990000, true, 0, NOW()),
       (17, 10, 'adobe-photoshop-1y', 18990000, true, 1, NOW())
+    ON CONFLICT (id) DO NOTHING
   `);
 
   // Variant attribute values
@@ -274,6 +270,7 @@ async function seedPublicSchema() {
       (8, 1, '44'),
       (9, 2, 'Black'),
       (10, 2, 'Grey')
+    ON CONFLICT DO NOTHING
   `);
 
   // Product-Category associations
@@ -292,6 +289,7 @@ async function seedPublicSchema() {
       (8, 2),
       (9, 7),
       (10, 7)
+    ON CONFLICT DO NOTHING
   `);
 
   // Warehouses
@@ -299,6 +297,7 @@ async function seedPublicSchema() {
     INSERT INTO public.warehouses (id, name, city, address, is_active) VALUES
       (1, 'Склад Алматы', 'Алматы', 'ул. Абая 150', true),
       (2, 'Склад Астана', 'Астана', 'пр. Кабанбай батыра 500', true)
+    ON CONFLICT (id) DO NOTHING
   `);
 
   // Inventory for all variants (updated_at required)
@@ -308,6 +307,7 @@ async function seedPublicSchema() {
   await prisma.$executeRawUnsafe(`
     INSERT INTO public.inventory (variant_id, warehouse_id, quantity_available, quantity_reserved, low_stock_threshold, updated_at) VALUES
       ${inventoryValues}
+    ON CONFLICT DO NOTHING
   `);
 
   // Customers (IDs 1 and 2 to match merchant IDs for demo, updated_at required)
@@ -316,12 +316,14 @@ async function seedPublicSchema() {
     INSERT INTO public.customers (id, first_name, last_name, email, phone, password_hash, updated_at) VALUES
       (1, 'Айym', 'Тест', 'test@customer.kz', '+7 777 000 0001', '${customerHash}', NOW()),
       (2, 'Дидар', 'Байбосын', 'didar@customer.kz', '+7 777 000 0002', '${customerHash}', NOW())
+    ON CONFLICT (id) DO UPDATE SET email = EXCLUDED.email
   `);
 
   // Webhooks
   await prisma.$executeRawUnsafe(`
     INSERT INTO public.webhooks (url, secret, events, is_active) VALUES
       ('https://example.com/webhook', '${Array.from({ length: 64 }, () => '0').join('')}', '["order.created","product.updated"]'::json, true)
+    ON CONFLICT DO NOTHING
   `);
 
   // Reset all sequences

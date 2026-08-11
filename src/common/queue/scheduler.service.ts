@@ -1,4 +1,4 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit, Optional } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 
@@ -8,17 +8,24 @@ import { Queue } from 'bullmq';
  *
  * Schedule:
  * - Abandoned cart check: every 15 minutes
+ *
+ * If Redis is not available, this service becomes a no-op.
  */
 @Injectable()
 export class SchedulerService implements OnModuleInit {
   private readonly logger = new Logger(SchedulerService.name);
 
   constructor(
-    @InjectQueue('abandoned-carts')
-    private readonly abandonedCartQueue: Queue,
+    @Optional() @InjectQueue('abandoned-carts')
+    private readonly abandonedCartQueue?: Queue,
   ) {}
 
   async onModuleInit() {
+    if (!this.abandonedCartQueue) {
+      this.logger.warn('SchedulerService running without Redis — scheduled jobs disabled');
+      return;
+    }
+
     this.logger.log('Registering scheduled jobs...');
 
     try {

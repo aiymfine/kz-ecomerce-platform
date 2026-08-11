@@ -10,6 +10,7 @@ import {
   HttpCode,
   HttpStatus,
   ParseIntPipe,
+  Optional,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { InjectQueue } from '@nestjs/bullmq';
@@ -31,8 +32,8 @@ import { AdminGuard } from '../../common/guards/admin.guard';
 export class AdminController {
   constructor(
     private readonly adminService: AdminService,
-    @InjectQueue('emails') private readonly emailQueue: Queue,
-    @InjectQueue('abandoned-carts') private readonly abandonedCartQueue: Queue,
+    @Optional() @InjectQueue('emails') private readonly emailQueue: Queue,
+    @Optional() @InjectQueue('abandoned-carts') private readonly abandonedCartQueue: Queue,
   ) {}
 
   // ==================== Merchants ====================
@@ -149,6 +150,16 @@ export class AdminController {
   @ApiOperation({ summary: 'Get BullMQ queue status and recent jobs' })
   @ApiResponse({ status: 200, description: 'Queue status with job counts and recent activity' })
   async getQueueStatus() {
+    // If Redis/BullMQ is not available, return a degraded status
+    if (!this.emailQueue || !this.abandonedCartQueue) {
+      return {
+        status: 'degraded',
+        message: 'Redis/BullMQ not configured — queue monitoring unavailable',
+        queues: {},
+        scheduledJobs: [],
+      };
+    }
+
     const [emailCounts, abandonedCounts, emailRecent, abandonedRecent, repeatableJobs] =
       await Promise.all([
         this.emailQueue.getJobCounts('waiting', 'active', 'completed', 'failed', 'delayed'),

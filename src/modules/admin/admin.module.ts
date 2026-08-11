@@ -5,9 +5,13 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
 
+const QUEUE_IMPORTS = process.env.REDIS_URL
+  ? [BullModule.registerQueue({ name: 'emails' }, { name: 'abandoned-carts' })]
+  : [];
+
 @Module({
   imports: [
-    BullModule.registerQueue({ name: 'emails' }, { name: 'abandoned-carts' }),
+    ...QUEUE_IMPORTS,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

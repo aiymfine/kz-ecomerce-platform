@@ -56,7 +56,7 @@ RUN pnpm install --prod --frozen-lockfile
 # Copy frontend static files (if built)
 COPY --from=frontend-build /app/dist ./public
 
-# Dokku proxies to port 8080 by default
-EXPOSE 8080
-# Dokku uses Procfile for web process; fallback CMD for docker-compose
-CMD ["sh", "-c", "echo \"Starting on PORT=$PORT\" && npx prisma@5 migrate deploy 2>&1 && tsx prisma/seed.ts 2>&1 && node dist/main.js"]
+# Render injects PORT env var; don't hardcode
+EXPOSE ${PORT:-3001}
+# Run migrations then start app (seed is a manual one-time step — see README)
+CMD ["sh", "-c", "npx prisma@5 migrate deploy && node dist/main.js"]
