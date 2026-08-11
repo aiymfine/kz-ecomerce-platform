@@ -1,25 +1,31 @@
-services:
-  - type: web
-    name: shopbuilder-kz
-    runtime: node
-    plan: free
-    buildCommand: npm install -g pnpm && pnpm install --frozen-lockfile && npx prisma generate && pnpm run build && cd frontend && npm ci && npm run build && cd .. && cp -r frontend/dist ./public
-    startCommand: npx prisma@5 migrate deploy && node dist/main.js
-    envVars:
-      - key: NODE_ENV
-        value: production
-      - key: DATABASE_URL
-        sync: false
-      - key: DIRECT_URL
-        sync: false
-      - key: REDIS_URL
-        sync: false
-      - key: JWT_SECRET_KEY
-        sync: false
-      - key: JWT_REFRESH_SECRET_KEY
-        sync: false
-      - key: CORS_ORIGINS
-        sync: false
-      - key: APP_URL
-        sync: false
-    healthCheckPath: /api/health
+# =============================================================================
+# DEPRECATED: Render blueprint (kept for reference)
+# This project now deploys on Fly.io — see fly.toml
+# To use Render instead: uncomment the config below and create a render.yaml
+# =============================================================================
+
+# services:
+#   - type: web
+#     name: shopbuilder-kz
+#     runtime: node
+#     plan: free
+#     buildCommand: npm install -g pnpm && pnpm install --frozen-lockfile && npx prisma generate && pnpm run build && cd frontend && npm ci && npm run build && cd .. && cp -r frontend/dist ./public
+#     startCommand: npx prisma@5 migrate deploy && node dist/main.js
+#     envVars:
+#       - key: NODE_ENV
+#         value: production
+#       - key: DATABASE_URL
+#         sync: false
+#       - key: DIRECT_URL
+#         sync: false
+#       - key: REDIS_URL
+#         sync: false
+#       - key: JWT_SECRET_KEY
+#         sync: false
+#       - key: JWT_REFRESH_SECRET_KEY
+#         sync: false
+#       - key: CORS_ORIGINS
+#         sync: false
+#       - key: APP_URL
+#         sync: false
+#     healthCheckPath: /api/health

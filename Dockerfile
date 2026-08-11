@@ -1,3 +1,8 @@
+# =============================================================================
+# ShopBuilder KZ — Dockerfile (Fly.io)
+# Deploys: NestJS API + React frontend (served statically from /public)
+# =============================================================================
+
 # Stage 1: Build frontend
 FROM node:22-slim AS frontend-build
 WORKDIR /app
@@ -23,23 +28,14 @@ FROM node:22-slim AS runner
 RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 
-# Sensible defaults for all required env vars.
-# Override via Dokku config:set or docker-compose environment.
-# NOTE: Do NOT set PORT here — Dokku assigns its own port at runtime
-# and configures nginx to proxy to it.
 ENV NODE_ENV=production \
-    DATABASE_POOL_SIZE=20 \
-    JWT_SECRET_KEY=change-me-in-production-min-32-chars!! \
+    PORT=3000 \
+    DATABASE_POOL_SIZE=10 \
     JWT_ALGORITHM=HS256 \
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES=30 \
     JWT_REFRESH_TOKEN_EXPIRE_DAYS=7 \
-    CORS_ORIGINS="https://kz-ecomerce-platform.onrender.com" \
     SMTP_HOST=smtp.gmail.com \
-    SMTP_PORT=587 \
-    SMTP_USER="" \
-    SMTP_PASSWORD="" \
-    SMTP_FROM="" \
-    APP_URL=http://localhost:3000
+    SMTP_PORT=587
 
 COPY --from=backend-build /app/dist ./dist
 COPY --from=backend-build /app/prisma ./prisma
@@ -47,16 +43,17 @@ COPY --from=backend-build /app/package.json ./
 COPY --from=backend-build /app/pnpm-lock.yaml ./
 COPY --from=backend-build /app/tsconfig.json ./
 
-# Install production deps — use hoisted layout so transitive deps (express, etc.)
-# are accessible from the root, matching how NestJS imports work
-RUN npm install -g pnpm@9 tsx
+# Install production deps (hoisted layout for NestJS compatibility)
+RUN npm install -g pnpm@9
 RUN echo "node-linker=hoisted" > .npmrc
 RUN pnpm install --prod --frozen-lockfile
 
-# Copy frontend static files (if built)
+# Copy frontend static build
 COPY --from=frontend-build /app/dist ./public
 
-# Render injects PORT env var; don't hardcode
-EXPOSE ${PORT:-3001}
-# Run migrations then start app (seed is a manual one-time step — see README)
+EXPOSE 3000
+
+# Run migrations then start app
+# Seed is a MANUAL one-time step: flyctl ssh console -a shopbuilder-kz
+#   then: npx tsx prisma/seed.ts
 CMD ["sh", "-c", "npx prisma@5 migrate deploy && node dist/main.js"]

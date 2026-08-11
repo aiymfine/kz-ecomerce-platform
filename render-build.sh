@@ -1,25 +1,17 @@
 #!/bin/bash
-set -e
-
-# Install pnpm
-npm install -g pnpm@9
-
-# Install backend deps
-pnpm install --frozen-lockfile
-
-# Generate Prisma client
-npx prisma generate
-
-# Build backend
-pnpm run build
-
-# Build frontend
-cd frontend
-npm ci
-npm run build
-cd ..
-
-# Copy frontend build to public
-cp -r frontend/dist ./public
-
-echo "Build complete!"
+# =============================================================================
+# DEPRECATED: Render build script (kept for reference)
+# This project now deploys on Fly.io — see fly.toml and Dockerfile
+# =============================================================================
+# set -e
+#
+# npm install -g pnpm@9
+# pnpm install --frozen-lockfile
+# npx prisma generate
+# pnpm run build
+# cd frontend
+# npm ci
+# npm run build
+# cd ..
+# cp -r frontend/dist ./public
+# echo "Build complete!"

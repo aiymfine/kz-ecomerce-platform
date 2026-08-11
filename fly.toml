@@ -1,0 +1,33 @@
+# fly.toml — ShopBuilder KZ deployment for Fly.io
+# This deploys: NestJS app (serves API + frontend static files)
+# Database: Fly Postgres (create separately, see instructions in README)
+# Redis: Optional — app works without it (queues become no-ops)
+
+app = "shopbuilder-kz"
+primary_region = "fra"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  NODE_ENV = "production"
+  PORT = "3000"
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
+
+[http_service.concurrency]
+  type = "requests"
+  soft_limit = 200
+  hard_limit = 250
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"
+
+[deploy]
+  strategy = "rolling"
