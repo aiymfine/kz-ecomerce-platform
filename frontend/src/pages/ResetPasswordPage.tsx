@@ -42,13 +42,13 @@ export function ResetPasswordPage() {
 
   if (success) {
     return (
-      <div className="max-w-md mx-auto px-4 py-20 text-center animate-fade-in">
-        <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
-          <CheckCircle size={40} className="text-green-500" />
+      <div className="max-w-md mx-auto px-4 py-20 text-center">
+        <div className="w-14 h-14 bg-emerald-50 dark:bg-emerald-950/30 rounded-full flex items-center justify-center mx-auto mb-5">
+          <CheckCircle size={28} className="text-emerald-600 dark:text-emerald-400" />
         </div>
-        <h1 className="text-2xl font-extrabold text-gray-900 dark:text-white mb-3">{t('reset_success_title')}</h1>
-        <p className="text-gray-500 dark:text-gray-400 mb-6">{t('reset_success_desc')}</p>
-        <Link to="/" className="btn-primary text-white px-6 py-3 rounded-xl font-semibold inline-block">
+        <h1 className="text-xl font-bold text-slate-900 dark:text-white mb-2">{t('reset_success_title')}</h1>
+        <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">{t('reset_success_desc')}</p>
+        <Link to="/" className="btn-primary px-5 py-2.5 rounded-lg font-semibold text-sm inline-block">
           {t('reset_go_login')}
         </Link>
       </div>
@@ -56,23 +56,23 @@ export function ResetPasswordPage() {
   }
 
   return (
-    <div className="max-w-md mx-auto px-4 py-16 animate-fade-in-up">
-      <div className="bg-white dark:bg-[#14141F]/80 rounded-2xl p-8 border border-blue-100/60 dark:border-white/5 shadow-sm shadow-sm">
-        <div className="text-center mb-6">
-          <div className="w-14 h-14 bg-green-100 dark:bg-green-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <KeyRound size={24} className="text-green-600" />
+    <div className="max-w-md mx-auto px-4 py-16">
+      <div className="bg-white dark:bg-slate-900 rounded-xl p-6 border border-slate-200 dark:border-slate-800">
+        <div className="text-center mb-5">
+          <div className="w-12 h-12 bg-emerald-50 dark:bg-emerald-950/30 rounded-xl flex items-center justify-center mx-auto mb-4">
+            <KeyRound size={22} className="text-emerald-600 dark:text-emerald-400" />
           </div>
-          <h1 className="text-xl font-extrabold text-gray-900 dark:text-white">{t('reset_title')}</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">{t('reset_desc')}</p>
+          <h1 className="text-lg font-bold text-slate-900 dark:text-white">{t('reset_title')}</h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{t('reset_desc')}</p>
         </div>
 
         {error && (
-          <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-3 rounded-xl text-sm mb-4">
+          <div className="bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 p-3 rounded-lg text-sm mb-4">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3">
           {!token && (
             <input
               type="text"
@@ -80,7 +80,7 @@ export function ResetPasswordPage() {
               value={token}
               onChange={e => setToken(e.target.value)}
               required
-              className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-blue-200 dark:border-white/10 rounded-xl input-premium outline-none text-gray-900 dark:text-white placeholder-gray-400 font-mono text-sm"
+              className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg input-focus outline-none text-slate-900 dark:text-white placeholder-slate-400 font-mono text-sm"
             />
           )}
           <div className="relative">
@@ -91,14 +91,14 @@ export function ResetPasswordPage() {
               onChange={e => setNewPassword(e.target.value)}
               required
               minLength={8}
-              className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-blue-200 dark:border-white/10 rounded-xl input-premium outline-none text-gray-900 dark:text-white placeholder-gray-400"
+              className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg input-focus outline-none text-slate-900 dark:text-white placeholder-slate-400 text-sm"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
             >
-              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
             </button>
           </div>
           <input
@@ -107,19 +107,19 @@ export function ResetPasswordPage() {
             value={confirmPassword}
             onChange={e => setConfirmPassword(e.target.value)}
             required
-            className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-blue-200 dark:border-white/10 rounded-xl input-premium outline-none text-gray-900 dark:text-white placeholder-gray-400"
+            className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg input-focus outline-none text-slate-900 dark:text-white placeholder-slate-400 text-sm"
           />
           <button
             type="submit"
             disabled={loading || !token}
-            className="w-full btn-primary text-white py-3 rounded-xl font-semibold disabled:opacity-50"
+            className="w-full btn-primary py-2.5 rounded-lg font-semibold text-sm disabled:opacity-50"
           >
             {loading ? '...' : t('reset_submit')}
           </button>
         </form>
 
-        <Link to="/" className="flex items-center gap-1 text-sm text-gray-400 hover:text-gray-600 mt-6 justify-center">
-          <ArrowLeft size={14} /> {t('reset_back')}
+        <Link to="/" className="flex items-center gap-1 text-sm text-slate-400 hover:text-slate-600 mt-5 justify-center">
+          <ArrowLeft size={13} /> {t('reset_back')}
         </Link>
       </div>
     </div>

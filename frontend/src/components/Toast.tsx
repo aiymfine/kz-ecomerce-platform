@@ -47,15 +47,19 @@ export function ToastContainer() {
       {toasts.map(toast => (
         <div
           key={toast.id}
-          className="pointer-events-auto animate-slide-in-right glass-card rounded-xl px-5 py-3 shadow-lg flex items-center gap-3 min-w-[280px] max-w-sm"
+          className={`pointer-events-auto animate-fade-in-fast rounded-lg px-4 py-3 shadow-lg flex items-center gap-3 min-w-[280px] max-w-sm border ${
+            toast.type === 'success'
+              ? 'bg-white dark:bg-slate-900 border-emerald-200 dark:border-emerald-800'
+              : toast.type === 'error'
+              ? 'bg-white dark:bg-slate-900 border-red-200 dark:border-red-800'
+              : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800'
+          }`}
         >
-          <span className="text-lg">
-            {toast.type === 'success' ? '✅' : toast.type === 'error' ? '❌' : 'ℹ️'}
-          </span>
-          <span className="text-sm font-medium text-gray-800 dark:text-gray-200 flex-1">{toast.message}</span>
+          <span className={`w-2 h-2 rounded-full flex-shrink-0 ${toast.type === 'success' ? 'bg-emerald-500' : toast.type === 'error' ? 'bg-red-500' : 'bg-slate-400'}`} />
+          <span className="text-sm font-medium text-slate-800 dark:text-slate-200 flex-1">{toast.message}</span>
           <button
             onClick={() => removeToast(toast.id)}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition text-xs"
+            className="text-slate-300 hover:text-slate-500 dark:hover:text-slate-400 transition-colors text-xs"
           >
             ✕
           </button>

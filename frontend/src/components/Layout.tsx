@@ -8,12 +8,11 @@ import { useLang } from '../hooks/useLang';
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen flex flex-col bg-[#EFF4FF] dark:bg-[#0a0a0f] transition-colors duration-300">
+    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 transition-colors duration-200">
       <Header />
       <main className="flex-1">{children}</main>
       <Footer />
       <ToastContainer />
-      {/* Mobile bottom nav */}
       <MobileBottomNav />
     </div>
   );
@@ -32,8 +31,8 @@ function MobileBottomNav() {
   ];
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 glass dark:glass border-t border-gray-200/50 dark:border-white/5">
-      <div className="flex justify-around items-center h-16 px-2">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
+      <div className="flex justify-around items-center h-14 px-2">
         {links.map(link => {
           const active = location.pathname === link.to;
           const Icon = link.icon;
@@ -41,14 +40,14 @@ function MobileBottomNav() {
             <Link
               key={link.to}
               to={link.to}
-              className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg transition-all ${
-                active ? 'text-kz-blue' : 'text-gray-400 dark:text-gray-500'
+              className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg transition-colors ${
+                active ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-500'
               }`}
             >
               <div className="relative">
-                <Icon size={20} strokeWidth={active ? 2.5 : 1.5} />
+                <Icon size={20} strokeWidth={active ? 2 : 1.5} />
                 {link.badge && link.badge > 0 && (
-                  <span className="absolute -top-1.5 -right-2 bg-kz-gold text-[10px] text-gray-900 font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                  <span className="absolute -top-1.5 -right-2 bg-indigo-600 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
                     {link.badge}
                   </span>
                 )}

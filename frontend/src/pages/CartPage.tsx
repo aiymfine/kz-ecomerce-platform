@@ -7,7 +7,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../components/Toast';
 import { useLang } from '../hooks/useLang';
 import { formatPrice } from '../types';
-import { Minus, Plus, X, Tag, ShoppingBag, Lock, ArrowRight, Download } from 'lucide-react';
+import { Minus, Plus, X, Tag, ShoppingBag, Lock, ArrowRight, Package } from 'lucide-react';
 
 export function CartPage() {
   const { t } = useLang();
@@ -68,16 +68,16 @@ export function CartPage() {
 
   if (!isAuthenticated) {
     return (
-      <div className="max-w-3xl mx-auto px-4 py-20 text-center animate-fade-in">
-        <Lock size={48} className="mx-auto mb-4 text-gray-300 dark:text-gray-600" />
-        <p className="text-xl font-semibold text-gray-500 dark:text-gray-400 mb-4">{t('cart_login_required')}</p>
-        <Link to="/products" className="text-kz-blue hover:underline font-medium">{t('cart_back_to_products')}</Link>
+      <div className="max-w-3xl mx-auto px-4 py-20 text-center">
+        <Lock size={40} className="mx-auto mb-4 text-slate-300 dark:text-slate-700" />
+        <p className="text-lg font-medium text-slate-500 dark:text-slate-400 mb-4">{t('cart_login_required')}</p>
+        <Link to="/products" className="text-indigo-600 dark:text-indigo-400 hover:underline font-medium text-sm">{t('cart_back_to_products')}</Link>
       </div>
     );
   }
 
   if (loading) return (
-    <div className="max-w-3xl mx-auto px-4 py-8 space-y-4">
+    <div className="max-w-3xl mx-auto px-4 py-8 space-y-3">
       {[1,2,3].map(i => <div key={i} className="skeleton h-20 rounded-xl" />)}
     </div>
   );
@@ -86,19 +86,17 @@ export function CartPage() {
 
   if (items.length === 0) {
     return (
-      <div className="max-w-3xl mx-auto px-4 py-20 text-center animate-fade-in">
-        <ShoppingBag size={48} className="mx-auto mb-4 text-gray-300 dark:text-gray-600" />
-        <p className="text-xl font-semibold text-gray-500 dark:text-gray-400 mb-4">{t('cart_empty')}</p>
-        <Link to="/products" className="inline-flex items-center gap-2 btn-primary text-white px-6 py-3 rounded-xl font-semibold">
-          {t('cart_go_to_products')} <ArrowRight size={16} />
+      <div className="max-w-3xl mx-auto px-4 py-20 text-center">
+        <ShoppingBag size={40} className="mx-auto mb-4 text-slate-300 dark:text-slate-700" />
+        <p className="text-lg font-medium text-slate-500 dark:text-slate-400 mb-4">{t('cart_empty')}</p>
+        <Link to="/products" className="inline-flex items-center gap-2 btn-primary px-5 py-2.5 rounded-lg font-semibold text-sm">
+          {t('cart_go_to_products')} <ArrowRight size={14} />
         </Link>
       </div>
     );
   }
 
   const totalItems = items.reduce((s: number, i: CartItemData) => s + i.quantity, 0);
-
-  // Calculate total from enriched variant data
   const subtotal = items.reduce((sum: number, item: CartItemData) => {
     const price = item.variant?.priceTiyin || 0;
     return sum + price * item.quantity;
@@ -107,76 +105,57 @@ export function CartPage() {
   const discount = promoApplied ? Math.round(subtotal * 0.1) : 0;
   const total = subtotal - discount;
 
-  const hasDigital = items.some((item: CartItemData) => {
-    // Rough check — if variant sku contains software-related keywords
-    const sku = item.variant?.sku?.toLowerCase() || '';
-    return sku.includes('windows') || sku.includes('kaspersly') || sku.includes('office')
-      || sku.includes('steam') || sku.includes('adobe') || sku.includes('photoshop');
-  });
-
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 pb-24 md:pb-8 animate-fade-in-up">
-      <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white mb-8 flex items-center gap-3">
-        <ShoppingBag size={28} className="text-kz-blue" />
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 pb-24 md:pb-8">
+      <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2.5">
+        <ShoppingBag size={22} className="text-slate-400" />
         {t('cart_title')}
-        <span className="text-sm font-normal text-gray-400">({totalItems} {t('cart_items_count')})</span>
+        <span className="text-sm font-normal text-slate-400">({totalItems} {t('cart_items_count')})</span>
       </h1>
 
-      {error && <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-4 rounded-xl mb-6 animate-scale-in">{error}</div>}
-
-      {/* Digital products notice */}
-      {hasDigital && (
-        <div className="bg-violet-50 dark:bg-violet-900/20 text-violet-700 dark:text-violet-300 p-4 rounded-xl mb-6 flex items-center gap-3">
-          <Download size={18} />
-          <span className="text-sm font-medium">{t('cart_digital_notice')}</span>
-        </div>
-      )}
+      {error && <div className="bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 p-3 rounded-lg mb-6 text-sm">{error}</div>}
 
       {/* Items */}
-      <div className="space-y-3">
+      <div className="space-y-2">
         {items.map((item: CartItemData) => {
           const productTitle = item.variant?.product?.title || `${t('variant')} #${item.variantId}`;
           const price = item.variant?.priceTiyin || 0;
           const lineTotal = price * item.quantity;
           const sku = item.variant?.sku || '';
-          const isDigitalItem = ['windows', 'kaspersly', 'office', 'steam', 'adobe', 'photoshop'].some(k => sku.includes(k));
 
           return (
-            <div key={item.id} className="bg-white dark:bg-[#14141F]/80 rounded-2xl p-4 flex items-center gap-4 border border-blue-100/60 dark:border-white/5 shadow-sm card-hover">
-              <div className={`w-16 h-16 bg-gradient-to-br ${isDigitalItem ? 'from-violet-500/20 to-purple-500/10' : 'from-kz-blue/20 to-kz-gold/10'} rounded-xl flex items-center justify-center text-2xl flex-shrink-0`}>
-                {isDigitalItem ? '💾' : '📦'}
+            <div key={item.id} className="bg-white dark:bg-slate-900 rounded-xl p-4 flex items-center gap-4 border border-slate-200 dark:border-slate-800">
+              <div className="w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Package size={18} className="text-slate-400" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-gray-900 dark:text-white truncate">{productTitle}</p>
-                <p className="text-sm text-gray-400 dark:text-gray-500">
-                  SKU: {sku || `VAR-${item.variantId}`}
-                  {isDigitalItem && <span className="ml-2 text-violet-400 text-xs font-medium">📱 {t('digital_label')}</span>}
-                </p>
-                {price > 0 && <p className="text-sm font-semibold text-kz-blue mt-0.5">{formatPrice(price)}</p>}
+                <p className="font-medium text-slate-900 dark:text-white truncate text-sm">{productTitle}</p>
+                <p className="text-xs text-slate-400 mt-0.5">SKU: {sku || `VAR-${item.variantId}`}</p>
+                {price > 0 && <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 mt-0.5">{formatPrice(price)}</p>}
               </div>
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1">
                 <button
                   onClick={() => updateQty(item.id, item.quantity - 1)}
-                  className="w-8 h-8 rounded-lg border border-gray-200 dark:border-white/10 flex items-center justify-center text-gray-500 hover:bg-gray-50 dark:hover:bg-white/5 transition"
+                  className="w-7 h-7 rounded-md border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                 >
-                  <Minus size={14} />
+                  <Minus size={12} />
                 </button>
-                <span className="w-8 text-center font-semibold text-gray-900 dark:text-white">{item.quantity}</span>
+                <span className="w-7 text-center font-semibold text-slate-900 dark:text-white text-sm">{item.quantity}</span>
                 <button
                   onClick={() => updateQty(item.id, item.quantity + 1)}
-                  className="w-8 h-8 rounded-lg border border-gray-200 dark:border-white/10 flex items-center justify-center text-gray-500 hover:bg-gray-50 dark:hover:bg-white/5 transition"
+                  className="w-7 h-7 rounded-md border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                 >
-                  <Plus size={14} />
+                  <Plus size={12} />
                 </button>
               </div>
-              <div className="text-right min-w-[80px]">
-                <p className="font-bold text-gray-900 dark:text-white">{formatPrice(lineTotal)}</p>
+              <div className="text-right min-w-[70px]">
+                <p className="font-bold text-slate-900 dark:text-white text-sm">{formatPrice(lineTotal)}</p>
               </div>
               <button
                 onClick={() => removeItem(item.id)}
-                className="p-2 text-gray-300 hover:text-red-500 transition-all"
+                className="p-1.5 text-slate-300 hover:text-red-500 transition-colors"
               >
-                <X size={16} />
+                <X size={14} />
               </button>
             </div>
           );
@@ -184,52 +163,51 @@ export function CartPage() {
       </div>
 
       {/* Summary */}
-      <div className="mt-8 bg-white dark:bg-[#14141F]/80 rounded-2xl p-6 border border-blue-100/60 dark:border-white/5 shadow-sm">
-        {/* Promo code */}
-        <form onSubmit={handlePromo} className="flex gap-2 mb-6">
+      <div className="mt-6 bg-white dark:bg-slate-900 rounded-xl p-5 border border-slate-200 dark:border-slate-800">
+        <form onSubmit={handlePromo} className="flex gap-2 mb-5">
           <div className="relative flex-1">
-            <Tag size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+            <Tag size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
               placeholder={t('promo_placeholder')}
               value={promo}
               onChange={e => setPromo(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-blue-50/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-sm outline-none input-premium text-gray-900 dark:text-white placeholder-gray-400"
+              className="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm outline-none input-focus text-slate-900 dark:text-white placeholder-slate-400"
             />
           </div>
-          <button type="submit" className="px-5 py-2.5 bg-kz-blue/10 text-kz-blue font-semibold rounded-xl text-sm hover:bg-kz-blue/20 transition-all">
+          <button type="submit" className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold rounded-lg text-sm hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
             {t('promo_apply')}
           </button>
         </form>
         {promoApplied && (
-          <div className="flex items-center gap-2 text-green-500 text-sm mb-4 animate-fade-in">
-            <Tag size={14} /> {t('promo_applied_label')}
+          <div className="flex items-center gap-2 text-emerald-600 text-sm mb-4">
+            <Tag size={13} /> {t('promo_applied_label')}
           </div>
         )}
 
-        <div className="space-y-3">
-          <div className="flex justify-between text-gray-500 dark:text-gray-400">
-            <span>{t('cart_total_items')}</span>
-            <span className="font-medium text-gray-900 dark:text-white">{totalItems}</span>
+        <div className="space-y-2.5">
+          <div className="flex justify-between text-sm">
+            <span className="text-slate-500 dark:text-slate-400">{t('cart_total_items')}</span>
+            <span className="font-medium text-slate-900 dark:text-white">{totalItems}</span>
           </div>
-          <div className="flex justify-between text-gray-500 dark:text-gray-400">
-            <span>{t('cart_subtotal')}</span>
-            <span className="font-medium text-gray-900 dark:text-white">{formatPrice(subtotal)}</span>
+          <div className="flex justify-between text-sm">
+            <span className="text-slate-500 dark:text-slate-400">{t('cart_subtotal')}</span>
+            <span className="font-medium text-slate-900 dark:text-white">{formatPrice(subtotal)}</span>
           </div>
-          <div className="flex justify-between text-gray-500 dark:text-gray-400">
-            <span>{t('cart_shipping')}</span>
-            <span className="font-medium text-green-500">{t('cart_shipping_free')}</span>
+          <div className="flex justify-between text-sm">
+            <span className="text-slate-500 dark:text-slate-400">{t('cart_shipping')}</span>
+            <span className="font-medium text-emerald-600">{t('cart_shipping_free')}</span>
           </div>
           {promoApplied && (
-            <div className="flex justify-between text-green-500">
+            <div className="flex justify-between text-sm text-emerald-600">
               <span>{t('cart_discount')}</span>
               <span className="font-medium">-{formatPrice(discount)}</span>
             </div>
           )}
-          <div className="border-t border-blue-100/60 dark:border-white/5 shadow-sm pt-4">
+          <div className="border-t border-slate-200 dark:border-slate-800 pt-3">
             <div className="flex justify-between items-center">
-              <span className="text-lg font-bold text-gray-900 dark:text-white">{t('cart_total')}</span>
-              <span className="text-2xl font-extrabold text-kz-blue animate-fade-in">{formatPrice(total)}</span>
+              <span className="text-base font-bold text-slate-900 dark:text-white">{t('cart_total')}</span>
+              <span className="text-xl font-bold text-slate-900 dark:text-white">{formatPrice(total)}</span>
             </div>
           </div>
         </div>
@@ -237,15 +215,15 @@ export function CartPage() {
         <button
           onClick={handleCheckout}
           disabled={checkingOut}
-          className="w-full mt-6 btn-primary text-white py-4 rounded-xl font-bold text-lg disabled:opacity-50 flex items-center justify-center gap-2"
+          className="w-full mt-5 btn-primary py-3 rounded-lg font-semibold text-sm disabled:opacity-50 flex items-center justify-center gap-2"
         >
           {checkingOut ? (
             <>
-              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               {t('cart_processing')}
             </>
           ) : (
-            <>{t('cart_checkout')} <ArrowRight size={18} /></>
+            <>{t('cart_checkout')} <ArrowRight size={16} /></>
           )}
         </button>
       </div>

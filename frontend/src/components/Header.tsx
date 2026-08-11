@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useDarkMode } from '../hooks/useDarkMode';
 import { useLang } from '../hooks/useLang';
 import { useState } from 'react';
-import { ShoppingCart, Sun, Moon, Menu, X, Zap, Globe } from 'lucide-react';
+import { ShoppingCart, Sun, Moon, Menu, X, Store, Globe } from 'lucide-react';
 
 export function Header() {
   const { itemCount } = useCartContext();
@@ -52,118 +52,107 @@ export function Header() {
 
   return (
     <>
-      <header className="glass sticky top-0 z-50 transition-all duration-300">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      <header className="sticky top-0 z-40 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2.5 group">
-            <div className="relative w-9 h-9 bg-gradient-to-br from-kz-blue to-kz-blue-dark rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-kz-blue/30 transition-shadow duration-300">
-              <Zap size={18} className="text-white" />
-              <div className="absolute -inset-0.5 bg-gradient-to-br from-kz-blue to-kz-gold rounded-xl opacity-0 group-hover:opacity-30 blur transition-opacity duration-300" />
+          <Link to="/" className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
+              <Store size={16} className="text-white" />
             </div>
-            <div className="flex items-baseline">
-              <span className="font-extrabold text-lg text-gray-900 dark:text-white">Shop</span>
-              <span className="font-extrabold text-lg text-kz-blue">Builder</span>
-              <span className="text-kz-gold font-bold text-xs ml-1 bg-kz-gold/10 px-1.5 py-0.5 rounded-md">KZ</span>
-            </div>
+            <span className="font-bold text-base text-slate-900 dark:text-white">ShopBuilder</span>
           </Link>
 
           {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center gap-1">
-            <Link to="/" className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-kz-blue dark:hover:text-kz-blue rounded-xl hover:bg-kz-blue/5 transition-all font-medium text-sm">
+          <nav className="hidden md:flex items-center gap-0.5">
+            <Link to="/" className="px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
               {t('nav_home')}
             </Link>
-            <Link to="/products" className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-kz-blue dark:hover:text-kz-blue rounded-xl hover:bg-kz-blue/5 transition-all font-medium text-sm">
+            <Link to="/products" className="px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
               {t('nav_products')}
             </Link>
-            <Link to="/merchant/dashboard" className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-kz-blue dark:hover:text-kz-blue rounded-xl hover:bg-kz-blue/5 transition-all font-medium text-sm">
+            <Link to="/merchant/dashboard" className="px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
               {t('nav_merchant')}
             </Link>
             {isAuthenticated && (
-              <Link to="/profile" className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-kz-blue dark:hover:text-kz-blue rounded-xl hover:bg-kz-blue/5 transition-all font-medium text-sm">
+              <Link to="/profile" className="px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                 {t('nav_profile')}
               </Link>
             )}
           </nav>
 
           {/* Actions */}
-          <div className="flex items-center gap-2">
-            {/* Language toggle */}
+          <div className="flex items-center gap-1">
             <button
               onClick={() => setLang(lang === 'kk' ? 'en' : 'kk')}
-              className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 transition-all"
+              className="hidden sm:flex items-center gap-1.5 px-2.5 py-2 rounded-lg text-sm font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             >
-              <Globe size={15} />
+              <Globe size={14} />
               <span>{lang === 'kk' ? 'RU' : 'EN'}</span>
             </button>
 
-            {/* Dark mode toggle */}
             <button
               onClick={toggle}
-              className="p-2.5 rounded-xl text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 transition-all"
+              className="p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               aria-label="Toggle dark mode"
             >
-              {dark ? <Sun size={18} /> : <Moon size={18} />}
+              {dark ? <Sun size={16} /> : <Moon size={16} />}
             </button>
 
-            {/* Cart */}
-            <Link to="/cart" className="relative p-2.5 rounded-xl text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 transition-all group">
-              <ShoppingCart size={18} className="group-hover:text-kz-blue transition-colors" />
+            <Link to="/cart" className="relative p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+              <ShoppingCart size={16} />
               {itemCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 bg-gradient-to-r from-kz-blue to-kz-gold text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-lg animate-scale-in">
+                <span className="absolute -top-0.5 -right-0.5 bg-indigo-600 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
                   {itemCount}
                 </span>
               )}
             </Link>
 
-            {/* Auth */}
             {isAuthenticated ? (
-              <div className="hidden sm:flex items-center gap-2">
-                <span className="text-sm text-gray-500 dark:text-gray-400">👋 {user?.firstName}</span>
-                <button onClick={logout} className="text-sm text-gray-400 hover:text-red-500 transition">{t('nav_logout')}</button>
+              <div className="hidden sm:flex items-center gap-2 pl-2">
+                <span className="text-sm text-slate-600 dark:text-slate-300">{user?.firstName}</span>
+                <button onClick={logout} className="text-sm text-slate-400 hover:text-red-500 transition-colors">{t('nav_logout')}</button>
               </div>
             ) : (
               <button
                 onClick={() => { setShowAuth(true); setMode('login'); setError(''); }}
-                className="hidden sm:block btn-primary text-white px-5 py-2 rounded-xl text-sm font-semibold"
+                className="hidden sm:inline-flex btn-primary px-4 py-1.5 rounded-lg text-sm font-semibold"
               >
                 {t('nav_login')}
               </button>
             )}
 
-            {/* Mobile menu button */}
             <button
               onClick={() => setMobileMenu(!mobileMenu)}
-              className="md:hidden p-2.5 rounded-xl text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 transition-all"
+              className="md:hidden p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             >
-              {mobileMenu ? <X size={20} /> : <Menu size={20} />}
+              {mobileMenu ? <X size={18} /> : <Menu size={18} />}
             </button>
           </div>
         </div>
 
         {/* Mobile menu */}
         {mobileMenu && (
-          <div className="md:hidden glass-card border-t border-gray-100 dark:border-white/5 animate-fade-in">
-            <div className="px-4 py-4 space-y-2">
-              <Link to="/" onClick={() => setMobileMenu(false)} className="block px-4 py-2.5 rounded-xl text-gray-700 dark:text-gray-200 hover:bg-kz-blue/5 font-medium">{t('nav_home')}</Link>
-              <Link to="/products" onClick={() => setMobileMenu(false)} className="block px-4 py-2.5 rounded-xl text-gray-700 dark:text-gray-200 hover:bg-kz-blue/5 font-medium">{t('nav_products')}</Link>
-              <Link to="/merchant/dashboard" onClick={() => setMobileMenu(false)} className="block px-4 py-2.5 rounded-xl text-gray-700 dark:text-gray-200 hover:bg-kz-blue/5 font-medium">{t('nav_merchant')}</Link>
-              {/* Mobile lang toggle */}
+          <div className="md:hidden bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 animate-fade-in-fast">
+            <div className="px-4 py-3 space-y-1">
+              <Link to="/" onClick={() => setMobileMenu(false)} className="block px-3 py-2 rounded-lg text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 font-medium text-sm">{t('nav_home')}</Link>
+              <Link to="/products" onClick={() => setMobileMenu(false)} className="block px-3 py-2 rounded-lg text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 font-medium text-sm">{t('nav_products')}</Link>
+              <Link to="/merchant/dashboard" onClick={() => setMobileMenu(false)} className="block px-3 py-2 rounded-lg text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 font-medium text-sm">{t('nav_merchant')}</Link>
               <button
                 onClick={() => { setLang(lang === 'kk' ? 'en' : 'kk'); }}
-                className="w-full text-left px-4 py-2.5 rounded-xl text-gray-700 dark:text-gray-200 hover:bg-kz-blue/5 font-medium flex items-center gap-2"
+                className="w-full text-left px-3 py-2 rounded-lg text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 font-medium text-sm flex items-center gap-2"
               >
-                <Globe size={15} /> {lang === 'kk' ? 'Русский → English' : 'English → Рус'}
+                <Globe size={14} /> {lang === 'kk' ? 'Switch to English' : 'Switch to Russian'}
               </button>
               {!isAuthenticated && (
                 <button
                   onClick={() => { setMobileMenu(false); setShowAuth(true); setMode('login'); setError(''); }}
-                  className="w-full btn-primary text-white py-2.5 rounded-xl font-semibold mt-2"
+                  className="w-full btn-primary py-2 rounded-lg font-semibold text-sm mt-2"
                 >
                   {t('nav_login')}
                 </button>
               )}
               {isAuthenticated && (
-                <button onClick={() => { logout(); setMobileMenu(false); }} className="w-full text-left px-4 py-2.5 text-red-500 font-medium">
+                <button onClick={() => { logout(); setMobileMenu(false); }} className="w-full text-left px-3 py-2 text-red-500 font-medium text-sm">
                   {t('nav_logout')} ({user?.firstName})
                 </button>
               )}
@@ -174,77 +163,75 @@ export function Header() {
 
       {/* Auth Modal */}
       {showAuth && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in" onClick={() => setShowAuth(false)}>
-          <div className="bg-white dark:bg-[#14141F] rounded-2xl p-8 w-full max-w-md shadow-2xl animate-scale-in border border-gray-100 dark:border-white/5" onClick={e => e.stopPropagation()}>
-            <div className="flex gap-4 mb-6">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in-fast" onClick={() => setShowAuth(false)}>
+          <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl w-full max-w-md animate-fade-in border border-slate-200 dark:border-slate-700" onClick={e => e.stopPropagation()}>
+            <div className="flex gap-6 border-b border-slate-200 dark:border-slate-700 px-6">
               <button
                 onClick={() => { setMode('login'); setError(''); }}
-                className={`pb-2 font-semibold transition-all ${mode === 'login' ? 'text-kz-blue border-b-2 border-kz-blue' : 'text-gray-400 dark:text-gray-500'}`}
+                className={`pb-3 pt-5 text-sm font-semibold transition-colors ${mode === 'login' ? 'text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600 dark:border-indigo-400' : 'text-slate-400 dark:text-slate-500'}`}
               >
                 {t('auth_login')}
               </button>
               <button
                 onClick={() => { setMode('register'); setError(''); }}
-                className={`pb-2 font-semibold transition-all ${mode === 'register' ? 'text-kz-blue border-b-2 border-kz-blue' : 'text-gray-400 dark:text-gray-500'}`}
+                className={`pb-3 pt-5 text-sm font-semibold transition-colors ${mode === 'register' ? 'text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600 dark:border-indigo-400' : 'text-slate-400 dark:text-slate-500'}`}
               >
                 {t('auth_register')}
               </button>
             </div>
 
-            {error && <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-3 rounded-xl text-sm mb-4 animate-scale-in">{error}</div>}
+            {error && <div className="bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 px-4 py-2.5 mx-6 mt-4 rounded-lg text-sm">{error}</div>}
 
-            {mode === 'login' ? (
-              <form onSubmit={handleLogin} className="space-y-4">
-                <input type="email" placeholder={t('auth_email_placeholder')} value={email} onChange={e => setEmail(e.target.value)} required
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-blue-200 dark:border-white/10 rounded-xl input-premium outline-none text-gray-900 dark:text-white placeholder-gray-400" />
-                <input type="password" placeholder={t('auth_password_placeholder')} value={password} onChange={e => setPassword(e.target.value)} required
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-blue-200 dark:border-white/10 rounded-xl input-premium outline-none text-gray-900 dark:text-white placeholder-gray-400" />
-                <button type="submit" disabled={submitting}
-                  className="w-full btn-primary text-white py-3 rounded-xl font-semibold disabled:opacity-50">
-                  {submitting ? '...' : t('auth_login')}
-                </button>
-              </form>
-            ) : (
-              <form onSubmit={handleRegister} className="space-y-3">
-                <div className="grid grid-cols-2 gap-3">
-                  <input type="text" placeholder={t('auth_firstname_placeholder')} value={firstName} onChange={e => setFirstName(e.target.value)} required
-                    className="px-4 py-3 bg-gray-50 dark:bg-white/5 border border-blue-200 dark:border-white/10 rounded-xl input-premium outline-none text-gray-900 dark:text-white placeholder-gray-400" />
-                  <input type="text" placeholder={t('auth_lastname_placeholder')} value={lastName} onChange={e => setLastName(e.target.value)}
-                    className="px-4 py-3 bg-gray-50 dark:bg-white/5 border border-blue-200 dark:border-white/10 rounded-xl input-premium outline-none text-gray-900 dark:text-white placeholder-gray-400" />
-                </div>
-                <input type="email" placeholder={t('auth_email_placeholder')} value={email} onChange={e => setEmail(e.target.value)} required
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-blue-200 dark:border-white/10 rounded-xl input-premium outline-none text-gray-900 dark:text-white placeholder-gray-400" />
-                <input type="tel" placeholder={t('auth_phone_placeholder')} value={phone} onChange={e => setPhone(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-blue-200 dark:border-white/10 rounded-xl input-premium outline-none text-gray-900 dark:text-white placeholder-gray-400" />
-                <input type="password" placeholder={t('auth_password_placeholder')} value={password} onChange={e => setPassword(e.target.value)} required minLength={8}
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-blue-200 dark:border-white/10 rounded-xl input-premium outline-none text-gray-900 dark:text-white placeholder-gray-400" />
-                <button type="submit" disabled={submitting}
-                  className="w-full btn-primary text-white py-3 rounded-xl font-semibold disabled:opacity-50">
-                  {submitting ? '...' : t('auth_register')}
-                </button>
-              </form>
-            )}
+            <div className="p-6">
+              {mode === 'login' ? (
+                <form onSubmit={handleLogin} className="space-y-3">
+                  <input type="email" placeholder={t('auth_email_placeholder')} value={email} onChange={e => setEmail(e.target.value)} required
+                    className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg input-focus outline-none text-slate-900 dark:text-white placeholder-slate-400 text-sm" />
+                  <input type="password" placeholder={t('auth_password_placeholder')} value={password} onChange={e => setPassword(e.target.value)} required
+                    className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg input-focus outline-none text-slate-900 dark:text-white placeholder-slate-400 text-sm" />
+                  <button type="submit" disabled={submitting}
+                    className="w-full btn-primary py-2.5 rounded-lg font-semibold text-sm disabled:opacity-50">
+                    {submitting ? '...' : t('auth_login')}
+                  </button>
+                </form>
+              ) : (
+                <form onSubmit={handleRegister} className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <input type="text" placeholder={t('auth_firstname_placeholder')} value={firstName} onChange={e => setFirstName(e.target.value)} required
+                      className="px-3.5 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg input-focus outline-none text-slate-900 dark:text-white placeholder-slate-400 text-sm" />
+                    <input type="text" placeholder={t('auth_lastname_placeholder')} value={lastName} onChange={e => setLastName(e.target.value)}
+                      className="px-3.5 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg input-focus outline-none text-slate-900 dark:text-white placeholder-slate-400 text-sm" />
+                  </div>
+                  <input type="email" placeholder={t('auth_email_placeholder')} value={email} onChange={e => setEmail(e.target.value)} required
+                    className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg input-focus outline-none text-slate-900 dark:text-white placeholder-slate-400 text-sm" />
+                  <input type="tel" placeholder={t('auth_phone_placeholder')} value={phone} onChange={e => setPhone(e.target.value)}
+                    className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg input-focus outline-none text-slate-900 dark:text-white placeholder-slate-400 text-sm" />
+                  <input type="password" placeholder={t('auth_password_placeholder')} value={password} onChange={e => setPassword(e.target.value)} required minLength={8}
+                    className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg input-focus outline-none text-slate-900 dark:text-white placeholder-slate-400 text-sm" />
+                  <button type="submit" disabled={submitting}
+                    className="w-full btn-primary py-2.5 rounded-lg font-semibold text-sm disabled:opacity-50">
+                    {submitting ? '...' : t('auth_register')}
+                  </button>
+                </form>
+              )}
 
-            <p className="text-xs text-gray-400 dark:text-gray-500 mt-4 text-center">
-              {t('auth_demo')}
-            </p>
-            <div className="flex justify-center gap-4 mt-3">
-              <Link to="/forgot-password" onClick={() => setShowAuth(false)} className="text-xs text-gray-400 hover:text-kz-blue transition">
-                {t('forgot_title')}
-              </Link>
-              <Link to="/verify-email" onClick={() => setShowAuth(false)} className="text-xs text-gray-400 hover:text-kz-blue transition">
-                {t('verify_title')}
-              </Link>
+              <div className="flex justify-center gap-4 mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                <Link to="/forgot-password" onClick={() => setShowAuth(false)} className="text-xs text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+                  {t('forgot_title')}
+                </Link>
+                <Link to="/verify-email" onClick={() => setShowAuth(false)} className="text-xs text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+                  {t('verify_title')}
+                </Link>
+              </div>
+              <div className="flex justify-center gap-4 mt-2">
+                <Link to="/admin" onClick={() => setShowAuth(false)} className="text-xs text-slate-400 hover:text-red-500 transition-colors">
+                  {t('admin_dashboard')}
+                </Link>
+                <Link to="/merchant/login" onClick={() => setShowAuth(false)} className="text-xs text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+                  {t('merchant_login_title')}
+                </Link>
+              </div>
             </div>
-            <Link to="/admin" onClick={() => setShowAuth(false)} className="block text-center text-xs text-red-400 hover:text-red-500 mt-2 transition">
-              {t('admin_dashboard')} →
-            </Link>
-            <Link to="/merchant/login" onClick={() => setShowAuth(false)} className="block text-center text-xs text-kz-blue hover:text-kz-blue-dark mt-1 transition">
-              {t('merchant_login_title')} →
-            </Link>
-            <Link to="/merchant/register" onClick={() => setShowAuth(false)} className="block text-center text-xs text-kz-blue hover:text-kz-blue-dark transition">
-              {t('merchant_register_title')} →
-            </Link>
           </div>
         </div>
       )}

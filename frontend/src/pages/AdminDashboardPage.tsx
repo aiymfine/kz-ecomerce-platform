@@ -21,7 +21,7 @@ interface Merchant {
   createdAt: string;
 }
 
-interface Store {
+interface StoreData {
   id: number;
   name: string;
   subdomain: string;
@@ -39,7 +39,7 @@ export function AdminDashboardPage() {
   const [password, setPassword] = useState('');
   const [queue, setQueue] = useState<QueueStatus | null>(null);
   const [merchants, setMerchants] = useState<Merchant[]>([]);
-  const [stores, setStores] = useState<Store[]>([]);
+  const [stores, setStores] = useState<StoreData[]>([]);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'merchants' | 'stores' | 'queue'>('overview');
 
@@ -80,28 +80,25 @@ export function AdminDashboardPage() {
     setLoading(false);
   };
 
-  // Always require explicit admin login (no auto-restore from localStorage)
-  // This ensures admin access is deliberate
-
   useEffect(() => { if (logged) fetchData(); }, [logged]);
 
   if (!logged) {
     return (
-      <div className="max-w-md mx-auto px-4 py-16 animate-fade-in-up">
-        <div className="bg-white dark:bg-[#14141F]/80 rounded-2xl p-8 border border-blue-100/60 dark:border-white/5 shadow-sm shadow-sm">
+      <div className="max-w-md mx-auto px-4 py-16">
+        <div className="bg-white dark:bg-slate-900 rounded-xl p-8 border border-slate-200 dark:border-slate-800">
           <div className="text-center mb-6">
-            <div className="w-14 h-14 bg-red-100 dark:bg-red-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <Shield size={24} className="text-red-600" />
+            <div className="w-12 h-12 bg-red-50 dark:bg-red-950/30 rounded-xl flex items-center justify-center mx-auto mb-4">
+              <Shield size={22} className="text-red-600 dark:text-red-400" />
             </div>
-            <h1 className="text-xl font-extrabold text-gray-900 dark:text-white">{t('admin_login_title')}</h1>
-            <p className="text-sm text-gray-500 mt-2">{t('admin_login_desc')}</p>
+            <h1 className="text-lg font-bold text-slate-900 dark:text-white">{t('admin_login_title')}</h1>
+            <p className="text-sm text-slate-500 mt-1">{t('admin_login_desc')}</p>
           </div>
-          <form onSubmit={handleLogin} className="space-y-4">
-            <input type="email" value={email} onChange={e => setEmail(e.target.value)} required
-              className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl input-premium outline-none text-gray-900 dark:text-white" />
-            <input type="password" value={password} onChange={e => setPassword(e.target.value)} required
-              className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl input-premium outline-none text-gray-900 dark:text-white" />
-            <button type="submit" className="w-full bg-gradient-to-r from-red-600 to-red-700 text-white py-3 rounded-xl font-semibold hover:shadow-lg transition">
+          <form onSubmit={handleLogin} className="space-y-3">
+            <input type="email" placeholder="admin@example.com" value={email} onChange={e => setEmail(e.target.value)} required
+              className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg input-focus outline-none text-slate-900 dark:text-white text-sm placeholder-slate-400" />
+            <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} required
+              className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg input-focus outline-none text-slate-900 dark:text-white text-sm placeholder-slate-400" />
+            <button type="submit" className="w-full bg-red-600 hover:bg-red-700 text-white py-2.5 rounded-lg font-semibold text-sm transition-colors">
               {t('admin_login')}
             </button>
           </form>
@@ -118,141 +115,137 @@ export function AdminDashboardPage() {
   ] as const;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 animate-fade-in-up">
-      <div className="flex items-center justify-between mb-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+      <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white flex items-center gap-3">
-            <Shield size={28} className="text-red-500" />
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2.5">
+            <Shield size={24} className="text-red-500" />
             {t('admin_dashboard')}
           </h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">{t('admin_subtitle')}</p>
+          <p className="text-slate-500 dark:text-slate-400 mt-0.5 text-sm">{t('admin_subtitle')}</p>
         </div>
         <button onClick={fetchData} disabled={loading}
-          className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-white/5 rounded-xl text-sm font-medium hover:bg-gray-200 dark:hover:bg-white/10 transition">
-          <RefreshCw size={14} className={loading ? 'animate-spin' : ''} /> {t('admin_refresh')}
+          className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+          <RefreshCw size={13} className={loading ? 'animate-spin' : ''} /> {t('admin_refresh')}
         </button>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 mb-6 overflow-x-auto">
+      <div className="flex gap-1 mb-6 overflow-x-auto border-b border-slate-200 dark:border-slate-800">
         {tabs.map(tab => (
           <button key={tab.key} onClick={() => setActiveTab(tab.key)}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
+            className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium transition-colors whitespace-nowrap border-b-2 ${
               activeTab === tab.key
-                ? 'bg-kz-blue text-white shadow-md'
-                : 'bg-white dark:bg-white/5 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 border border-blue-100/60 dark:border-white/5 shadow-sm'
+                ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 dark:border-indigo-400'
+                : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
             }`}>
-            <tab.icon size={16} /> {tab.label}
+            <tab.icon size={14} /> {tab.label}
           </button>
         ))}
       </div>
 
       {/* Overview */}
       {activeTab === 'overview' && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <StatCard icon={Users} label={t('admin_total_merchants')} value={merchants.length} color="blue" />
-          <StatCard icon={Store} label={t('admin_total_stores')} value={stores.length} color="green" />
-          <StatCard icon={Mail} label={t('admin_email_queue')} value={queue ? queue.emails?.waiting || 0 : '—'} color="purple" />
-          <StatCard icon={ShoppingCart} label={t('admin_cart_queue')} value={queue ? queue.abandonedCarts?.waiting || 0 : '—'} color="amber" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatCard icon={Users} label={t('admin_total_merchants')} value={merchants.length} />
+          <StatCard icon={Store} label={t('admin_total_stores')} value={stores.length} />
+          <StatCard icon={Mail} label={t('admin_email_queue')} value={queue ? queue.emails?.waiting || 0 : '—'} />
+          <StatCard icon={ShoppingCart} label={t('admin_cart_queue')} value={queue ? queue.abandonedCarts?.waiting || 0 : '—'} />
         </div>
       )}
 
       {/* Merchants Tab */}
       {activeTab === 'merchants' && (
-        <div className="bg-white dark:bg-[#14141F]/80 rounded-2xl border border-blue-100/60 dark:border-white/5 shadow-sm overflow-hidden">
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 dark:bg-white/5">
+              <thead className="bg-slate-50 dark:bg-slate-800/50">
                 <tr>
-                  <th className="text-left px-4 py-3 font-semibold text-gray-500 dark:text-gray-400">ID</th>
-                  <th className="text-left px-4 py-3 font-semibold text-gray-500 dark:text-gray-400">Name</th>
-                  <th className="text-left px-4 py-3 font-semibold text-gray-500 dark:text-gray-400">Email</th>
-                  <th className="text-left px-4 py-3 font-semibold text-gray-500 dark:text-gray-400">Business</th>
-                  <th className="text-left px-4 py-3 font-semibold text-gray-500 dark:text-gray-400">Status</th>
-                  <th className="text-left px-4 py-3 font-semibold text-gray-500 dark:text-gray-400">Verified</th>
+                  <th className="text-left px-4 py-3 font-medium text-slate-500 dark:text-slate-400">ID</th>
+                  <th className="text-left px-4 py-3 font-medium text-slate-500 dark:text-slate-400">Name</th>
+                  <th className="text-left px-4 py-3 font-medium text-slate-500 dark:text-slate-400">Email</th>
+                  <th className="text-left px-4 py-3 font-medium text-slate-500 dark:text-slate-400">Business</th>
+                  <th className="text-left px-4 py-3 font-medium text-slate-500 dark:text-slate-400">Status</th>
+                  <th className="text-left px-4 py-3 font-medium text-slate-500 dark:text-slate-400">Verified</th>
                 </tr>
               </thead>
               <tbody>
                 {merchants.map(m => (
-                  <tr key={m.id} className="border-t border-blue-100/60 dark:border-white/5 shadow-sm">
-                    <td className="px-4 py-3 font-mono text-gray-400">#{m.id}</td>
-                    <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">{m.name}</td>
-                    <td className="px-4 py-3 text-gray-500">{m.email}</td>
-                    <td className="px-4 py-3 text-gray-500">{m.businessName}</td>
+                  <tr key={m.id} className="border-t border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/30">
+                    <td className="px-4 py-3 font-mono text-slate-400">#{m.id}</td>
+                    <td className="px-4 py-3 font-medium text-slate-900 dark:text-white">{m.name}</td>
+                    <td className="px-4 py-3 text-slate-500">{m.email}</td>
+                    <td className="px-4 py-3 text-slate-500">{m.businessName}</td>
                     <td className="px-4 py-3">
-                      <span className={`text-xs font-bold px-2 py-1 rounded-lg ${m.status === 'approved' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'}`}>
+                      <span className={`text-xs font-semibold px-2 py-0.5 rounded ${m.status === 'approved' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400' : 'bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400'}`}>
                         {m.status}
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      {m.emailVerified ? <CheckCircle size={16} className="text-green-500" /> : <XCircle size={16} className="text-red-400" />}
+                      {m.emailVerified ? <CheckCircle size={14} className="text-emerald-500" /> : <XCircle size={14} className="text-red-400" />}
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-          {merchants.length === 0 && <p className="text-center py-8 text-gray-400">{t('admin_no_data')}</p>}
+          {merchants.length === 0 && <p className="text-center py-8 text-slate-400 text-sm">{t('admin_no_data')}</p>}
         </div>
       )}
 
       {/* Stores Tab */}
       {activeTab === 'stores' && (
-        <div className="grid gap-4">
+        <div className="grid gap-3">
           {stores.map(s => (
-            <div key={s.id} className="bg-white dark:bg-[#14141F]/80 rounded-2xl p-5 border border-blue-100/60 dark:border-white/5 shadow-sm flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-kz-blue to-kz-gold rounded-xl flex items-center justify-center text-white font-bold">
+            <div key={s.id} className="bg-white dark:bg-slate-900 rounded-xl p-4 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-indigo-50 dark:bg-indigo-950/30 rounded-lg flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-bold text-sm">
                   {s.name.charAt(0)}
                 </div>
                 <div>
-                  <p className="font-semibold text-gray-900 dark:text-white">{s.name}</p>
-                  <p className="text-sm text-gray-400">{s.subdomain} · {s.plan} plan</p>
+                  <p className="font-medium text-slate-900 dark:text-white text-sm">{s.name}</p>
+                  <p className="text-xs text-slate-400">{s.subdomain} · {s.plan} plan</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <span className={`text-xs font-bold px-2.5 py-1 rounded-lg ${s.status === 'active' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-700'}`}>
+                <span className={`text-xs font-semibold px-2 py-0.5 rounded ${s.status === 'active' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400' : 'bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-400'}`}>
                   {s.status}
                 </span>
-                {s.isLive ? <CheckCircle size={16} className="text-green-500" /> : <AlertTriangle size={16} className="text-yellow-500" />}
+                {s.isLive ? <CheckCircle size={14} className="text-emerald-500" /> : <AlertTriangle size={14} className="text-amber-500" />}
               </div>
             </div>
           ))}
-          {stores.length === 0 && <p className="text-center py-8 text-gray-400">{t('admin_no_data')}</p>}
+          {stores.length === 0 && <p className="text-center py-8 text-slate-400 text-sm">{t('admin_no_data')}</p>}
         </div>
       )}
 
       {/* Queue Tab */}
       {activeTab === 'queue' && queue && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <QueueCard title="📧 Email Queue" data={queue.emails} />
-          <QueueCard title="🛒 Abandoned Cart Queue" data={queue.abandonedCarts} />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <QueueCard title="Email Queue" data={queue.emails} />
+          <QueueCard title="Abandoned Cart Queue" data={queue.abandonedCarts} />
         </div>
       )}
       {activeTab === 'queue' && !queue && (
-        <div className="text-center py-12 text-gray-400">
-          <Activity size={40} className="mx-auto mb-3 opacity-50" />
-          <p>{t('admin_queue_unavailable')}</p>
+        <div className="text-center py-12 text-slate-400">
+          <Activity size={36} className="mx-auto mb-3 opacity-50" />
+          <p className="text-sm">{t('admin_queue_unavailable')}</p>
         </div>
       )}
     </div>
   );
 }
 
-function StatCard({ icon: Icon, label, value, color }: { icon: any; label: string; value: any; color: string }) {
-  const colorMap: Record<string, string> = {
-    blue: 'from-blue-500 to-blue-600',
-    green: 'from-emerald-500 to-emerald-600',
-    purple: 'from-violet-500 to-violet-600',
-    amber: 'from-amber-500 to-amber-600',
-  };
+function StatCard({ icon: Icon, label, value }: { icon: any; label: string; value: any }) {
   return (
-    <div className="bg-white dark:bg-[#14141F]/80 rounded-2xl p-5 border border-blue-100/60 dark:border-white/5 shadow-sm">
-      <div className={`w-10 h-10 bg-gradient-to-br ${colorMap[color]} rounded-xl flex items-center justify-center text-white mb-3`}>
-        <Icon size={18} />
+    <div className="bg-white dark:bg-slate-900 rounded-xl p-5 border border-slate-200 dark:border-slate-800">
+      <div className="flex items-center justify-between mb-3">
+        <div className="w-9 h-9 bg-indigo-50 dark:bg-indigo-950/30 rounded-lg flex items-center justify-center">
+          <Icon size={16} className="text-indigo-600 dark:text-indigo-400" />
+        </div>
       </div>
-      <p className="text-2xl font-extrabold text-gray-900 dark:text-white">{value}</p>
-      <p className="text-sm text-gray-500 dark:text-gray-400">{label}</p>
+      <p className="text-2xl font-bold text-slate-900 dark:text-white">{value}</p>
+      <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">{label}</p>
     </div>
   );
 }
@@ -260,20 +253,20 @@ function StatCard({ icon: Icon, label, value, color }: { icon: any; label: strin
 function QueueCard({ title, data }: { title: string; data: any }) {
   if (!data) return null;
   return (
-    <div className="bg-white dark:bg-[#14141F]/80 rounded-2xl p-6 border border-blue-100/60 dark:border-white/5 shadow-sm">
-      <h3 className="font-bold text-gray-900 dark:text-white mb-4">{title}</h3>
+    <div className="bg-white dark:bg-slate-900 rounded-xl p-5 border border-slate-200 dark:border-slate-800">
+      <h3 className="font-semibold text-slate-900 dark:text-white mb-4 text-sm">{title}</h3>
       <div className="grid grid-cols-2 gap-3">
         {[
-          { label: 'Waiting', value: data.waiting, icon: Clock, color: 'text-yellow-500' },
-          { label: 'Active', value: data.active, icon: Activity, color: 'text-blue-500' },
-          { label: 'Completed', value: data.completed, icon: CheckCircle, color: 'text-green-500' },
+          { label: 'Waiting', value: data.waiting, icon: Clock, color: 'text-amber-500' },
+          { label: 'Active', value: data.active, icon: Activity, color: 'text-indigo-500' },
+          { label: 'Completed', value: data.completed, icon: CheckCircle, color: 'text-emerald-500' },
           { label: 'Failed', value: data.failed, icon: XCircle, color: 'text-red-500' },
         ].map(item => (
-          <div key={item.label} className="flex items-center gap-2 bg-gray-50 dark:bg-white/5 rounded-xl p-3">
-            <item.icon size={16} className={item.color} />
+          <div key={item.label} className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg p-3">
+            <item.icon size={14} className={item.color} />
             <div>
-              <p className="text-lg font-bold text-gray-900 dark:text-white">{item.value}</p>
-              <p className="text-xs text-gray-400">{item.label}</p>
+              <p className="text-lg font-bold text-slate-900 dark:text-white">{item.value}</p>
+              <p className="text-xs text-slate-400">{item.label}</p>
             </div>
           </div>
         ))}
