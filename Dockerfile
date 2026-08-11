@@ -6,7 +6,6 @@
 # Stage 1: Build frontend
 FROM node:22-slim AS frontend-build
 WORKDIR /app
-RUN corepack enable && corepack prepare npm@latest --activate
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
 COPY frontend/ .

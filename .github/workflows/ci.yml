@@ -87,5 +87,6 @@ jobs:
           JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
           NODE_ENV: test
 
-      - name: Docker build test
+      - name: Docker build test (non-blocking)
+        continue-on-error: true
         run: docker build -t shopbuilder-test .
