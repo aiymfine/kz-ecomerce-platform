@@ -14,3 +14,10 @@ export const refundSchema = z.object({
 });
 
 export type RefundDto = z.infer<typeof refundSchema>;
+
+export const threeDsCompleteSchema = z.object({
+  three_ds_token: z.string().min(16).max(128),
+  result: z.enum(['authenticated', 'failed']),
+});
+
+export type ThreeDsCompleteDto = z.infer<typeof threeDsCompleteSchema>;

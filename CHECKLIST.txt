@@ -46,7 +46,7 @@
 - [x] Multi-warehouse inventory with smart routing (Almaty, Astana)
 - [x] Full checkout flow: cart → order → payment → webhook
 - [x] Payment integration: Kaspi Pay / Halyk Bank with idempotency keys
-- [x] 3D Secure redirect handling (mock payment URL + token)
+- [x] 3-D Secure challenge flow: initiate returns ACS redirect + token, POST /:id/3ds-complete finishes it
 - [x] Webhook engine: HMAC-SHA256, exponential backoff, dead-letter queue (5 retries)
 - [x] Discount / promo engine: stackable vs exclusive, percentage/fixed/free_shipping
 - [x] VAT calculation (12% Kazakhstan) with stacked vs exclusive promo rules
@@ -171,8 +171,9 @@
 - POST /api/stores/:storeId/promo-codes/:code/validate (200)
 - POST /api/stores/:storeId/promo-codes/apply (200) — VAT + stacked/exclusive
 
-### Payments (2)
-- POST /api/stores/:storeId/payments/initiate (201) — idempotency keys
+### Payments (3)
+- POST /api/stores/:storeId/payments/initiate (201) — idempotency keys, returns 3DS challenge
+- POST /api/stores/:storeId/payments/:id/3ds-complete (200) — completes 3-D Secure challenge
 - POST /api/stores/:storeId/payments/callback/:provider (200)
 
 ### Admin (3)

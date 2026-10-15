@@ -33,3 +33,5 @@ Thumbs.db
 
 # Docker secrets
 docker-compose.override.yml
+
+.pnpm-store/

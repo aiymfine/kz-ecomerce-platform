@@ -79,13 +79,100 @@ export class PaymentsService {
       return payment;
     }
 
-    // Mock payment URL/token for gateway providers
-    const mockToken = randomBytes(16).toString('hex');
+    // Simulated 3-D Secure challenge (required for Kaspi Pay / Halyk Bank card payments)
+    const threeDsToken = randomBytes(16).toString('hex');
+    const threeDsPayment = await this.prisma.withTenant(storeId, (client) =>
+      client.payment.update({
+        where: { id: payment.id },
+        data: {
+          status: 'processing',
+          metadata: {
+            ...((payment.metadata as Record<string, any>) || {}),
+            requires3ds: true,
+            threeDsStatus: 'challenge_required',
+            threeDsToken,
+          } as any,
+        },
+      }),
+    );
+
     return {
-      ...payment,
-      paymentUrl: `https://mock-gateway.${data.provider}.kz/pay?token=${mockToken}`,
-      paymentToken: mockToken,
+      ...threeDsPayment,
+      requires_3ds: true,
+      three_ds_redirect_url: `https://mock-gateway.${data.provider}.kz/3ds/challenge?token=${threeDsToken}`,
+      three_ds_complete_url: `/api/stores/${storeId}/payments/${payment.id}/3ds-complete`,
+      three_ds_token: threeDsToken, // Demo convenience: token needed to complete the challenge
     };
+  }
+
+  /**
+   * Complete a 3-D Secure challenge (simulated ACS response).
+   * The customer authenticates at the issuer's ACS page, which posts the
+   * result here — exactly how real Kaspi Pay / Halyk 3DS callbacks work.
+   */
+  async completeThreeDs(
+    storeId: number,
+    paymentId: number,
+    data: { threeDsToken: string; result: 'authenticated' | 'failed' },
+  ) {
+    const payment = await this.prisma.withTenant(storeId, (client) =>
+      client.payment.findUnique({ where: { id: paymentId } }),
+    );
+
+    if (!payment) {
+      throw new NotFoundException('Payment not found');
+    }
+
+    const meta = (payment.metadata as Record<string, any>) || {};
+
+    if (!meta.requires3ds) {
+      throw new BadRequestException('Payment does not require 3-D Secure authentication');
+    }
+
+    if (payment.status !== 'processing') {
+      throw new BadRequestException(
+        `3-D Secure already completed for payment with status: ${payment.status}`,
+      );
+    }
+
+    if (meta.threeDsToken !== data.threeDsToken) {
+      throw new BadRequestException('Invalid 3-D Secure token');
+    }
+
+    if (data.result === 'authenticated') {
+      const updated = await this.prisma.withTenant(storeId, (client) =>
+        client.payment.update({
+          where: { id: paymentId },
+          data: {
+            status: 'succeeded',
+            providerTxId: `3ds-${randomBytes(8).toString('hex')}`,
+            metadata: { ...meta, threeDsStatus: 'authenticated' } as any,
+          },
+        }),
+      );
+
+      await this.finalizeSuccessfulPayment(storeId, payment, updated.providerTxId);
+      return updated;
+    }
+
+    const failed = await this.prisma.withTenant(storeId, (client) =>
+      client.payment.update({
+        where: { id: paymentId },
+        data: {
+          status: 'failed',
+          metadata: { ...meta, threeDsStatus: 'authentication_failed' } as any,
+        },
+      }),
+    );
+
+    await this.prisma.withTenant(storeId, (client) =>
+      client.order.update({
+        where: { id: payment.orderId },
+        data: { status: 'payment_failed' },
+      }),
+    );
+
+    return failed;
   }
 
   async handleKaspiCallback(storeId: number, body: Record<string, unknown>) {
@@ -126,36 +213,13 @@ export class PaymentsService {
       }),
     );
 
-    // Update order status on success
+    // Update order status + queue receipt email on success
     if (newStatus === 'succeeded') {
-      await this.prisma.withTenant(storeId, (client) =>
-        client.order.update({
-          where: { id: payment.orderId },
-          data: { status: 'confirmed' },
-        }),
+      await this.finalizeSuccessfulPayment(
+        storeId,
+        payment,
+        (body.provider_tx_id as string) || null,
       );
-
-      // Enqueue payment receipt email
-      try {
-        const order = await this.prisma.withTenant(storeId, (client) =>
-          client.order.findUnique({ where: { id: payment.orderId } }),
-        );
-        if (order) {
-          await this.queueService.enqueueEmail({
-            type: 'payment-receipt',
-            to: '', // Customer email is not available in this context — checkout sends order-confirmation
-            data: {
-              orderNumber: order.orderNumber,
-              amount: payment.amountTiyin,
-              provider: payment.provider,
-              transactionId: updated.providerTxId || undefined,
-              currency: 'KZT',
-            },
-          });
-        }
-      } catch {
-        // Non-blocking — email queue may not be available
-      }
     } else {
       await this.prisma.withTenant(storeId, (client) =>
         client.order.update({
@@ -166,6 +230,44 @@ export class PaymentsService {
     }
 
     return { status: 'ok', payment: updated };
+  }
+
+  /**
+   * Shared success path: confirm the order and queue the payment receipt email.
+   */
+  private async finalizeSuccessfulPayment(
+    storeId: number,
+    payment: { orderId: number; amountTiyin: number; provider: string },
+    providerTxId?: string | null,
+  ) {
+    await this.prisma.withTenant(storeId, (client) =>
+      client.order.update({
+        where: { id: payment.orderId },
+        data: { status: 'confirmed' },
+      }),
+    );
+
+    // Enqueue payment receipt email
+    try {
+      const order = await this.prisma.withTenant(storeId, (client) =>
+        client.order.findUnique({ where: { id: payment.orderId } }),
+      );
+      if (order) {
+        await this.queueService.enqueueEmail({
+          type: 'payment-receipt',
+          to: '', // Customer email is not available in this context — checkout sends order-confirmation
+          data: {
+            orderNumber: order.orderNumber,
+            amount: payment.amountTiyin,
+            provider: payment.provider,
+            transactionId: providerTxId || undefined,
+            currency: 'KZT',
+          },
+        });
+      }
+    } catch {
+      // Non-blocking — email queue may not be available
+    }
   }
 
   async refund(

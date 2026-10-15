@@ -39,7 +39,7 @@ Localized for Kazakhstan: **Kaspi Pay**, **Halyk Bank**, tiyin-based pricing, Ha
 | **Checkout** | Full ACID transaction — cart → order → payment → inventory reservation. Any failure = rollback |
 | **Orders** | Order lifecycle, status tracking, fulfillment management |
 | **Inventory** | Atomic stock adjustments via `SELECT FOR UPDATE`. Transfer between warehouses. Haversine nearest-warehouse |
-| **Payments** | Payment initiation, Kaspi Pay & Halyk Bank callbacks, refund processing |
+| **Payments** | Payment initiation with **idempotency keys**, simulated **3-D Secure** challenge (Kaspi Pay / Halyk Bank), provider callbacks, refund processing |
 | **Discounts** | Promo codes — create, validate, apply to orders |
 | **Warehouses** | Multi-warehouse management with geographic coordinates |
 | **Customers** | Customer profiles, addresses, order history |
@@ -94,6 +94,17 @@ This automatically runs migrations → seeds the database → starts the app. In
 
 App: http://localhost:3001 | Swagger: http://localhost:3001/api/docs | Frontend: http://localhost:5173
 
+### Deploying to DeployRocks (required platform)
+
+1. Go to **https://dashboard.deployrocks.com** → *Continue with GitHub*
+2. Create a new app → select the **`aiymfine/kz-ecomerce-platform`** repository
+3. DeployRocks detects the root `docker-compose.yml` (backend + frontend static build + PostgreSQL 15 + Redis 7)
+4. Set the required environment variables in the dashboard (see table below — at minimum `JWT_SECRET_KEY`, `JWT_REFRESH_SECRET_KEY`, and for real email `SMTP_USER` / `SMTP_PASSWORD` / `EMAIL_FROM_ADDRESS`)
+5. Deploy → wait for health check `GET /api/health` to return `{"status":"ok"}`
+6. Put the assigned public URL into `DEPLOYED_URL.txt` and push
+
+> Inside the DeployRocks network use service hostnames (`postgres`, `redis`) — never `localhost` — exactly as `docker-compose.yml` already does.
+
 ### Frontend (Storefront)
 
 ```bash
@@ -138,10 +149,21 @@ The Vite dev server runs on http://localhost:5173 and proxies `/api` requests to
 | GET | `/api/stores/:storeId/inventory/nearest-warehouse` | Nearest warehouse (Haversine) |
 | POST | `/api/stores/:storeId/checkout` | Checkout (ACID transaction) |
 | POST | `/api/stores/:storeId/payments/initiate` | Initiate payment |
+| POST | `/api/stores/:storeId/payments/:id/3ds-complete` | Complete 3-D Secure challenge (ACS response) |
 | POST | `/api/stores/:storeId/promo-codes/:code/validate` | Validate promo code |
 | GET | `/api/storefront/products` | Public product listing (Redis cached) |
 | GET | `/api/storefront/products/:slug` | Product by slug (Redis cached) |
 | GET | `/api/storefront/categories` | Public category tree (Redis cached) |
+
+### 3-D Secure Flow (simulated)
+
+Mirrors how real Kaspi Pay / Halyk Bank card payments work:
+
+1. `POST /payments/initiate` → payment created (`processing`), response contains `requires_3ds`, `three_ds_redirect_url` (issuer ACS page) and a one-time `three_ds_token`
+2. Customer "authenticates" at the ACS page (mock gateway URL)
+3. ACS posts the result to `POST /payments/:id/3ds-complete` with `{ three_ds_token, result: "authenticated" | "failed" }`
+4. On success: payment → `succeeded`, order → `confirmed`, payment-receipt email queued via BullMQ. On failure: payment → `failed`, order → `payment_failed`
+5. Wrong/replayed tokens or already-completed challenges are rejected (`400`)
 
 ### Webhooks & Integrations
 | Method | Endpoint | Description |

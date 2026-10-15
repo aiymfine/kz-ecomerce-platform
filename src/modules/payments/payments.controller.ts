@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { PaymentsService } from './payments.service';
-import { initiatePaymentSchema, refundSchema } from './dto/payment.dto';
+import { initiatePaymentSchema, refundSchema, threeDsCompleteSchema } from './dto/payment.dto';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -59,6 +59,23 @@ export class PaymentsController {
     @Body() body: Record<string, unknown>,
   ) {
     return this.paymentsService.handleHalykCallback(storeId, body);
+  }
+
+  @Post(':id/3ds-complete')
+  @HttpCode(HttpStatus.OK)
+  @UsePipes(new ZodValidationPipe(threeDsCompleteSchema))
+  @ApiOperation({ summary: 'Complete 3-D Secure challenge (simulated issuer ACS response)' })
+  @ApiResponse({ status: 200, description: '3-D Secure challenge completed' })
+  async completeThreeDs(
+    @Param('storeId', ParseIntPipe) storeId: number,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: unknown,
+  ) {
+    const dto = body as any;
+    return this.paymentsService.completeThreeDs(storeId, id, {
+      threeDsToken: dto.three_ds_token,
+      result: dto.result,
+    });
   }
 
   @Post(':id/refund')

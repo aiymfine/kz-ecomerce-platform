@@ -1,1 +1,2 @@
-https://kz-ecomerce-platform.onrender.com
+https://<your-app>.deployrocks.com
+# ↑ REPLACE after deploying via https://dashboard.deployrocks.com (sign in with GitHub → connect aiymfine/kz-ecomerce-platform → docker-compose detected → deploy). Health check: GET /api/health

@@ -108,22 +108,135 @@ describe('PaymentsService', () => {
       expect(prismaMock.order.update).toHaveBeenCalled();
     });
 
-    it('should return payment URL for gateway providers', async () => {
+    it('should return a 3-D Secure challenge for gateway providers', async () => {
       prismaMock.order.findUnique.mockResolvedValue({
         id: 1,
         status: 'payment_pending',
         totalTiyin: 50000,
       });
       prismaMock.payment.findUnique.mockResolvedValue(null);
-      prismaMock.payment.create.mockResolvedValue({ id: 1, status: 'pending', amountTiyin: 50000 });
+      prismaMock.payment.create.mockResolvedValue({
+        id: 1,
+        status: 'pending',
+        amountTiyin: 50000,
+        metadata: null,
+      });
+      prismaMock.payment.update.mockImplementation(({ data }: any) =>
+        Promise.resolve({
+          id: 1,
+          status: data.status,
+          amountTiyin: 50000,
+          metadata: data.metadata,
+        }),
+      );
 
-      const result = await service.initiatePayment(1, {
+      const result = (await service.initiatePayment(1, {
         orderId: 1,
         provider: 'kaspi_pay',
         idempotencyKey: 'key-kaspi',
-      });
+      })) as any;
 
       expect(prismaMock.payment.create).toHaveBeenCalled();
+      expect(result.requires_3ds).toBe(true);
+      expect(result.three_ds_redirect_url).toContain('/3ds/challenge?token=');
+      expect(result.metadata.requires3ds).toBe(true);
+      expect(result.metadata.threeDsStatus).toBe('challenge_required');
+    });
+  });
+
+  describe('completeThreeDs', () => {
+    const paymentWithChallenge = {
+      id: 1,
+      orderId: 10,
+      amountTiyin: 50000,
+      provider: 'kaspi_pay',
+      status: 'processing',
+      metadata: {
+        requires3ds: true,
+        threeDsStatus: 'challenge_required',
+        threeDsToken: 'a'.repeat(32),
+      },
+    };
+
+    it('should throw if payment not found', async () => {
+      prismaMock.payment.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.completeThreeDs(1, 999, { threeDsToken: 'a'.repeat(32), result: 'authenticated' }),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw if payment does not require 3-D Secure', async () => {
+      prismaMock.payment.findUnique.mockResolvedValue({
+        id: 1,
+        status: 'pending',
+        metadata: null,
+      });
+
+      await expect(
+        service.completeThreeDs(1, 1, { threeDsToken: 'a'.repeat(32), result: 'authenticated' }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw if 3-D Secure was already completed', async () => {
+      prismaMock.payment.findUnique.mockResolvedValue({
+        ...paymentWithChallenge,
+        status: 'succeeded',
+        metadata: { ...paymentWithChallenge.metadata, threeDsStatus: 'authenticated' },
+      });
+
+      await expect(
+        service.completeThreeDs(1, 1, { threeDsToken: 'a'.repeat(32), result: 'authenticated' }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw for an invalid 3-D Secure token', async () => {
+      prismaMock.payment.findUnique.mockResolvedValue(paymentWithChallenge);
+
+      await expect(
+        service.completeThreeDs(1, 1, { threeDsToken: 'b'.repeat(32), result: 'authenticated' }),
+      ).rejects.toThrow('Invalid 3-D Secure token');
+    });
+
+    it('should succeed: payment succeeded, order confirmed, receipt email queued', async () => {
+      prismaMock.payment.findUnique.mockResolvedValueOnce(paymentWithChallenge);
+      prismaMock.payment.update.mockResolvedValue({
+        id: 1,
+        status: 'succeeded',
+        providerTxId: '3ds-abc',
+      });
+      prismaMock.order.findUnique.mockResolvedValue({ id: 10, orderNumber: 'SB-1' });
+      prismaMock.order.update.mockResolvedValue({ id: 10, status: 'confirmed' });
+
+      const result = await service.completeThreeDs(1, 1, {
+        threeDsToken: 'a'.repeat(32),
+        result: 'authenticated',
+      });
+
+      expect(result.status).toBe('succeeded');
+      expect(prismaMock.order.update).toHaveBeenCalledWith(
+        expect.objectContaining({ data: { status: 'confirmed' } }),
+      );
+      expect(queueMock.enqueueEmail).toHaveBeenCalledWith(
+        expect.objectContaining({ type: 'payment-receipt' }),
+      );
+    });
+
+    it('should fail: payment failed, order set to payment_failed', async () => {
+      prismaMock.payment.findUnique.mockResolvedValueOnce(paymentWithChallenge);
+      prismaMock.payment.update.mockResolvedValue({ id: 1, status: 'failed' });
+      prismaMock.order.update.mockResolvedValue({ id: 10, status: 'payment_failed' });
+
+      const result = await service.completeThreeDs(1, 1, {
+        threeDsToken: 'a'.repeat(32),
+        result: 'failed',
+      });
+
+      expect(result.status).toBe('failed');
+      expect(prismaMock.order.update).toHaveBeenCalledWith(
+        expect.objectContaining({ data: { status: 'payment_failed' } }),
+      );
+      expect(queueMock.enqueueEmail).not.toHaveBeenCalled();
     });
   });
 

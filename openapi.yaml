@@ -1745,6 +1745,43 @@ paths:
       tags: - Payments
       security: - bearer:
 []
+  /api/stores/{storeId}/payments/{id}/3ds-complete:
+    post:
+      operationId: PaymentsController_completeThreeDs
+      summary: Complete 3-D Secure challenge (simulated issuer ACS response)
+      parameters:
+        - name: storeId
+          required: true
+          in: path
+          schema:
+            type: number
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: number
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                three_ds_token:
+                  type: string
+                result:
+                  type: string
+                  enum: [authenticated, failed]
+            example:
+              three_ds_token: 5f3a...hex32
+              result: authenticated
+      responses:
+        200:
+          description: 3-D Secure challenge completed
+      tags:
+        - Payments
+      security:
+        - bearer: []
   /api/stores/{storeId}/payments/{id}/refund:
     post:
       operationId: PaymentsController_refund
